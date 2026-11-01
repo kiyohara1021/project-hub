@@ -4,7 +4,7 @@ import { supabaseConfig } from "@/lib/supabase/config";
 import { taskAccess, queryTasks } from "@/lib/tasks-server";
 import { ProjectError } from "@/lib/projects-server";
 import { PageHeading, EmptyState } from "@/components/page-parts";
-import { taskStatuses, priorities, priorityLabels, type BoardPages } from "@/lib/task-types";
+import { taskStatuses, priorities, priorityLabels, type BoardPages, type TaskStatus } from "@/lib/task-types";
 import { ConnectedKanban } from "./connected-kanban";
 
 export async function ConnectedBoardPage({ id, search }: { id: string; search: Record<string, string | string[] | undefined> }) {
@@ -20,9 +20,11 @@ export async function ConnectedBoardPage({ id, search }: { id: string; search: R
     throw error;
   }
   const { client, project } = access;
+  const column=search.column ?? "todo";
+  if (typeof column !== "string" || !taskStatuses.includes(column as TaskStatus)) return <><EmptyState title="表示する状態を確認してください" /><Link href={`/projects/${id}/board?workspace=${wid}`} className="mt-4 inline-block text-blue-700 underline">表示をリセット</Link></>;
   const filters = new URLSearchParams();
   for (const [key,value] of Object.entries(search)) {
-    if (key === "workspace" || value === undefined) continue;
+    if (key === "workspace" || key === "column" || value === undefined) continue;
     if (typeof value !== "string" || !["assignee","priority"].includes(key)) return <EmptyState title="検索条件を確認してください" description="担当者・優先度を選び直してください。" />;
     if (value) filters.set(key,value);
   }
@@ -47,10 +49,11 @@ export async function ConnectedBoardPage({ id, search }: { id: string; search: R
     {project.status === "archived" && <p role="status" className="mb-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">アーカイブ済みのため閲覧のみ利用できます。</p>}
     <form key={filters.toString()} action={`/projects/${id}/board`} method="get" className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border bg-white p-4">
       <input type="hidden" name="workspace" value={wid} />
+      <input type="hidden" name="column" value={column} />
       <div className="min-w-0 flex-1"><label htmlFor="assignee-filter" className="mb-2 block text-sm font-medium">担当者で絞り込み</label><select id="assignee-filter" name="assignee" defaultValue={filters.get("assignee") ?? ""} className="h-10 w-full rounded-md border px-2 text-sm"><option value="">すべて</option><option value="unassigned">未割当</option>{members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
       <div className="min-w-0 flex-1"><label htmlFor="priority-filter" className="mb-2 block text-sm font-medium">優先度で絞り込み</label><select id="priority-filter" name="priority" defaultValue={filters.get("priority") ?? ""} className="h-10 w-full rounded-md border px-2 text-sm"><option value="">すべて</option>{priorities.map(p => <option key={p} value={p}>{priorityLabels[p]}</option>)}</select></div>
       <button className="h-10 rounded-lg bg-slate-900 px-4 text-sm text-white" type="submit">絞り込む</button><Link href={`/projects/${id}/board?workspace=${wid}`} className="self-center text-sm text-blue-700 underline">リセット</Link>
     </form>
-    <ConnectedKanban key={`${id}:${filters}:${project.status}`} base={`/api/v1/workspaces/${wid}/projects/${id}/tasks`} initial={initial} members={members} canWrite={canWrite} assignee={filters.get("assignee") ?? ""} priority={filters.get("priority") ?? ""} />
+    <ConnectedKanban key={`${id}:${filters}:${project.status}:${column}`} base={`/api/v1/workspaces/${wid}/projects/${id}/tasks`} initial={initial} members={members} canWrite={canWrite} assignee={filters.get("assignee") ?? ""} priority={filters.get("priority") ?? ""} initialColumn={column as TaskStatus} />
   </>;
 }

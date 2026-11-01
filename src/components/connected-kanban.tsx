@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { TaskEditor } from "./task-editor";
 import { taskStatuses, taskLabels, priorityLabels, type Task, type TaskStatus, type TaskPage, type BoardPages, type Assignee } from "@/lib/task-types";
 
-export function ConnectedKanban({ base, initial, members, canWrite, assignee, priority }: { base: string; initial: BoardPages; members: Assignee[]; canWrite: boolean; assignee: string; priority: string }) {
+export function ConnectedKanban({ base, initial, members, canWrite, assignee, priority, initialColumn="todo" }: { base: string; initial: BoardPages; members: Assignee[]; canWrite: boolean; assignee: string; priority: string; initialColumn?: TaskStatus }) {
   const router = useRouter();
   const [pages, setPages] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [mobileColumn, setMobileColumn] = useState<TaskStatus>("todo");
+  const [mobileColumn, setMobileColumn] = useState<TaskStatus>(initialColumn);
   const locked = useRef(false);
   function lock(value: boolean) { locked.current = value; setBusy(value); }
   function query(status: TaskStatus, cursor?: string | null) {

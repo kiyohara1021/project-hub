@@ -19,7 +19,10 @@ function Navigation({ mobile = false, connected = false }: { mobile?: boolean; c
   const path = usePathname();
   const query = useSearchParams();
   return <nav aria-label="メインメニュー" className="space-y-2">{links.map(({ href, label, icon: Icon }) => {
-    const target = connected && label === "カンバン" ? (path.endsWith("/board") ? `${path}?${query}` : "/projects") : href;
+    const workspace=query.get("workspace");
+    const scoped=workspace ? `?${new URLSearchParams({workspace})}` : "";
+    let target=connected && ["ダッシュボード","プロジェクト一覧"].includes(label) ? `${href}${scoped}` : href;
+    if (connected && label === "カンバン") target=path.endsWith("/board") ? `${path}?${query}` : `/projects${scoped}`;
     const active = connected && label === "カンバン" ? path.endsWith("/board") : path === href;
     const link = <Link href={target} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-700 hover:text-white"}`}><Icon size={18} aria-hidden="true" />{label}</Link>;
     return mobile ? <SheetClose key={href} asChild>{link}</SheetClose> : <div key={href}>{link}</div>;
@@ -46,7 +49,7 @@ export function AppShell({ children, connected = false }: { children: React.Reac
         </div>
         <span className="hidden text-sm font-medium sm:inline">表示例: デモメンバー01</span>
       </header>
-      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "プロジェクト一覧・カンバンはDB接続済みです。その他の業務画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
+      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "ダッシュボード・プロジェクト一覧・カンバンはDB接続済みです。課題・メンバー・履歴の一覧画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
       <main id="main" tabIndex={-1} className="mx-auto min-h-[80vh] max-w-7xl px-4 py-8 outline-none md:px-10">{children}</main>
       <footer className="px-4 py-8 text-xs text-slate-500 md:px-10">ProjectHub · 個人非商用 / 設計プレビュー v0.1</footer>
     </div>
