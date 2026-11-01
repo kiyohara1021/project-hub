@@ -41,7 +41,7 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[公開準備](docs/specs/009-release-readiness.md)、タスクは[Issue #17](https://github.com/kiyohara1021/project-hub/issues/17)。P4の6画面DB接続が完了し、P5-1で設定検査・操作検証・公開手順を整備。P5-2でログイン付き本番を公開済み。残りは[Issue #19](https://github.com/kiyohara1021/project-hub/issues/19)のAPI拒否・Cookie属性・性能確認です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
+仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[公開準備](docs/specs/009-release-readiness.md)、タスクは[Issue #17](https://github.com/kiyohara1021/project-hub/issues/17)。P4の6画面DB接続が完了し、P5-1で設定検査・操作検証・公開手順を整備。P5-2でログイン付き本番を公開済み。[Issue #19](https://github.com/kiyohara1021/project-hub/issues/19)で認証・API拒否・Cookie属性・モバイル操作・API応答・利用量を確認しました。測定範囲は公開手順に記載しています。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
 
 P4-2: [メンバー管理仕様](docs/specs/007-connected-members.md)に沿って一覧・ロール変更・所属解除をDB接続。招待・メール送信は対象外です。
 

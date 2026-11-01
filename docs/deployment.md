@@ -153,3 +153,14 @@ commit;
 切り戻し基準は変更前のReady Production（Deployment GAuCwh3r3s5xnGNyQPnY4CTKkL35、SHA e95487b61b1787490122034d80ba1aac9ebf58ad）。今回DB変更なし。HobbyのInstant Rollbackは直前のProductionのみで、過去ビルド時の環境変数へ戻り、DBデータは戻らない。必要なら基準コミットへのrevert PRと現在の環境設定での再ビルドを使う。切り戻し自体は未実行。
 
 参考: [Functionsのリージョン](https://vercel.com/docs/functions/configuring-functions/region)、[Instant Rollback](https://vercel.com/docs/instant-rollback)。
+
+### 表記整理・Tokyo配置の公開後確認（2026-11-02）
+
+- PR #25のSHA `aba80eb885435ca38ef5ea146e66297e751eb31f`をProduction Deployment `8pMhXGiuvU3KPxE9DGDaRGkQ3tku`へ反映しReadyと正規URLを確認。HTTP応答のx-vercel-idでhnd1を確認。
+- 本番のDB接続モード6画面を360px/1280pxで表示し、全画面で横溢れなし。常設の開発向け注記・固定ユーザー表示がないことを確認。サンプルプロジェクト説明に残った非商用表記も、対象IDと旧本文を限定して通常の説明へ更新した。
+- 本文スキップ、メニューのEnter/Tab/Shift+Tab/Escape、タスク/課題追加ダイアログのフォーカス保持と閉じた後の起点復帰を本番で確認。これらの検証ではレコード作成・削除は実行しない。
+- 同一ブラウザ/同一メンバーセッションで6読取APIを1回ずつ測定。変更前は1,069–2,083ms（中央値1,715ms）、Tokyo配置後は399–2,270ms（中央値536ms）。すべてデータを取得。後者の初回dashboardは2,270msで、残る5件は399–660ms。
+- 計測値はブラウザ操作ツールの往復を含む単発のGET完了時間。ネットワーク・ウォーム状態を制御したベンチマークや負荷試験、Core Web Vitalsではない。詳細な描画指標はChrome DevTools MCP未接続のため未計測であり、上記API計測と区別する。
+- Usageと切り戻し基準は前節の通り。新たなDBマイグレーションはなし。最新デプロイからの即時切り戻し対象は、その時点でVercelが提示する直前Productionを確認して選択する。
+
+Issue #19の本番公開確認は、認証/ロール・API拒否・所属境界・Origin/Cookie・監査ログ・DB接続後の表示/キーボード・API応答/Usage・切り戻し基準の記録をもって完了。Core Web Vitals・負荷試験・DB復元訓練を実施したという意味ではない。
