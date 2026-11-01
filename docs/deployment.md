@@ -64,7 +64,7 @@ commit;
 ## デプロイ前後の確認
 
 - PRのCIが成功し、mainにマージされたコミットSHAを記録。Productionの公開対象がそのSHAか照合する。
-- VercelのDeployment Protectionと公開範囲を確認。ログ・ソースはpublic:falseを維持。noindexは検索除外用でありログイン/公開範囲を制限しない。
+- VercelのDeployment Protectionと公開範囲を確認。ログ・ソースのアクセス制御はVercel管理画面で確認する。vercel.jsonへpublicキーは追加しない（実デプロイのスキーマで拒否される）。noindexは検索除外用でありログイン/公開範囲を制限しない。
 - 初回DB反映→環境変数→デプロイの順。APP_ORIGINは実際の正規URLと一致させる。別エイリアスURLからの変更操作はOrigin検査で拒否されるため、利用URLを一本化する。
 - 未ログインで6画面がログインへ移動し、6種のGET APIが401を返す。画面デモの場合は認証フォームを出さず、DB APIは503となる。
 - admin/member/viewerで閲覧と変更許可を確認し、他workspaceのUUIDで404、viewerによる変更403を確認。通常ユーザーのJWTでactivity_logs直接書込が拒否されることも確認する。管理鍵のリクエストをブラウザに渡さない。
