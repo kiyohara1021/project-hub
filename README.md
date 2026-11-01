@@ -4,7 +4,7 @@
 
 ## 現在の状態
 
-2026-11-01 P3-2版。接続モードのダッシュボード・プロジェクト一覧・カンバンはDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク管理ができます。課題・メンバー・履歴の一覧画面は固定の架空プレビューです。クラウド接続・デプロイは未実施です。
+2026-11-01 P4-1版。接続モードのダッシュボード・プロジェクト一覧・カンバン・課題一覧はDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理ができます。メンバー・履歴の一覧画面は固定の架空プレビューです。クラウド接続・デプロイは未実施です。
 
 想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel Hobby（個人非商用）。バージョンは実装開始時に互換性を確認して固定します。
 
@@ -40,4 +40,4 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。P1/P2/P3-1は完了。現在の仕様は[ダッシュボード集計](docs/specs/005-connected-dashboard.md)、タスクは[Issue #9](https://github.com/kiyohara1021/project-hub/issues/9)。次はP4の課題管理です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
+仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[課題管理](docs/specs/006-connected-issues.md)、タスクは[Issue #11](https://github.com/kiyohara1021/project-hub/issues/11)。次はメンバー管理です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。

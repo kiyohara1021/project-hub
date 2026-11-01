@@ -2,8 +2,8 @@ import { projectAccess, ProjectError, uuid, validateProject, rpcError } from "./
 import { priorities, taskStatuses, type Task, type TaskPage, type TaskStatus, type Priority } from "./task-types";
 
 const fields = "id,workspace_id,project_id,title,description,status,priority,assignee_id,due_date,position,version";
-export async function taskAccess(wid: string, pid: string, write = false) {
-  const client = await projectAccess(wid, write ? "task" : false);
+export async function taskAccess(wid: string, pid: string, write = false, resource: "task" | "issue" = "task") {
+  const client = await projectAccess(wid, write ? resource : false);
   if (!uuid.test(pid)) throw new ProjectError(400, "INVALID_INPUT", "IDを確認してください");
   const project = await client.from("projects").select("id,name,status,workspace_id").eq("workspace_id", wid).eq("id", pid).maybeSingle();
   if (project.error) throw new ProjectError(500, "READ_FAILED", "プロジェクトを取得できませんでした");

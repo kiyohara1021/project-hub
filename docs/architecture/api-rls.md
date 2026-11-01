@@ -2,7 +2,9 @@
 
 ## 実装状況
 
-P2で認証・プロジェクト管理、P3でタスクCRUD・移動・再送対応とダッシュボードGETを実装。現在の契約・対象外は[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク編集/削除/移動はadmin/memberに許可、アーカイブ内では拒否する。
+P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応を実装。現在の契約・対象外は[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
+
+課題GETはq/status/priority/assignee/limit/cursorで絞り込み、statusの既定unresolvedはopen/investigatingに対応する。作成はopen、編集でresolved/closedを含む状態を変更できる。所属・親プロジェクト・アーカイブのガードはタスクと共通で、ダッシュボードの課題数は同じissuesテーブルを集計する。
 
 ダッシュボードGETは追加クエリーを受け付けず、集計日と本人はDBの現在時刻・auth.uid()から決定する。read_dashboardはSECURITY INVOKERでテーブルのRLSとSELECT権限を維持する。役割に関係なく所属者はworkspace全体を集計できるが、個人タスクは呼出者本人に限定。進捗・タスク・ログの表示上限5件と、全件数を使う集計は別に処理する。
 

@@ -13,7 +13,7 @@ export function apiError(error: unknown) {
   const e = error instanceof ProjectError ? error : new ProjectError(500, "INTERNAL_ERROR", "処理できませんでした。再試行してください。");
   return json({ error: { code: e.code, message: e.message, requestId: crypto.randomUUID() } }, e.status);
 }
-export async function projectAccess(wid: string, write: boolean | "task" = false) {
+export async function projectAccess(wid: string, write: boolean | "task" | "issue" = false) {
   if (!supabaseConfig()) throw new ProjectError(503, "NOT_CONFIGURED", "接続が設定されていません");
   const client = await supabaseServer();
   const { data, error } = await client.auth.getClaims();
@@ -22,7 +22,7 @@ export async function projectAccess(wid: string, write: boolean | "task" = false
   const member = await client.from("memberships").select("role").eq("workspace_id", wid).eq("user_id", data.claims.sub).maybeSingle();
   if (member.error) throw new ProjectError(500, "READ_FAILED", "所属を確認できませんでした");
   if (!member.data) throw new ProjectError(404, "NOT_FOUND", "見つかりませんでした");
-  if (write && !(write === "task" ? ["admin", "member"].includes(member.data.role) : member.data.role === "admin")) throw new ProjectError(403, "FORBIDDEN", write === "task" ? "閲覧者はタスクを変更できません" : "管理者だけが変更できます");
+  if (write && !(typeof write === "string" ? ["admin", "member"].includes(member.data.role) : member.data.role === "admin")) throw new ProjectError(403, "FORBIDDEN", typeof write === "string" ? `閲覧者は${write === "issue" ? "課題" : "タスク"}を変更できません` : "管理者だけが変更できます");
   return client;
 }
 export function checkOrigin(request: Request) {
