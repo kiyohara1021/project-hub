@@ -10,7 +10,7 @@ pnpm db:env
 pnpm dev
 ```
 
-http://127.0.0.1:3000/projects を開くと未認証の場合はログインへ移動する。ログイン後はプロジェクト一覧へ進み、名前を選ぶとカンバンへ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。その他の業務画面は固定プレビュー。
+http://127.0.0.1:3000/dashboard を開くと未認証の場合はログインへ移動する。ログイン後はダッシュボードで所属先の集計を確認できる。プロジェクト一覧で名前を選ぶとカンバンへ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。課題・メンバー・履歴の一覧画面は固定プレビュー。
 
 ## 架空のログイン情報
 
@@ -50,7 +50,7 @@ DBテストは所属解除や同時降格まで実行し、検証用workspaceを
 
 ## 今回のDB契約
 
-実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task。課題の変更、所属追加、プロフィール変更は後続段階。
+実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task / read_dashboard。課題の変更、所属追加、プロフィール変更は後続段階。
 
 一覧APIはq（名前部分一致）/status/limit(1〜100)/cursorを受け付け、created_at DESC,id DESCでページングする。cursorはAPIが返す不透明な文字列をそのまま渡す。未対応/重複パラメーターは400。APIはservice_roleを使わず、cookieのJWTを検証してRLS付きで読み取る。
 
@@ -67,3 +67,11 @@ POST `/api/v1/workspaces/:wid/projects` はIdempotency-Key必須。24時間は�
 移動後は列を再取得するため、追加読込済みでも最初の25件に戻る。他ユーザーの並び替えがあった場合も、再読み込みで整合させる。作成の再送時にも権限とアーカイブ状態を検査する。DBテストは共通の架空データを変更するためファイルを直列実行し、所属解除テスト後は初期メンバーを復元する。
 
 supabase/config.tomlはローカル専用で、反復テスト用のログイン枠を設定している。本番の認証設定はこのファイルをそのまま使わず別途検討する。
+
+## ダッシュボード
+
+ワークスペースを選び「最新の状況を取得」で更新する。完了率はアーカイブ以外の全タスクに対する完了数の割合（0件は0%）で、プロジェクト別の率を平均しない。期限超過は日本時間で今日より前の未完了タスク。未解決課題はopen/investigating。課題の編集画面は未接続だが、DBの架空seedは集計対象になる。
+
+プロジェクト進捗・自分の未完了タスク・最近の操作はそれぞれ最大5件。最近の操作だけはアーカイブも含むworkspace全体から取得し、本文や変更内容ペイロードを返さない。自分のタスクのリンクは担当者と `column` をカンバンへ引き継ぐ。
+
+集計RPCはSECURITY INVOKERでRLSを維持し、1,001件のテストでもHTTPの行数上限で切り捨てないことを検証している。日付境界とSECURITY INVOKERの検証は `scripts/local-sql.mjs` からローカルDockerコンテナだけに固定SQLを実行する。認証画面テストは専用fixtureと一時的な関数実行権限の剥奪で障害復旧も確認し、finallyで権限を復元するため、テストの強制終了時は `pnpm db:reset` で再構築する。

@@ -37,4 +37,6 @@ tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し
 
 索引: memberships(user_id,workspace_id)、projects(workspace_id,status,id)、tasks(workspace_id,project_id,status,position,id)、issues(workspace_id,project_id,status,id)、activity_logs(workspace_id,created_at DESC,id DESC)、tasks/issues(workspace_id,assignee_id)。
 
-サンプルは「デモスペース」「架空プロジェクトA〜C」「デモメンバー01〜03」。画面数値は固定の架空値。
+サンプルは「デモスペース」「架空プロジェクトA〜C」「デモメンバー01〜05」。データはすべて架空で、previewの数値は固定、connectedの数値はDBから計算する。
+
+接続モードのダッシュボードはread_dashboard RPCでRLS付きの集計を行い、集計テーブルや公開ビューは追加しない。日付はprivate.dashboard_dayでAsia/Tokyoへ変換。previewモードだけが固定値を使用する。
