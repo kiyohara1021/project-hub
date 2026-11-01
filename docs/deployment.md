@@ -141,3 +141,15 @@ commit;
 - [リポジトリの公開前確認](publication-review.md)を記録。Public化は実行していない。
 
 - Usage確認時点: Supabaseのproject-hub単体はDB 26.01MB（上限0.5GB）、MAU 3、Egress/Storage表示0GB。組織全体もFree枠内。Vercelのproject-hubはFast Data Transfer 9.65MB/100GB、Fast Origin Transfer 3.25MB/10GB、Fluid Provisioned Memory 0.11GB-Hrs/360GB-Hrs。Vercel表示期間はOct 2–Nov 1、SupabaseはOct 10–Nov 10。表示の丸め・更新遅延を含むスナップショットであり、継続的な上限保証ではない。
+
+### 認証済みAPI・Cookieの本番検証（2026-11-02）
+
+所有者が対話入力したメンバー/閲覧者の実セッションで46項目すべて成功。各ロールの6読取APIは200/no-store。両ロールのプロジェクト作成とメンバー管理、閲覧者のタスク/課題作成は403/FORBIDDEN。異なるOrigin・null・Origin未指定は403/INVALID_ORIGIN。実在し所属0件の別workspaceに対する6読取APIは404/NOT_FOUND。ログアウト後は401へ戻る。
+
+実際のログイン応答のCookieはSecure、SameSite=Lax、Path=/、host-only。HttpOnlyはSupabase SSRの現行設定ではfalseであり、HttpOnlyを確認したという扱いにはしない。Cookie値・パスワードは記録していない。初回のPython CA未設定はmacOSの信頼済みCAを使用して解消し、入力前にHTTPS事前確認を行う。
+
+読取API12回の単発実測は1,380–3,535ms、中央値1,752ms。負荷試験・Core Web Vitalsではない。レスポンスのx-vercel-idで実行拠点iad1を確認し、Supabase Tokyoとの距離を減らすためvercel.jsonに単一リージョンhnd1を設定。Hobbyの1リージョン範囲内で、反映後の応答確認を行う。
+
+切り戻し基準は変更前のReady Production（Deployment GAuCwh3r3s5xnGNyQPnY4CTKkL35、SHA e95487b61b1787490122034d80ba1aac9ebf58ad）。今回DB変更なし。HobbyのInstant Rollbackは直前のProductionのみで、過去ビルド時の環境変数へ戻り、DBデータは戻らない。必要なら基準コミットへのrevert PRと現在の環境設定での再ビルドを使う。切り戻し自体は未実行。
+
+参考: [Functionsのリージョン](https://vercel.com/docs/functions/configuring-functions/region)、[Instant Rollback](https://vercel.com/docs/instant-rollback)。
