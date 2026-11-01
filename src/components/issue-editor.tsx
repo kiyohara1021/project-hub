@@ -43,7 +43,7 @@ export function IssueEditor({base,issue,members}:{base:string;issue?:Issue;membe
   }
   const locked=busy||confirmStatus||confirmDelete;
   return <Dialog open={open} onOpenChange={value=>{if(!sending.current)setOpen(value);}}><DialogTrigger asChild><Button variant={issue?"outline":"default"}>{issue?"編集":"課題追加"}</Button></DialogTrigger>
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{issue?"課題編集":"課題追加"}</DialogTitle><DialogDescription>架空の内容だけを入力してください。状態変更と削除は確認してから実行します。</DialogDescription></DialogHeader>
+    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>{issue?"課題編集":"課題追加"}</DialogTitle><DialogDescription>課題の内容・担当者・期限を設定します。状態変更と削除は確認してから実行します。</DialogDescription></DialogHeader>
       <form onSubmit={submit} className="space-y-4">
         {error&&<div role="alert" className="space-y-2 rounded-md bg-red-50 p-3 text-sm text-red-800"><p>{error}</p>{conflict&&<Button type="button" variant="outline" disabled={busy} onClick={reload}>入力を破棄して最新版を読み直す</Button>}</div>}
         <div><label htmlFor={`${id}-title`} className="mb-2 block text-sm font-medium">課題名</label><Input id={`${id}-title`} value={title} onChange={e=>setTitle(e.target.value)} maxLength={120} required disabled={locked} autoFocus/></div>

@@ -1,12 +1,12 @@
 # ProjectHub
 
-個人非商用のReact学習用プロジェクト管理アプリ。実在の案件・顧客・会社・人物・機密情報は使わず、架空データだけを使用します。技術製品名は採用技術として記載します。
+プロジェクト・タスク・課題をまとめて管理するWebアプリです。カンバン、ロール別の権限管理、操作履歴を備えています。
 
 ## 現在の状態
 
-2026-11-02 P5-2本番接続版。接続モードのダッシュボード・プロジェクト一覧・カンバン・課題一覧・メンバー一覧・操作履歴はDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理ができます。管理者はメンバーのロール変更・所属解除も行えます。操作履歴は読み取り専用で、条件絞り込みとページ送りに対応しています。[公開アプリ](https://project-hub-zeta-nine.vercel.app)はVercelへデプロイ済みです。Productionは専用Supabaseに接続済みで、事前登録したデモユーザーでログインできます。パスワードは所有者が管理し、公開しません。
+2026-11-02 本番接続版。接続モードのダッシュボード・プロジェクト一覧・カンバン・課題一覧・メンバー一覧・操作履歴はDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理ができます。管理者はメンバーのロール変更・所属解除も行えます。操作履歴は読み取り専用で、条件絞り込みとページ送りに対応しています。[公開アプリ](https://project-hub-zeta-nine.vercel.app)はVercelへデプロイ済みです。Productionは専用Supabaseに接続済みで、登録済みアカウントでログインできます。パスワードは所有者が管理し、公開しません。
 
-想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel Hobby（個人非商用）。バージョンは実装開始時に互換性を確認して固定します。
+想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel。採用バージョンはpackage.jsonとlockfileを参照してください。
 
 ## 設計資料
 
@@ -41,7 +41,7 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[公開準備](docs/specs/009-release-readiness.md)、タスクは[Issue #17](https://github.com/kiyohara1021/project-hub/issues/17)。P4の6画面DB接続が完了し、P5-1で設定検査・操作検証・公開手順を整備。P5-2でログイン付き本番を公開済み。残りは[Issue #19](https://github.com/kiyohara1021/project-hub/issues/19)のロール別本番検証と性能確認です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
+仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[公開準備](docs/specs/009-release-readiness.md)、タスクは[Issue #17](https://github.com/kiyohara1021/project-hub/issues/17)。P4の6画面DB接続が完了し、P5-1で設定検査・操作検証・公開手順を整備。P5-2でログイン付き本番を公開済み。残りは[Issue #19](https://github.com/kiyohara1021/project-hub/issues/19)のAPI拒否・Cookie属性・性能確認です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
 
 P4-2: [メンバー管理仕様](docs/specs/007-connected-members.md)に沿って一覧・ロール変更・所属解除をDB接続。招待・メール送信は対象外です。
 
