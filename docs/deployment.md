@@ -87,7 +87,7 @@ commit;
 | Vercelアカウント/Project | ProjectHub Personal（Hobby）/ project-hub 作成済み |
 | Supabaseプロジェクト/6件反映 | project-hub / Tokyo（ap-northeast-1）、6件反映済み。7テーブルのRLS・匿名読取不可・直接書込不可を確認 |
 | 正規URL/初回公開確認SHA | https://project-hub-zeta-nine.vercel.app / cba33556e76fc4428815ecf1cc5c52c168b7bea8 |
-| 本番Auth・RLS・Origin・Cookie検証 | 一般登録・匿名ログイン無効、Site URL設定済み。匿名の6 APIは401、変更APIの異なるOriginは403。管理者のログイン・保存・更新・ログアウト成功。ロール別の追加確認を継続 |
+| 本番Auth・RLS・Origin・Cookie検証 | 一般登録・匿名ログイン無効、Site URL設定済み。匿名の6 APIは401、変更APIの異なるOriginは403。管理者・メンバーの保存/更新と3ロールのログイン・画面権限を確認。実認証での禁止API・他workspace拒否・Cookie属性の追加確認を継続 |
 | 公開先モバイル/キーボード・性能/Usage | 画面デモ6画面のPC/360px表示・横溢れなし・モバイルメニューEnter/Escapeとフォーカス復帰を確認。性能/Usageの詳細確認は未実施 |
 
 公式資料（確認日: 2026-11-01）: [Hobbyの個人非商用条件](https://vercel.com/docs/plans/hobby)、[Node.js対応バージョン](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)、[Vercelプロジェクト設定](https://vercel.com/docs/project-configuration)、[環境変数のスコープ](https://vercel.com/docs/environment-variables)、[Supabase環境管理](https://supabase.com/docs/guides/deployment/managing-environments)。公開直前にも条件を確認する。
@@ -116,4 +116,19 @@ commit;
 - Supabase Data APIへ公開キーで匿名アクセスし、7テーブルとread_dashboard RPCが401/42501で拒否されることも確認。
 - Vercel UsageのFast Data Transferは確認時点で6.51MB/100GB。課金機能の追加・プラン変更は行っていない。
 
-メンバー・閲覧者の本番ログイン確認と性能の記録は継続する。過去の画面デモ公開の検証結果は、その時点の記録として上に残す。
+メンバー・閲覧者の本番ログインと画面権限は下記の通り確認。実認証での禁止API・他workspace拒否・Cookie属性と性能の記録は継続する。過去の画面デモ公開の検証結果は、その時点の記録として上に残す。
+
+### メンバー・閲覧者のProduction確認（2026-11-02）
+
+所有者がそれぞれのパスワードを公開サイトで入力し、ログイン状況とメンバー一覧で本人とロールを照合した。パスワード・Cookie/JWTの値は取得していない。
+
+| 確認対象 | メンバー（デモメンバー02） | 閲覧者（デモメンバー03） |
+|---|---|---|
+| プロジェクト一覧 | 閲覧専用、作成/編集操作なし | 閲覧専用、作成/編集操作なし |
+| カンバン | 架空タスクを進行中からレビューへ移動し、保存成功 | 同じタスクをレビュー列で閲覧。追加/編集/状態変更操作なし |
+| 課題一覧 | 架空課題の担当を未割当から自分へ更新し、一覧に反映 | 更新後の担当と解決済み状態を閲覧。追加/編集操作なし |
+| メンバー一覧 | 自分のメンバーロールを確認、読み取り専用 | 自分の閲覧者ロールを確認、読み取り専用 |
+| 操作履歴 | タスク/課題の更新が本人名義で記録 | メンバーによる更新を閲覧 |
+| ダッシュボード | 進行中1件、全1タスク、自分のタスクがレビューで表示 | 同じ集計を表示、自分の未完了タスクはなし |
+
+メンバー・閲覧者は確認後にログアウト済み。これらはUIの権限制御と許可された保存・読み取りの確認であり、禁止された変更APIへ実認証リクエストを送った検証ではない。Issue #19は、他workspace拒否・Cookie属性・公開先性能などの残作業を含むため完了扱いにしない。
