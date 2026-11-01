@@ -14,7 +14,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "playwright test",
     "test:auth": "playwright test --config playwright.auth.config.ts",
-    "test:db": "node --test tests/database/*.test.mjs",
+    "test:db": "node --test --test-concurrency=1 tests/database/*.test.mjs",
     "db:start": "node scripts/start-local.mjs",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset --local",

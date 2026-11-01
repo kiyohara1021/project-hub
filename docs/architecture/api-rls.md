@@ -2,7 +2,7 @@
 
 ## 実装状況
 
-P2-1で認証・7テーブルのRLS、P2-2でプロジェクト一覧/単一GET・POST・PATCHと再送対応を実装。現在の契約・対象外は[P2-2仕様](../specs/003-connected-projects.md)と[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTPの変更は32KiBのJSONのみ、POSTはname/description/due_date、PATCHはname/description/status/due_date/versionの全項目を必須とし、不明なキーを拒否する。
+P2で認証・プロジェクト管理、P3-1でタスクCRUD・移動・再送対応を実装。現在の契約・対象外は[カンバン仕様](../specs/004-connected-kanban.md)と[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク編集/削除/移動はadmin/memberに許可、アーカイブ内では拒否する。
 
 ## API契約
 

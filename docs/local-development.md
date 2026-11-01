@@ -10,7 +10,7 @@ pnpm db:env
 pnpm dev
 ```
 
-http://127.0.0.1:3000/projects を開くと未認証の場合はログインへ移動する。ログイン後はプロジェクト一覧へ進む。管理者は作成・編集・アーカイブ・復元、メンバー/閲覧者は閲覧のみ。その他の業務画面は固定プレビュー。
+http://127.0.0.1:3000/projects を開くと未認証の場合はログインへ移動する。ログイン後はプロジェクト一覧へ進み、名前を選ぶとカンバンへ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。その他の業務画面は固定プレビュー。
 
 ## 架空のログイン情報
 
@@ -50,10 +50,20 @@ DBテストは所属解除や同時降格まで実行し、検証用workspaceを
 
 ## 今回のDB契約
 
-実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project。HTTPの作成はcreate_project_onceを使い、更新はedit_projectを使う。タスク・課題の変更、所属追加、プロフィール変更は後続段階。
+実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task。課題の変更、所属追加、プロフィール変更は後続段階。
 
 一覧APIはq（名前部分一致）/status/limit(1〜100)/cursorを受け付け、created_at DESC,id DESCでページングする。cursorはAPIが返す不透明な文字列をそのまま渡す。未対応/重複パラメーターは400。APIはservice_roleを使わず、cookieのJWTを検証してRLS付きで読み取る。
 
 POST `/api/v1/workspaces/:wid/projects` はIdempotency-Key必須。24時間は同じ本文・キーで再試行しても同じ作成結果を返す。本文を変えた再送は409。PATCH `.../projects/:pid` はversion必須で、古いversionは409。画面は失敗時の入力を保持し、競合時は「入力を破棄して最新版を読み直す」を明示的に選択できる。期限切れの再送記録は同じworkspace/actorが次に作成した時に削除するため、厳密な24時間後の物理削除ではない。
 
 参考（2026-11-01確認）: [Supabase SSR](https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs&queryGroups=framework)、[ローカル開発](https://supabase.com/docs/guides/local-development/cli/getting-started)。
+
+## カンバン操作
+
+プロジェクト一覧から名前を選び、列ごとに25件ずつ表示する。「さらに読み込む」で続きへ進む。担当者/優先度を選択して絞り込み、リセットで解除する。スマートフォンは表示状態を選んで1列ずつ操作する。
+
+管理者/メンバーはタスクを追加し、編集から担当・優先度・期限を変更できる。削除には確認が必要。PCではカードを別列の余白へドラッグすると列末尾へ、カード上へ落とすとその前へ移動する。状態メニューと「上へ」ボタンはキーボード/モバイル向けの代替操作。
+
+移動後は列を再取得するため、追加読込済みでも最初の25件に戻る。他ユーザーの並び替えがあった場合も、再読み込みで整合させる。作成の再送時にも権限とアーカイブ状態を検査する。DBテストは共通の架空データを変更するためファイルを直列実行し、所属解除テスト後は初期メンバーを復元する。
+
+supabase/config.tomlはローカル専用で、反復テスト用のログイン枠を設定している。本番の認証設定はこのファイルをそのまま使わず別途検討する。
