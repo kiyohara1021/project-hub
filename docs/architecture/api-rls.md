@@ -84,3 +84,7 @@ private.is_member/has_roleはsecurity definer、search_path=''、完全修飾参
 ## 操作履歴（P4-3）
 
 GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-activity.md)に従う。既存RLSを通常JWTで適用し、変更APIは提供しない。履歴のchangesは許可済みのstatus/role/versionだけを再抽出して返す。actor表示は保存済みスナップショットを使い、現在のprofileや対象との内部結合による記録の欠落を避ける。削除済み対象/退会済み操作者もproject/actorで検索できる。
+
+## 公開設定（P5-1）
+
+[公開準備仕様](../specs/009-release-readiness.md)と[運用手順](../deployment.md)を参照。PreviewはDB未接続、Productionのconnectedは正規HTTPSオリジンと公開用Supabaseキーを明示する。Server/Proxyで同一のCookie設定を使い、HTTPSではSecureを付与。全画面にnoindex/nofollow・nosniff・frame DENY等のヘッダーを追加。既存APIの認可/RLS・ER/テーブル定義の変更はない。

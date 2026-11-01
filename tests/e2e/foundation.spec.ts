@@ -44,3 +44,8 @@ test("モバイルの状態選択とキーボードメニュー", async ({ page,
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(trigger).toBeFocused();
 });
+
+test("公開用ヘッダーと画面デモの認証分離",async({page,request})=>{
+ const response=await page.goto('/login');expect(response?.headers()['x-robots-tag']).toBe('noindex, nofollow');expect(response?.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');await expect(page.getByText('接続設定がありません',{exact:true})).toBeVisible();await expect(page.getByLabel('メールアドレス')).toHaveCount(0);
+ const api=await request.get('/api/v1/workspaces/11111111-1111-4111-8111-111111111111/projects');expect(api.status()).toBe(503);expect(api.headers()['cache-control']).toContain('no-store');
+});

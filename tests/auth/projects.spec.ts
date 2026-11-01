@@ -102,7 +102,7 @@ test("API入力・再送・権限・競合とダイアログの復旧", async ({
 test("閲覧者は変更できず、無所属と別workspaceを分離", async ({ page }) => {
   await login(page, "viewer");
   await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto(`/projects?workspace=${workspace}`);
+  await page.goto(`/projects?workspace=${workspace}&q=${encodeURIComponent("架空プロジェクトA")}`);
   await expect(page.getByRole("heading", { name: "架空プロジェクトA", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "プロジェクト作成" })).not.toBeVisible();
   await expect(page.getByRole("button", { name: "編集", exact: true })).not.toBeVisible();

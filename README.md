@@ -4,7 +4,7 @@
 
 ## 現在の状態
 
-2026-11-01 P4-3版。接続モードのダッシュボード・プロジェクト一覧・カンバン・課題一覧・メンバー一覧・操作履歴はDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理ができます。管理者はメンバーのロール変更・所属解除も行えます。操作履歴は読み取り専用で、条件絞り込みとページ送りに対応しています。クラウド接続・デプロイは未実施です。
+2026-11-01 P5-1公開準備版。接続モードのダッシュボード・プロジェクト一覧・カンバン・課題一覧・メンバー一覧・操作履歴はDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理ができます。管理者はメンバーのロール変更・所属解除も行えます。操作履歴は読み取り専用で、条件絞り込みとページ送りに対応しています。クラウド接続・デプロイは未実施です。
 
 想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel Hobby（個人非商用）。バージョンは実装開始時に互換性を確認して固定します。
 
@@ -15,6 +15,7 @@
 - [API・RLS設計](docs/architecture/api-rls.md)
 - [6画面の仕様・SVG](docs/design/screens.md)
 - [ロードマップ](docs/roadmap.md)
+- [Vercel公開・運用手順](docs/deployment.md)
 - [開発ルール](CONTRIBUTING.md)
 
 ## 起動・確認
@@ -40,8 +41,10 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[操作履歴](docs/specs/008-connected-activity.md)、タスクは[Issue #15](https://github.com/kiyohara1021/project-hub/issues/15)。P4の6画面DB接続まで完了し、次はP5の公開準備です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
+仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[公開準備](docs/specs/009-release-readiness.md)、タスクは[Issue #17](https://github.com/kiyohara1021/project-hub/issues/17)。P4の6画面DB接続が完了し、P5-1で設定検査・操作検証・公開手順を整備。実際のクラウド公開はP5-2で実施します。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
 
 P4-2: [メンバー管理仕様](docs/specs/007-connected-members.md)に沿って一覧・ロール変更・所属解除をDB接続。招待・メール送信は対象外です。
 
 P4-3: [操作履歴仕様](docs/specs/008-connected-activity.md)。読み取り専用の監査ログを日本時間で表示し、削除・所属解除後も操作当時の記録を保持します。
+
+Vercel Previewは`APP_MODE=preview`でDB接続なし、本番接続は専用Supabaseを別途設定します。`pnpm test:release`で環境検査のテストを実行できます。実際のデプロイ状態は[公開記録](docs/deployment.md#公開記録p5-2で記入)を参照してください。

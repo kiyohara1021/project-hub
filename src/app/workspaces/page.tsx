@@ -6,9 +6,9 @@ import { PageHeading, EmptyState } from "@/components/page-parts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export const metadata = { title: "DB接続確認" };
+export const metadata = { title: "ログイン状況" };
 export default async function Workspaces() {
-  if (!supabaseConfig()) return <EmptyState title="DB接続は無効です" description="ローカル環境で接続設定を行ってください。プレビューは引き続き利用できます。" />;
+  if (!supabaseConfig()) return <EmptyState title="DB接続は無効です" description="画面デモではログインやデータ保存は利用できません。" />;
   const client = await supabaseServer();
   const { data, error } = await client.auth.getClaims();
   if (error || !data?.claims.sub) redirect("/login");
@@ -16,7 +16,7 @@ export default async function Workspaces() {
   const workspaceResult = await client.from("workspaces").select("id,name").order("created_at");
   const projectResult = await client.from("projects").select("id,workspace_id,name,status").order("created_at");
   if (workspaceResult.error || projectResult.error || profileResult.error) throw new Error("Database read failed");
-  return <><PageHeading title="DB接続確認" description="この画面だけは認証済みユーザーの所属に応じたDBデータを表示します。" />
+  return <><PageHeading title="ログイン状況" description="ログイン中のユーザーと所属先を確認できます。" />
     <p className="mb-4 text-sm">ログイン中: {profileResult.data.display_name}</p>
     <Link href="/projects" className="mb-5 inline-block text-sm text-blue-700 underline">プロジェクト一覧へ →</Link>
     <form action="/auth/logout" method="post" className="mb-6"><Button variant="outline">ログアウト</Button></form>
