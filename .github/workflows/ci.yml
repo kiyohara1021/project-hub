@@ -31,3 +31,29 @@ jobs:
           name: playwright-results
           path: test-results/
           retention-days: 3
+  database-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:start
+      - run: pnpm db:seed
+      - run: pnpm test:db
+      - run: pnpm db:env
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:auth
+      - run: pnpm db:stop
+        if: always()
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: auth-test-results
+          path: test-results/
+          retention-days: 3
