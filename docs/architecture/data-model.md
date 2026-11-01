@@ -47,3 +47,5 @@ tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し
 課題のページ送り用にissues(workspace_id,project_id,created_at DESC,id DESC)の索引を追加。課題削除後もactivity_logsと再送結果は保持し、同じキーの再送で課題を復活させない。
 
 P4-2: membershipsにversion（integer、初期1）を追加。更新トリガーが既存RPCを含む全UPDATEで増加し、`change_member` RPCが期待versionを検査する。新規エンティティ・リレーションの変更はなし。
+
+P4-3: 操作履歴一覧は既存activity_logsとactivity_list_idx(workspace_id,created_at DESC,id DESC)を使用。ER・列の追加なし。actor_id/project_id/entity_idは履歴の識別用に保持し、現在の行との存在確認・結合を必須にしない。表示名はactor_display_nameスナップショットを参照。

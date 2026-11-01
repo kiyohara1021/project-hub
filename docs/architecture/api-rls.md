@@ -2,7 +2,7 @@
 
 ## 実装状況
 
-P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応、P4-2でメンバー一覧・ロール変更・所属解除を実装。現在の契約・対象外は[メンバー仕様](../specs/007-connected-members.md)、[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
+P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応、P4-2でメンバー一覧・ロール変更・所属解除、P4-3で操作履歴一覧を実装。現在の契約・対象外は[履歴仕様](../specs/008-connected-activity.md)、[メンバー仕様](../specs/007-connected-members.md)、[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
 
 課題GETはq/status/priority/assignee/limit/cursorで絞り込み、statusの既定unresolvedはopen/investigatingに対応する。作成はopen、編集でresolved/closedを含む状態を変更できる。所属・親プロジェクト・アーカイブのガードはタスクと共通で、ダッシュボードの課題数は同じissuesテーブルを集計する。
 
@@ -30,7 +30,7 @@ Next.js Route Handlersの `/api/v1`。セッションcookieを検証しユーザ
 | POST /members | 登録済みデモuser_id,role | admin |
 | PATCH /members/:uid | role変更 | admin |
 | DELETE /members/:uid | 担当解除と所属削除 | admin |
-| GET /activity | project/action/actor/cursor/limit | 所属者 |
+| GET /activity | project/action/entity/actor/cursor/limit、読取専用 | 所属者 |
 
 ログイン・ログアウト・callbackはSupabase Authの別ルート。招待メールと一般登録は初期対象外。ローカルで架空ユーザーを事前作成する。
 
@@ -80,3 +80,7 @@ private.is_member/has_roleはsecurity definer、search_path=''、完全修飾参
 ## メンバー管理（P4-2）
 
 [仕様](../specs/007-connected-members.md)。GET `/workspaces/:wid/members`（role/cursor/limit）、GET/PATCH/DELETE `/workspaces/:wid/members/:uid`（全て`/api/v1`配下）。PATCH `{role,version}`、DELETE `{version}`、成功204。全所属者が閲覧、adminだけ変更。Origin/JSON32KiB/キー/UUID/versionを検証。`change_member` RPCがworkspaceをロックして競合409・最後のadmin409を拒否。担当解除・監査は原子的に保存。招待・全プロフィール検索・メール送信はなし。
+
+## 操作履歴（P4-3）
+
+GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-activity.md)に従う。既存RLSを通常JWTで適用し、変更APIは提供しない。履歴のchangesは許可済みのstatus/role/versionだけを再抽出して返す。actor表示は保存済みスナップショットを使い、現在のprofileや対象との内部結合による記録の欠落を避ける。削除済み対象/退会済み操作者もproject/actorで検索できる。
