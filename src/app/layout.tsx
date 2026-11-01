@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { default: "ProjectHub", template: "%s | ProjectHub" },
-  description: "架空データだけを使う個人非商用のプロジェクト管理デモ",
+  description: "プロジェクト・タスク・課題をまとめて管理するアプリ",
   robots: { index: false, follow: false },
 };
 

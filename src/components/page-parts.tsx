@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function PageHeading({ title, description }: { title: string; description: string }) {
-  return <div className="mb-8"><p className="mb-2 text-xs font-semibold tracking-wider text-blue-700">DEMO WORKSPACE</p><h1 className="text-2xl font-bold tracking-tight md:text-3xl">{title}</h1><p className="mt-3 text-sm leading-6 text-slate-500">{description}</p></div>;
+  return <div className="mb-8"><p className="mb-2 text-xs font-semibold tracking-wider text-blue-700">PROJECT HUB</p><h1 className="text-2xl font-bold tracking-tight md:text-3xl">{title}</h1><p className="mt-3 text-sm leading-6 text-slate-500">{description}</p></div>;
 }
 
 export function EmptyState({ title = "該当するデータがありません", description = "検索条件を変えてお試しください。" }: { title?: string; description?: string }) {

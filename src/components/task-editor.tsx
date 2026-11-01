@@ -59,7 +59,7 @@ export function TaskEditor({ base, task, members, disabled, onBusy, onSaved }: {
   return <Dialog open={open} onOpenChange={value => { if (!sending.current) setOpen(value); }}>
     <DialogTrigger asChild><Button variant={task ? "outline" : "default"} disabled={disabled}>{task ? "編集" : "タスク追加"}</Button></DialogTrigger>
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-      <DialogHeader><DialogTitle>{task ? "タスク編集" : "タスク追加"}</DialogTitle><DialogDescription>架空の内容だけを入力してください。状態変更はカードの状態メニューから行えます。</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{task ? "タスク編集" : "タスク追加"}</DialogTitle><DialogDescription>タスク名・担当者・期限を設定します。状態変更はカードの状態メニューから行えます。</DialogDescription></DialogHeader>
       <form onSubmit={submit} className="space-y-4">
         {error && <div role="alert" className="space-y-2 rounded-md bg-red-50 p-3 text-sm text-red-800"><p>{error}</p>{conflict && <Button type="button" variant="outline" onClick={reload} disabled={busy}>入力を破棄して最新版を読み直す</Button>}</div>}
         <div><label htmlFor={`${fieldId}-title`} className="mb-2 block text-sm font-medium">タスク名</label><Input id={`${fieldId}-title`} value={title} onChange={e => setTitle(e.target.value)} maxLength={120} required disabled={busy} autoFocus /></div>

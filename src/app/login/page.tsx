@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const metadata = { title: "ログイン" };
 export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  return <><PageHeading title="ログイン" description="事前登録したデモユーザーでログインしてください。" />
+  return <><PageHeading title="ログイン" description="登録済みのアカウントでログインしてください。" />
     {!supabaseConfig() ? <EmptyState title="接続設定がありません" description="この環境ではログインを利用できません。画面デモをご覧ください。" /> :
       <Card className="max-w-md"><CardContent className="pt-6"><form action="/auth/login" method="post" className="space-y-5">
         {error && <p role="alert" className="text-sm text-red-700">ログインできませんでした。入力内容と接続状況をご確認ください。</p>}

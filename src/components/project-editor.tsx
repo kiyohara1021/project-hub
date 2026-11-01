@@ -64,7 +64,7 @@ export function ProjectEditor({ workspaceId, project }: { workspaceId: string; p
   return <Dialog open={open} onOpenChange={value => { if (!sending.current) setOpen(value); }}>
     <DialogTrigger asChild><Button variant={project ? "outline" : "default"}>{project ? "編集" : "プロジェクト作成"}</Button></DialogTrigger>
     <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
-      <DialogHeader><DialogTitle>{project ? "プロジェクト編集" : "プロジェクト作成"}</DialogTitle><DialogDescription>架空の名前と情報だけを入力してください。{project && "アーカイブは削除の代わりに使い、状態を変更すると復元できます。"}</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>{project ? "プロジェクト編集" : "プロジェクト作成"}</DialogTitle><DialogDescription>プロジェクト名・説明・期限を設定します。{project && "アーカイブは削除の代わりに使い、状態を変更すると復元できます。"}</DialogDescription></DialogHeader>
       <form onSubmit={save} className="space-y-4">
         {error && <div role="alert" className="space-y-3 rounded-md bg-red-50 p-3 text-sm text-red-800"><p>{error}</p>{conflict && <Button type="button" variant="outline" disabled={busy} onClick={reload}>入力を破棄して最新版を読み直す</Button>}</div>}
         <div><label htmlFor={`${fieldId}-name`} className="mb-2 block text-sm font-medium">プロジェクト名</label><Input id={`${fieldId}-name`} value={name} onChange={e => setName(e.target.value)} maxLength={120} required disabled={busy} autoFocus /></div>
