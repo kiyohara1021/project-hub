@@ -1,6 +1,6 @@
 # Vercel Hobby 公開・運用手順
 
-2026-11-01確認。対象は個人非商用・架空データのみのProjectHub。画面デモはVercelへ公開済み。正規URLは https://project-hub-zeta-nine.vercel.app 。APP_MODE=previewの固定画面で、ログイン・DB保存は無効。Supabaseの専用プロジェクト作成と本番接続は未完了。
+2026-11-01確認。対象は個人非商用・架空データのみのProjectHub。正規URLは https://project-hub-zeta-nine.vercel.app 。2026-11-02にProductionをAPP_MODE=connectedへ切り替え、専用Hosted Supabaseへ接続済み。PreviewはDB未接続の画面デモを維持する。公開先の権限・性能確認は以下の公開記録を参照。
 
 ## 構成と環境変数
 
@@ -85,9 +85,9 @@ commit;
 | 項目 | 状態 |
 |---|---|
 | Vercelアカウント/Project | ProjectHub Personal（Hobby）/ project-hub 作成済み |
-| Supabaseプロジェクト/6件反映 | ログイン済み。project-hub/Tokyoの作成フォームを準備、DBパスワードの本人入力・プロジェクト作成待ち。反映未実施 |
+| Supabaseプロジェクト/6件反映 | project-hub / Tokyo（ap-northeast-1）、6件反映済み。7テーブルのRLS・匿名読取不可・直接書込不可を確認 |
 | 正規URL/初回公開確認SHA | https://project-hub-zeta-nine.vercel.app / cba33556e76fc4428815ecf1cc5c52c168b7bea8 |
-| 本番Auth・RLS・Origin・Cookie検証 | 未実施 |
+| 本番Auth・RLS・Origin・Cookie検証 | 一般登録・匿名ログイン無効、Site URL設定済み。匿名の6 APIは401、変更APIの異なるOriginは403。管理者のログイン・保存・更新・ログアウト成功。ロール別の追加確認を継続 |
 | 公開先モバイル/キーボード・性能/Usage | 画面デモ6画面のPC/360px表示・横溢れなし・モバイルメニューEnter/Escapeとフォーカス復帰を確認。性能/Usageの詳細確認は未実施 |
 
 公式資料（確認日: 2026-11-01）: [Hobbyの個人非商用条件](https://vercel.com/docs/plans/hobby)、[Node.js対応バージョン](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)、[Vercelプロジェクト設定](https://vercel.com/docs/project-configuration)、[環境変数のスコープ](https://vercel.com/docs/environment-variables)、[Supabase環境管理](https://supabase.com/docs/guides/deployment/managing-environments)。公開直前にも条件を確認する。
@@ -103,3 +103,17 @@ commit;
 - ソース/ログの匿名取得可否は、ダッシュボードURLへのHTTP 200だけで判断しない。Vercel管理画面の保護設定確認は継続する。
 
 残作業はIssue #19。専用DB作成、マイグレーション・Auth・初期所属設定、Productionだけconnectedへ変更、実ユーザーJWTでのRLS/Origin/Cookie検証と公開先性能/Usage記録を行う。ローカル用の共通パスワードやseedは転用しない。
+
+### ログイン付きProduction接続（2026-11-02）
+
+- Production Deployment `FiF56xztdxNYnbGaFTdAQBxPY9JU`がReady。アプリSHAは`bb8b796876bb085592359f8ec8049a64151c7e6c`。正規URLへ割当済み。
+- ProductionだけAPP_MODE=connected、APP_ORIGINとHosted Supabase URL/公開用publishableキーを設定。管理鍵・DBパスワードはVercelへ渡していない。PreviewはAPP_MODE=previewだけ。
+- 空の専用DBを照合してから、SQL Editorで既存6マイグレーションを単一トランザクションとして適用。成功後にsupabase_migrations.schema_migrationsへ6バージョンを記録。既存マイグレーション本文は改変していない。ローカルseed/共通パスワードは未使用。
+- DBパスワードと3人のAuthユーザーのパスワードは所有者本人が画面で設定。架空アドレスのadmin/member/viewerをAuto confirmで作成し、初期workspaceの各ロールへ所属設定した。外部メール招待は行っていない。
+- 管理者の実ログインで架空プロジェクト作成・進行中への更新、担当/優先度付きタスク作成と状態移動、課題作成と解決、監査ログ反映、ログアウトを確認。
+- 匿名HTTPの6画面は/loginへ誘導する。App RouterはリダイレクトをHTTP200のHTML内meta refreshで返す場合があるため、ステータスだけを判定基準にしない。6 APIの未認証401/no-storeと異なるOriginの403も確認済み。
+- VercelのStandard Protection（Require Log In）とProtected Sourcemapsは有効な既存設定を確認。保護を無効化したり、迂回トークンを作成していない。
+- Supabase Data APIへ公開キーで匿名アクセスし、7テーブルとread_dashboard RPCが401/42501で拒否されることも確認。
+- Vercel UsageのFast Data Transferは確認時点で6.51MB/100GB。課金機能の追加・プラン変更は行っていない。
+
+メンバー・閲覧者の本番ログイン確認と性能の記録は継続する。過去の画面デモ公開の検証結果は、その時点の記録として上に残す。
