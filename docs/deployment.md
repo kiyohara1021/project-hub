@@ -1,6 +1,6 @@
 # Vercel Hobby 公開・運用手順
 
-2026-11-01確認。対象は個人非商用・架空データのみのProjectHub。現時点ではローカル検証のみで、Vercel/Supabaseのクラウドプロジェクトと公開URLは未作成。P5-1の完了は公開完了を意味しない。
+2026-11-01確認。対象は個人非商用・架空データのみのProjectHub。画面デモはVercelへ公開済み。正規URLは https://project-hub-zeta-nine.vercel.app 。APP_MODE=previewの固定画面で、ログイン・DB保存は無効。Supabaseの専用プロジェクト作成と本番接続は未完了。
 
 ## 構成と環境変数
 
@@ -84,10 +84,22 @@ commit;
 
 | 項目 | 状態 |
 |---|---|
-| Vercelアカウント/Project | 未接続・未作成 |
-| Supabaseプロジェクト/6件反映 | 未接続・未実施 |
-| 正規URL/公開コミットSHA | 未設定 |
+| Vercelアカウント/Project | ProjectHub Personal（Hobby）/ project-hub 作成済み |
+| Supabaseプロジェクト/6件反映 | ログイン済み。project-hub/Tokyoの作成フォームを準備、DBパスワードの本人入力・プロジェクト作成待ち。反映未実施 |
+| 正規URL/初回公開確認SHA | https://project-hub-zeta-nine.vercel.app / cba33556e76fc4428815ecf1cc5c52c168b7bea8 |
 | 本番Auth・RLS・Origin・Cookie検証 | 未実施 |
-| 公開先モバイル/キーボード・性能/Usage | 未実施 |
+| 公開先モバイル/キーボード・性能/Usage | 画面デモ6画面のPC/360px表示・横溢れなし・モバイルメニューEnter/Escapeとフォーカス復帰を確認。性能/Usageの詳細確認は未実施 |
 
 公式資料（確認日: 2026-11-01）: [Hobbyの個人非商用条件](https://vercel.com/docs/plans/hobby)、[Node.js対応バージョン](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)、[Vercelプロジェクト設定](https://vercel.com/docs/project-configuration)、[環境変数のスコープ](https://vercel.com/docs/environment-variables)、[Supabase環境管理](https://supabase.com/docs/guides/deployment/managing-environments)。公開直前にも条件を確認する。
+
+### 初回画面デモ公開の検証
+
+2026-11-01、Production Deployment `A9jo26fjHaLFgRBsQXv1fv7t1gUn`がReady。mainのアプリコードを公開し、DB接続変数は設定していない。画面デモの公開はログイン付き本番の完了条件とは別に扱う。
+
+- 匿名HTTPで6画面と/loginが200。nosniff、frame DENY、noindex/nofollowを確認。
+- /loginに認証フォームなし。プロジェクトGET APIは503かつno-store。
+- 公開ブラウザで6画面遷移と360pxの横溢れなしを確認。メニューのキーボード操作も確認。
+- 初回は非対応のvercel.json publicキーで失敗し、PR #21で削除後に成功。公式JSONスキーマでキーと型も照合。
+- ソース/ログの匿名取得可否は、ダッシュボードURLへのHTTP 200だけで判断しない。Vercel管理画面の保護設定確認は継続する。
+
+残作業はIssue #19。専用DB作成、マイグレーション・Auth・初期所属設定、Productionだけconnectedへ変更、実ユーザーJWTでのRLS/Origin/Cookie検証と公開先性能/Usage記録を行う。ローカル用の共通パスワードやseedは転用しない。
