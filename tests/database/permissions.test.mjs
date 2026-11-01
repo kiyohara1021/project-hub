@@ -86,4 +86,8 @@ test("実JWTでワークスペース分離、RPC、制約、履歴を確認", as
   checked(await admin.from("memberships").delete().eq("workspace_id", wid));
   checked(await admin.from("activity_logs").delete().eq("workspace_id", wid));
   checked(await admin.from("workspaces").delete().eq("id", wid));
+  // 後続の画面テストで利用する初期所属を復元する。
+  checked(await admin.from("memberships").insert({ workspace_id: workspaceA, user_id: accounts.member.user.id, role: "member" }));
+  checked(await admin.from("tasks").update({ assignee_id: accounts.member.user.id }).eq("id", "55555555-5555-4555-8555-555555555555"));
+  checked(await admin.from("issues").update({ assignee_id: accounts.member.user.id }).eq("id", "66666666-6666-4666-8666-666666666666"));
 });

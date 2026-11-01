@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { LayoutDashboard, FolderKanban, Columns3, CircleAlert, Users, History, PanelsTopLeft } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,13 @@ const links = [
   { href: "/activity", label: "操作履歴", icon: History },
 ];
 
-function Navigation({ mobile = false }: { mobile?: boolean }) {
+function Navigation({ mobile = false, connected = false }: { mobile?: boolean; connected?: boolean }) {
   const path = usePathname();
+  const query = useSearchParams();
   return <nav aria-label="メインメニュー" className="space-y-2">{links.map(({ href, label, icon: Icon }) => {
-    const link = <Link href={href} aria-current={path === href ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${path === href ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-700 hover:text-white"}`}><Icon size={18} aria-hidden="true" />{label}</Link>;
+    const target = connected && label === "カンバン" ? (path.endsWith("/board") ? `${path}?${query}` : "/projects") : href;
+    const active = connected && label === "カンバン" ? path.endsWith("/board") : path === href;
+    const link = <Link href={target} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-700 hover:text-white"}`}><Icon size={18} aria-hidden="true" />{label}</Link>;
     return mobile ? <SheetClose key={href} asChild>{link}</SheetClose> : <div key={href}>{link}</div>;
   })}</nav>;
 }
@@ -30,20 +33,20 @@ export function AppShell({ children, connected = false }: { children: React.Reac
       <Link href="/dashboard" className="px-3 text-2xl font-bold tracking-tight text-white">ProjectHub</Link>
       <p className="px-3 pt-2 text-[10px] tracking-[.18em] text-slate-400">PERSONAL DEVELOPMENT</p>
       <div className="my-8 rounded-lg bg-slate-700/60 px-4 py-4 text-sm text-white">デモスペース<span className="mt-1 block text-xs text-slate-300">ローカルプレビュー</span></div>
-      <Navigation />
+      <Navigation connected={connected} />
       <p className="mt-auto px-4 pt-10 text-xs leading-6 text-slate-300">個人・非商用デモ<br />架空データのみ</p>
     </aside>
     <div className="md:pl-60">
       <header className="flex min-h-20 items-center justify-between gap-3 border-b bg-white px-4 md:px-10">
         <div className="flex items-center gap-3">
           <Sheet><SheetTrigger asChild><Button variant="outline" size="icon" className="md:hidden" aria-label="メニューを開く"><PanelsTopLeft size={20} /></Button></SheetTrigger>
-            <SheetContent side="left" className="w-72 bg-[#14233e] p-6 text-white"><SheetTitle className="text-xl text-white">ProjectHub</SheetTitle><SheetDescription className="mb-4 text-slate-300">デモスペースのメニュー</SheetDescription><Navigation mobile /></SheetContent>
+            <SheetContent side="left" className="w-72 bg-[#14233e] p-6 text-white"><SheetTitle className="text-xl text-white">ProjectHub</SheetTitle><SheetDescription className="mb-4 text-slate-300">デモスペースのメニュー</SheetDescription><Navigation mobile connected={connected} /></SheetContent>
           </Sheet>
           <span className="text-sm text-slate-500">ワークスペース / デモスペース</span>
         </div>
         <span className="hidden text-sm font-medium sm:inline">表示例: デモメンバー01</span>
       </header>
-      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "プロジェクト一覧はDB接続済みです。その他の業務画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
+      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "プロジェクト一覧・カンバンはDB接続済みです。その他の業務画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
       <main id="main" tabIndex={-1} className="mx-auto min-h-[80vh] max-w-7xl px-4 py-8 outline-none md:px-10">{children}</main>
       <footer className="px-4 py-8 text-xs text-slate-500 md:px-10">ProjectHub · 個人非商用 / 設計プレビュー v0.1</footer>
     </div>

@@ -4,7 +4,7 @@
 
 ## 現在の状態
 
-2026-11-01 P2-2版。接続モードのプロジェクト一覧はDBデータを表示し、管理者は作成・編集・アーカイブ・復元できます。その他の業務画面は固定の架空プレビューです。クラウド接続・デプロイは未実施です。
+2026-11-01 P3-1版。接続モードのプロジェクト一覧とカンバンはDBデータを表示します。管理者はプロジェクト管理、管理者/メンバーはタスクの作成・編集・削除・状態変更・並び替えができます。その他の業務画面は固定の架空プレビューです。クラウド接続・デプロイは未実施です。
 
 想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel Hobby（個人非商用）。バージョンは実装開始時に互換性を確認して固定します。
 
@@ -40,4 +40,4 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。P1と[認証・DB基盤](docs/specs/002-auth-database.md)は完了。現在の仕様は[DB接続プロジェクト一覧](docs/specs/003-connected-projects.md)、タスクは[Issue #5](https://github.com/kiyohara1021/project-hub/issues/5)。次はタスクのCRUDとカンバンのDB接続です。プレビューの集計は固定値です。
+仕様 → Issue → 実装・テスト → PR。P1/P2は完了。現在の仕様は[タスクとカンバン](docs/specs/004-connected-kanban.md)、タスクは[Issue #7](https://github.com/kiyohara1021/project-hub/issues/7)。次はダッシュボードのDB集計です。プレビューの集計は固定値です。

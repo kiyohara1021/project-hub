@@ -33,3 +33,6 @@ minimum_password_length = 12
 [auth.email]
 enable_signup = true
 enable_confirmations = false
+[auth.rate_limit]
+# ローカルのDB/ブラウザテストを繰り返せる枠。本番の設定ではない。
+sign_in_sign_ups = 100
