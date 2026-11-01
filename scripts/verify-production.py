@@ -9,6 +9,7 @@ import getpass
 import http.cookiejar
 import json
 import sys
+import ssl
 import time
 import urllib.error
 import urllib.parse
@@ -35,6 +36,9 @@ def main():
         uuid.UUID(value)
     if args.workspace == args.other_workspace:
         parser.error("The isolated workspace must differ from the accessible workspace")
+    # python.org builds on macOS may lack their optional CA symlink.
+    system_ca = Path("/etc/ssl/cert.pem")
+    context = ssl.create_default_context(cafile=str(system_ca) if not ssl.get_default_verify_paths().cafile and system_ca.exists() else None)
     report = {"origin": args.origin, "checks": []}
     results = report["checks"]
 
@@ -46,9 +50,8 @@ def main():
 
     for role in ("member", "viewer"):
         print("Login destination: " + args.origin + "/auth/login", flush=True)
-        password = getpass.getpass(role + "@example.invalid password (not saved): ")
         jar = http.cookiejar.CookieJar()
-        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar), NoRedirect())
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar), NoRedirect(), urllib.request.HTTPSHandler(context=context))
 
         def request(path, method="GET", data=None, request_origin=args.origin, form=False):
             headers = {"User-Agent": "ProjectHub-release-verifier"}
@@ -68,6 +71,10 @@ def main():
                 payload = response.read()
                 return response.status, response.headers, payload, round((time.monotonic() - start) * 1000)
 
+        # Check TLS/reachability before asking the operator for credentials.
+        status, _, _, _ = request("/login")
+        record(role, "https-preflight", status == 200, status=status)
+        password = getpass.getpass(role + "@example.invalid password (not saved): ")
         try:
             status, headers, _, _ = request("/auth/login", "POST", {"email": role + "@example.invalid", "password": password}, form=True)
             password = None
