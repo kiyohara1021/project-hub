@@ -6,7 +6,7 @@ Vercel Hobbyの個人非商用デモとして公開できる設定と手順を�
 
 ## 受け入れ条件
 
-- vercel.jsonでNext.js、pnpm frozen install、専用build:vercelを設定。package.jsonのNode.js範囲は24系を維持。ログ・ソースの公開設定はfalse。
+- vercel.jsonでNext.js、pnpm frozen install、専用build:vercelを設定。package.jsonのNode.js範囲は24系を維持。ログ・ソースの公開範囲はVercel管理画面で確認する。vercel.jsonにpublicキーは含めない。
 - APP_MODEを明示。previewではDB接続変数を拒否、Vercel Previewでconnectedを拒否。本番でも画面デモだけを公開する場合はpreviewを使用できる。
 - connectedではAPP_ORIGINがHTTPSオリジン、SUPABASE_URLがHosted SupabaseのHTTPSプロジェクトURL、キーがpublishableまたはrole=anon形式であることを検査。既知の管理鍵変数・service_roleキーは拒否し、値をログ出力しない。
 - 検査は設定形式だけを保証する。鍵の実在性・署名・DB到達性・RLS・Auth設定は公開先の別確認が必要。
