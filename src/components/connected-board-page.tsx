@@ -45,7 +45,7 @@ export async function ConnectedBoardPage({ id, search }: { id: string; search: R
   const initial = Object.fromEntries(taskStatuses.map((s,i) => [s,pages[i]])) as BoardPages;
   return <>
     <PageHeading title="カンバン" description={`${project.name} · 所属ワークスペースのタスクを表示しています。`} />
-    <Link href={`/projects?workspace=${wid}`} className="mb-6 inline-block text-sm text-blue-700 underline">← プロジェクト一覧へ</Link>
+    <div className="mb-6 flex flex-wrap gap-5 text-sm text-blue-700"><Link href={`/projects?workspace=${wid}`} className="underline">← プロジェクト一覧へ</Link><Link href={`/projects/${id}/issues?workspace=${wid}`} className="underline">課題一覧へ →</Link></div>
     {project.status === "archived" && <p role="status" className="mb-5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">アーカイブ済みのため閲覧のみ利用できます。</p>}
     <form key={filters.toString()} action={`/projects/${id}/board`} method="get" className="mb-6 flex flex-wrap items-end gap-4 rounded-xl border bg-white p-4">
       <input type="hidden" name="workspace" value={wid} />

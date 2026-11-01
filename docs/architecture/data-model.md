@@ -17,6 +17,8 @@ erDiagram
  PROFILES ||--o{ PROJECT_REQUESTS : requests
  PROJECTS ||--o{ TASK_REQUESTS : deduplicates
  PROFILES ||--o{ TASK_REQUESTS : requests
+ PROJECTS ||--o{ ISSUE_REQUESTS : deduplicates
+ PROFILES ||--o{ ISSUE_REQUESTS : requests
 ```
 
 | テーブル | 列・制約 |
@@ -30,6 +32,7 @@ erDiagram
 | activity_logs | id PK、workspace_id FK、project_id nullable、actor_id nullable、actor_display_name、entity_type、entity_id、action、changes jsonb、created_at |
 | private.project_requests | workspace_id + actor_id + request_key 複合PK、workspace/profile FK、payload/result jsonb、expires_at。API非公開、直接アクセス不可。作成の同時再送を防ぐ |
 | private.task_requests | workspace_id + project_id + actor_id + request_key 複合PK、project複合FK/profile FK、payload/result jsonb、expires_at。API非公開。タスク作成の同時再送を防ぐ |
+| private.issue_requests | workspace_id + project_id + actor_id + request_key 複合PK、project複合FK/profile FK、payload/result jsonb、expires_at。API非公開。課題作成の同時再送を防ぐ |
 
 tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し、(workspace_id,assignee_id)はmemberships(workspace_id,user_id)を参照する。別スペースへの担当すり替えをDB制約でも拒否。所属解除RPCは担当解除後に所属を削除する。ユーザー削除も同じ順序で行う。workspace削除は初期対象外。
 
@@ -40,3 +43,5 @@ tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し
 サンプルは「デモスペース」「架空プロジェクトA〜C」「デモメンバー01〜05」。データはすべて架空で、previewの数値は固定、connectedの数値はDBから計算する。
 
 接続モードのダッシュボードはread_dashboard RPCでRLS付きの集計を行い、集計テーブルや公開ビューは追加しない。日付はprivate.dashboard_dayでAsia/Tokyoへ変換。previewモードだけが固定値を使用する。
+
+課題のページ送り用にissues(workspace_id,project_id,created_at DESC,id DESC)の索引を追加。課題削除後もactivity_logsと再送結果は保持し、同じキーの再送で課題を復活させない。
