@@ -21,4 +21,4 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/workspaces/:path*", "/login", "/auth/:path*", "/api/v1/:path*"] };
+export const config = { matcher: ["/projects", "/workspaces/:path*", "/login", "/auth/:path*", "/api/v1/:path*"] };

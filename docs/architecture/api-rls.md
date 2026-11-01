@@ -2,7 +2,7 @@
 
 ## 実装状況
 
-P2-1で認証、一覧GET、7テーブルのRLSと一部RPCを実装。現在の契約・対象外は[仕様](../specs/002-auth-database.md)と[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。
+P2-1で認証・7テーブルのRLS、P2-2でプロジェクト一覧/単一GET・POST・PATCHと再送対応を実装。現在の契約・対象外は[P2-2仕様](../specs/003-connected-projects.md)と[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTPの変更は32KiBのJSONのみ、POSTはname/description/due_date、PATCHはname/description/status/due_date/versionの全項目を必須とし、不明なキーを拒否する。
 
 ## API契約
 
