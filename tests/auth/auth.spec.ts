@@ -29,7 +29,7 @@ test("認証、所属データ、API境界、ログアウト", async ({ page, re
   expect((await page.request.get("/api/v1/workspaces/99999999-9999-4999-8999-999999999999/projects")).status()).toBe(404);
   expect((await page.request.get(url + "?limit=0")).status()).toBe(400);
   expect((await page.request.get(url + "?cursor=invalid")).status()).toBe(400);
-  expect((await page.request.get(url + "?status=active")).status()).toBe(400);
+  expect((await page.request.get(url + "?status=invalid")).status()).toBe(400);
   const first = await (await page.request.get(url + "?limit=1")).json();
   expect(first.data).toHaveLength(1);
   expect(first.nextCursor).toBeTruthy();
@@ -62,5 +62,9 @@ for (const alias of ["viewer", "outside", "unassigned"]) {
       await expect(page.getByText("架空プロジェクトB", { exact: true })).not.toBeVisible();
     }
     expect((await page.request.get(`/api/v1/workspaces/${workspaceA}/projects`)).status()).toBe(alias === "viewer" ? 200 : 404);
+    if (alias === "unassigned") {
+      await page.goto("/projects");
+      await expect(page.getByText("所属ワークスペースがありません", { exact: true })).toBeVisible();
+    }
   });
 }

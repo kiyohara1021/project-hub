@@ -13,6 +13,8 @@ erDiagram
  MEMBERSHIPS ||--o{ TASKS : assigned
  MEMBERSHIPS ||--o{ ISSUES : assigned
  WORKSPACES ||--o{ ACTIVITY_LOGS : records
+ WORKSPACES ||--o{ PROJECT_REQUESTS : deduplicates
+ PROFILES ||--o{ PROJECT_REQUESTS : requests
 ```
 
 | テーブル | 列・制約 |
@@ -24,6 +26,7 @@ erDiagram
 | tasks | id PK、workspace_id、project_id、title、description、status、priority、assignee_id nullable、due_date、position bigint、version、created_at、updated_at |
 | issues | id PK、workspace_id、project_id、title、description、status、priority、assignee_id nullable、due_date、version、created_at、updated_at |
 | activity_logs | id PK、workspace_id FK、project_id nullable、actor_id nullable、actor_display_name、entity_type、entity_id、action、changes jsonb、created_at |
+| private.project_requests | workspace_id + actor_id + request_key 複合PK、workspace/profile FK、payload/result jsonb、expires_at。API非公開、直接アクセス不可。作成の同時再送を防ぐ |
 
 tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し、(workspace_id,assignee_id)はmemberships(workspace_id,user_id)を参照する。別スペースへの担当すり替えをDB制約でも拒否。所属解除RPCは担当解除後に所属を削除する。ユーザー削除も同じ順序で行う。workspace削除は初期対象外。
 
