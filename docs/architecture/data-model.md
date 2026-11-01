@@ -1,6 +1,6 @@
 # ER図・データ辞書
 
-設計案。SQLマイグレーションはP2で作成する。IDはuuid、日時はtimestamptz。
+P2-1でSQLマイグレーションを作成。IDはuuid、日時はtimestamptz。操作APIの提供範囲は[認証・DB基盤仕様](../specs/002-auth-database.md)を参照。
 
 ```mermaid
 erDiagram

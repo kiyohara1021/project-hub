@@ -1,5 +1,9 @@
 # API・RLS設計
 
+## 実装状況
+
+P2-1で認証、一覧GET、7テーブルのRLSと一部RPCを実装。現在の契約・対象外は[仕様](../specs/002-auth-database.md)と[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。
+
 ## API契約
 
 Next.js Route Handlersの `/api/v1`。セッションcookieを検証しユーザーJWTでSupabaseに接続する。通常操作でservice_roleを使用しない。

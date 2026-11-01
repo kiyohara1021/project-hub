@@ -4,7 +4,7 @@
 
 ## 現在の状態
 
-2026-11-01 P1基盤版。Next.jsで6画面をプレビューできます。表示は固定の架空データで、認証・DB保存・データ更新・デプロイは未実施です。
+2026-11-01 P2-1版。既存6画面は固定の架空データのプレビューです。別画面 `/workspaces` でローカルSupabaseの認証とDB参照を確認できます。全画面のDB化・更新UI・デプロイは未実施です。
 
 想定構成: Next.js App Router / React / TypeScript、Tailwind CSS / shadcn/ui、Supabase Auth / PostgreSQL、Vercel Hobby（個人非商用）。バージョンは実装開始時に互換性を確認して固定します。
 
@@ -19,7 +19,7 @@
 
 ## 起動・確認
 
-Node.js 24 / pnpm 9.15.0を使用します。環境変数は不要です。
+Node.js 24 / pnpm 9.15.0を使用します。プレビューは環境変数不要です。認証とDB接続は[ローカル開発手順](docs/local-development.md)を参照してください。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -40,4 +40,4 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 
 ## 開発の進め方
 
-仕様 → Issue → 実装・テスト → PR。現在の作業仕様は[基盤構築](docs/specs/001-app-foundation.md)、タスクは[Issue #1](https://github.com/kiyohara1021/project-hub/issues/1)。次はP2の認証・DB・RLS設計の実装です。現在の表示は完成画面のプレビューで、集計は固定値です。
+仕様 → Issue → 実装・テスト → PR。P1の[基盤構築](docs/specs/001-app-foundation.md)は完了。現在の仕様は[認証・DB基盤](docs/specs/002-auth-database.md)、タスクは[Issue #3](https://github.com/kiyohara1021/project-hub/issues/3)。次はプロジェクト一覧のDB接続と作成・更新をUI/APIまでつなぎます。プレビューの集計は固定値です。
