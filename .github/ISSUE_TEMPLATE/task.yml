@@ -1,0 +1,28 @@
+name: 開発タスク
+description: 仕様と完了条件から開発を始める
+body:
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: 誰が何をできるようになるか
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: 関連仕様
+      description: docs内の仕様パス、または小さな変更ならここに仕様を書く
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件と確認方法
+      placeholder: "- [ ] 条件と確認方法"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 対象外・依存タスク
