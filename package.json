@@ -19,7 +19,10 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset --local",
     "db:seed": "node scripts/seed-local.mjs",
-    "db:env": "node scripts/local-env.mjs"
+    "db:env": "node scripts/local-env.mjs",
+    "build:vercel": "node scripts/check-deployment.mjs && next build",
+    "check:deploy": "node scripts/check-deployment.mjs",
+    "test:release": "node --test tests/release/*.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

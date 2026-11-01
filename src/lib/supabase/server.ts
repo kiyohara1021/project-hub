@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { supabaseConfig } from "./config";
+import { supabaseConfig, authCookieOptions } from "./config";
 
 export async function supabaseServer() {
   const config = supabaseConfig();
   if (!config) throw new Error("Supabase connection is not configured");
   const store = await cookies();
   return createServerClient(config.url, config.key, {
+    cookieOptions: authCookieOptions(config.origin),
     cookies: {
       getAll: () => store.getAll(),
       setAll: (values) => {

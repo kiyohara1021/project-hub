@@ -11,3 +11,7 @@ export function supabaseConfig() {
   } catch { return null; }
   return { url, key, origin };
 }
+
+export function authCookieOptions(origin: string) {
+  return { path: "/", sameSite: "lax" as const, secure: new URL(origin).protocol === "https:" };
+}

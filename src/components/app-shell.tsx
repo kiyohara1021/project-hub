@@ -36,7 +36,7 @@ export function AppShell({ children, connected = false }: { children: React.Reac
     <aside className="fixed inset-y-0 left-0 hidden w-60 flex-col bg-[#14233e] px-4 py-8 md:flex">
       <Link href="/dashboard" className="px-3 text-2xl font-bold tracking-tight text-white">ProjectHub</Link>
       <p className="px-3 pt-2 text-[10px] tracking-[.18em] text-slate-400">PERSONAL DEVELOPMENT</p>
-      <div className="my-8 rounded-lg bg-slate-700/60 px-4 py-4 text-sm text-white">デモスペース<span className="mt-1 block text-xs text-slate-300">ローカルプレビュー</span></div>
+      <div className="my-8 rounded-lg bg-slate-700/60 px-4 py-4 text-sm text-white">デモスペース<span className="mt-1 block text-xs text-slate-300">{connected ? "DB接続モード" : "画面デモ"}</span></div>
       <Navigation connected={connected} />
       <p className="mt-auto px-4 pt-10 text-xs leading-6 text-slate-300">個人・非商用デモ<br />架空データのみ</p>
     </aside>
@@ -52,7 +52,7 @@ export function AppShell({ children, connected = false }: { children: React.Reac
       </header>
       <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "6画面すべてDB接続済みです。架空データで操作を確認できます。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
       <main id="main" tabIndex={-1} className="mx-auto min-h-[80vh] max-w-7xl px-4 py-8 outline-none md:px-10">{children}</main>
-      <footer className="px-4 py-8 text-xs text-slate-500 md:px-10">ProjectHub · 個人非商用 / 設計プレビュー v0.1</footer>
+      <footer className="px-4 py-8 text-xs text-slate-500 md:px-10">ProjectHub · 個人非商用 / 架空データのみ</footer>
     </div>
   </>;
 }
