@@ -10,7 +10,7 @@ pnpm db:env
 pnpm dev
 ```
 
-http://127.0.0.1:3000/dashboard を開くと未認証の場合はログインへ移動する。ログイン後はダッシュボードで所属先の集計を確認できる。プロジェクト一覧で名前を選ぶとカンバンへ、課題リンクを選ぶと課題一覧へ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。メンバー・履歴の一覧画面は固定プレビュー。
+http://127.0.0.1:3000/dashboard を開くと未認証の場合はログインへ移動する。ログイン後はダッシュボードで所属先の集計を確認できる。プロジェクト一覧で名前を選ぶとカンバンへ、課題リンクを選ぶと課題一覧へ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。管理者はメンバーのロール変更・所属解除も可能。操作履歴の一覧画面は固定プレビュー。
 
 ## 架空のログイン情報
 
@@ -50,7 +50,7 @@ DBテストは所属解除や同時降格まで実行し、検証用workspaceを
 
 ## 今回のDB契約
 
-実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task / read_dashboard / create_issue_once / edit_issue / delete_issue。所属追加・プロフィール変更、メンバー管理UIは後続段階。
+実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task / read_dashboard / create_issue_once / edit_issue / delete_issue / change_member。所属追加・プロフィール変更は後続段階。
 
 一覧APIはq（名前部分一致）/status/limit(1〜100)/cursorを受け付け、created_at DESC,id DESCでページングする。cursorはAPIが返す不透明な文字列をそのまま渡す。未対応/重複パラメーターは400。APIはservice_roleを使わず、cookieのJWTを検証してRLS付きで読み取る。
 
@@ -81,3 +81,7 @@ supabase/config.tomlはローカル専用で、反復テスト用のログイン
 プロジェクト一覧またはカンバンから課題一覧へ進む。既定は未解決・調査中だけを表示し、「すべて」「解決済み」「終了」も選べる。件名、状態、優先度、担当者を組み合わせて検索でき、25件ずつページを送る。PCは表、スマートフォン/タブレットはカード表示で、「説明を見る」から本文を確認する。
 
 admin/memberは課題追加・編集・削除が可能。状態変更は編集ダイアログで選択し、確認して保存する。解決後は既定の一覧から消えるため、解決済みで検索して再開する。削除も確認が必要。409は入力を保持し、明示操作で最新版を読み直す。作成の再送は24時間、同じ本文とキーなら同じ作成結果を返し、再送時にも現在の権限・アーカイブ状態を検証する。
+
+## メンバー管理
+
+`/members?workspace=11111111-1111-4111-8111-111111111111`で架空メンバーを表示。adminで権限管理、member/viewerで読取専用を確認。最後の管理者の所属解除は拒否される。新規招待・外部メール送信は未対応。DB/E2Eに所属解除の副作用・競合・最後の管理者保護を追加。

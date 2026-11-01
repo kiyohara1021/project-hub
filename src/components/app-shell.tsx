@@ -21,7 +21,7 @@ function Navigation({ mobile = false, connected = false }: { mobile?: boolean; c
   return <nav aria-label="メインメニュー" className="space-y-2">{links.map(({ href, label, icon: Icon }) => {
     const workspace=query.get("workspace");
     const scoped=workspace ? `?${new URLSearchParams({workspace})}` : "";
-    let target=connected && ["ダッシュボード","プロジェクト一覧"].includes(label) ? `${href}${scoped}` : href;
+    let target=connected && ["ダッシュボード","プロジェクト一覧","メンバー"].includes(label) ? `${href}${scoped}` : href;
     if (connected && label === "カンバン") target=path.endsWith("/board") ? `${path}?${query}` : /^\/projects\/[^/]+\/issues$/.test(path) ? `${path.replace(/\/issues$/, "/board")}${scoped}` : `/projects${scoped}`;
     if (connected && label === "課題一覧") target=/^\/projects\/[^/]+\/(board|issues)$/.test(path) ? `${path.replace(/\/(board|issues)$/, "/issues")}${scoped}` : `/projects${scoped}`;
     const active = connected && label === "カンバン" ? path.endsWith("/board") : connected && label === "課題一覧" ? path.endsWith("/issues") : path === href;
@@ -50,7 +50,7 @@ export function AppShell({ children, connected = false }: { children: React.Reac
         </div>
         <span className="hidden text-sm font-medium sm:inline">表示例: デモメンバー01</span>
       </header>
-      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "ダッシュボード・プロジェクト・タスク・課題はDB接続済みです。メンバー・履歴の一覧画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
+      <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">{connected ? "ダッシュボード・プロジェクト・タスク・課題・メンバーはDB接続済みです。操作履歴の一覧画面は固定プレビューです。" : "架空データのプレビューです。認証・データ保存は未接続です。"} <Link href="/workspaces" className="underline">ログイン状況 →</Link></div>
       <main id="main" tabIndex={-1} className="mx-auto min-h-[80vh] max-w-7xl px-4 py-8 outline-none md:px-10">{children}</main>
       <footer className="px-4 py-8 text-xs text-slate-500 md:px-10">ProjectHub · 個人非商用 / 設計プレビュー v0.1</footer>
     </div>

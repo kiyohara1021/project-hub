@@ -2,7 +2,7 @@
 
 ## 実装状況
 
-P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応を実装。現在の契約・対象外は[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
+P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応、P4-2でメンバー一覧・ロール変更・所属解除を実装。現在の契約・対象外は[メンバー仕様](../specs/007-connected-members.md)、[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
 
 課題GETはq/status/priority/assignee/limit/cursorで絞り込み、statusの既定unresolvedはopen/investigatingに対応する。作成はopen、編集でresolved/closedを含む状態を変更できる。所属・親プロジェクト・アーカイブのガードはタスクと共通で、ダッシュボードの課題数は同じissuesテーブルを集計する。
 
@@ -76,3 +76,7 @@ private.is_member/has_roleはsecurity definer、search_path=''、完全修飾参
 未認証、無所属、別workspace、viewer、member、adminそれぞれのJWTで全テーブルと全RPCの許可/拒否を確認。ID推測、担当すり替え、workspace変更、直接REST書込、自己昇格、履歴偽造、最後のadminの同時削除、アーカイブへの書込、version競合、集計からの漏洩を検証する。
 
 参考: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)。
+
+## メンバー管理（P4-2）
+
+[仕様](../specs/007-connected-members.md)。GET `/workspaces/:wid/members`（role/cursor/limit）、GET/PATCH/DELETE `/workspaces/:wid/members/:uid`（全て`/api/v1`配下）。PATCH `{role,version}`、DELETE `{version}`、成功204。全所属者が閲覧、adminだけ変更。Origin/JSON32KiB/キー/UUID/versionを検証。`change_member` RPCがworkspaceをロックして競合409・最後のadmin409を拒否。担当解除・監査は原子的に保存。招待・全プロフィール検索・メール送信はなし。
