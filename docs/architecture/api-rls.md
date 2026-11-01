@@ -76,3 +76,7 @@ private.is_member/has_roleはsecurity definer、search_path=''、完全修飾参
 未認証、無所属、別workspace、viewer、member、adminそれぞれのJWTで全テーブルと全RPCの許可/拒否を確認。ID推測、担当すり替え、workspace変更、直接REST書込、自己昇格、履歴偽造、最後のadminの同時削除、アーカイブへの書込、version競合、集計からの漏洩を検証する。
 
 参考: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)。
+
+## メンバー管理（P4-2）
+
+[仕様](../specs/007-connected-members.md)。GET `/workspaces/:wid/members`（role/cursor/limit）、GET/PATCH/DELETE `/workspaces/:wid/members/:uid`（全て`/api/v1`配下）。PATCH `{role,version}`、DELETE `{version}`、成功204。全所属者が閲覧、adminだけ変更。Origin/JSON32KiB/キー/UUID/versionを検証。`change_member` RPCがworkspaceをロックして競合409・最後のadmin409を拒否。担当解除・監査は原子的に保存。招待・全プロフィール検索・メール送信はなし。

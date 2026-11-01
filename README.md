@@ -41,3 +41,5 @@ E2Eはビルド済みのアプリをポート3100で起動します。Windows/Li
 ## 開発の進め方
 
 仕様 → Issue → 実装・テスト → PR。P1/P2/P3は完了。現在の仕様は[課題管理](docs/specs/006-connected-issues.md)、タスクは[Issue #11](https://github.com/kiyohara1021/project-hub/issues/11)。次はメンバー管理です。previewモードでは固定値を表示し、connectedモードでは所属workspaceの全件をDB内で集計します。
+
+P4-2: [メンバー管理仕様](docs/specs/007-connected-members.md)に沿って一覧・ロール変更・所属解除をDB接続。招待・メール送信は対象外です。

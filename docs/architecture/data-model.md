@@ -25,7 +25,7 @@ erDiagram
 |---|---|
 | profiles | id PK/FK auth.users.id、display_name（架空名） |
 | workspaces | id PK、name、created_at |
-| memberships | workspace_id + user_id 複合PK、user_id FK profiles、role(admin/member/viewer)、joined_at |
+| memberships | workspace_id + user_id 複合PK、user_id FK profiles、role(admin/member/viewer)、joined_at、version |
 | projects | id PK、workspace_id FK、name、description、status、due_date、version、created_at、updated_at、UNIQUE(workspace_id,id) |
 | tasks | id PK、workspace_id、project_id、title、description、status、priority、assignee_id nullable、due_date、position bigint、version、created_at、updated_at |
 | issues | id PK、workspace_id、project_id、title、description、status、priority、assignee_id nullable、due_date、version、created_at、updated_at |
@@ -45,3 +45,5 @@ tasks/issuesの(workspace_id,project_id)はprojects(workspace_id,id)を参照し
 接続モードのダッシュボードはread_dashboard RPCでRLS付きの集計を行い、集計テーブルや公開ビューは追加しない。日付はprivate.dashboard_dayでAsia/Tokyoへ変換。previewモードだけが固定値を使用する。
 
 課題のページ送り用にissues(workspace_id,project_id,created_at DESC,id DESC)の索引を追加。課題削除後もactivity_logsと再送結果は保持し、同じキーの再送で課題を復活させない。
+
+P4-2: membershipsにversion（integer、初期1）を追加。更新トリガーが既存RPCを含む全UPDATEで増加し、`change_member` RPCが期待versionを検査する。新規エンティティ・リレーションの変更はなし。
