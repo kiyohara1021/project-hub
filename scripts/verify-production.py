@@ -51,7 +51,9 @@ def main():
         opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar), NoRedirect())
 
         def request(path, method="GET", data=None, request_origin=args.origin, form=False):
-            headers = {"Origin": request_origin, "User-Agent": "ProjectHub-release-verifier"}
+            headers = {"User-Agent": "ProjectHub-release-verifier"}
+            if request_origin is not None:
+                headers["Origin"] = request_origin
             body = None
             if data is not None:
                 body = (urllib.parse.urlencode(data) if form else json.dumps(data)).encode()
@@ -71,7 +73,7 @@ def main():
             password = None
             record(role, "login", status == 303 and headers.get("Location") == args.origin + "/workspaces", status=status)
             auth = [cookie for cookie in jar if cookie.name.startswith("sb-") and "auth-token" in cookie.name]
-            attributes = [{"secure": c.secure, "path": c.path, "sameSite": next((str(v).lower() for k, v in c._rest.items() if k.lower() == "samesite"), None), "hostOnly": not c.domain_specified} for c in auth]
+            attributes = [{"secure": c.secure, "path": c.path, "sameSite": next((str(v).lower() for k, v in c._rest.items() if k.lower() == "samesite"), None), "hostOnly": not c.domain_specified, "httpOnly": any(k.lower() == "httponly" for k in c._rest)} for c in auth]
             record(role, "cookie-attributes", bool(auth) and all(c["secure"] and c["path"] == "/" and c["sameSite"] == "lax" and c["hostOnly"] for c in attributes), attributes=attributes)
             base = "/api/v1/workspaces/" + args.workspace
             project = base + "/projects/" + args.project
@@ -85,10 +87,10 @@ def main():
                 status, _, payload, _ = request(path, method, {})
                 code = json.loads(payload).get("error", {}).get("code")
                 record(role, "denied-" + method + path, status == 403 and code == "FORBIDDEN", status=status, code=code)
-            for foreign_origin in ("https://example.invalid", "null", ""):
+            for foreign_origin in ("https://example.invalid", "null", None):
                 status, _, payload, _ = request(project + "/tasks", "POST", {}, request_origin=foreign_origin)
                 code = json.loads(payload).get("error", {}).get("code")
-                record(role, "origin-" + (foreign_origin or "empty"), status == 403 and code == "INVALID_ORIGIN", status=status, code=code)
+                record(role, "origin-" + (foreign_origin or "missing"), status == 403 and code == "INVALID_ORIGIN", status=status, code=code)
             other = "/api/v1/workspaces/" + args.other_workspace
             for suffix in ("/dashboard", "/projects", "/members", "/activity", "/projects/" + args.project + "/tasks", "/projects/" + args.project + "/issues"):
                 status, _, payload, _ = request(other + suffix)

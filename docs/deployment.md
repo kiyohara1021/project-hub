@@ -139,3 +139,5 @@ commit;
 - 本番APIの拒否/Origin/Cookieを検証する`python3 scripts/verify-production.py`を追加。引数は`--origin --workspace --other-workspace --project --output`。パスワードは対話入力し保存しない。Cookie値も出力しない。変更APIには必須項目を欠く空JSONだけを送り、権限チェックが後退してもデータを作成/更新できない入力とする。ローカルseed/共通パスワードを本番へ送らない。
 - 他workspaceの検証用に、誰も所属しない空の「権限確認用スペースB」を専用DBへ作成し、SQLで所属0件を確認。既存アカウントへ権限を追加していない。
 - [リポジトリの公開前確認](publication-review.md)を記録。Public化は実行していない。
+
+- Usage確認時点: Supabaseのproject-hub単体はDB 26.01MB（上限0.5GB）、MAU 3、Egress/Storage表示0GB。組織全体もFree枠内。Vercelのproject-hubはFast Data Transfer 9.65MB/100GB、Fast Origin Transfer 3.25MB/10GB、Fluid Provisioned Memory 0.11GB-Hrs/360GB-Hrs。Vercel表示期間はOct 2–Nov 1、SupabaseはOct 10–Nov 10。表示の丸め・更新遅延を含むスナップショットであり、継続的な上限保証ではない。
