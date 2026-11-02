@@ -30,7 +30,7 @@ Next.js Route Handlersの `/api/v1`。セッションcookieを検証しユーザ
 | POST /members | 登録済みデモuser_id,role | admin |
 | PATCH /members/:uid | role変更 | admin |
 | DELETE /members/:uid | 担当解除と所属削除 | admin |
-| GET /activity | project/action/entity/actor/cursor/limit、読取専用 | 所属者 |
+| GET /activity | project/action/entity/actor/from/to/cursor/limit、読取専用 | 所属者 |
 
 ログイン・ログアウト・callbackはSupabase Authの別ルート。招待メールと一般登録は初期対象外。ローカルで架空ユーザーを事前作成する。
 
@@ -88,3 +88,7 @@ GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-a
 ## 公開設定（P5-1）
 
 [公開準備仕様](../specs/009-release-readiness.md)と[運用手順](../deployment.md)を参照。PreviewはDB未接続、Productionのconnectedは正規HTTPSオリジンと公開用Supabaseキーを明示する。Server/Proxyで同一のCookie設定を使い、HTTPSではSecureを付与。全画面にnoindex/nofollow・nosniff・frame DENY等のヘッダーを追加。既存APIの認可/RLS・ER/テーブル定義の変更はない。
+
+## 操作履歴の期間検索
+
+[期間検索仕様](../specs/012-activity-date-filter.md)（Issue #30）でGET activityへfrom/toを追加。日本時間のYYYY-MM-DDを両端含みで検索する。空欄は制限なし、不正日付・逆転・重複は400。既存の条件とカーソルを併用し、RLS・テーブル・ERの変更はない。

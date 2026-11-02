@@ -49,3 +49,5 @@ P4-2: [メンバー管理仕様](docs/specs/007-connected-members.md)に沿っ�
 P4-3: [操作履歴仕様](docs/specs/008-connected-activity.md)。読み取り専用の監査ログを日本時間で表示し、削除・所属解除後も操作当時の記録を保持します。
 
 Vercel Previewは`APP_MODE=preview`でDB接続なし、本番接続は専用Supabaseを別途設定します。`pnpm test:release`で環境検査のテストを実行できます。実際のデプロイ状態は[公開記録](docs/deployment.md#公開記録p5-2で記入)を参照してください。
+
+P5後の仕様差分: [期間検索仕様](docs/specs/012-activity-date-filter.md)（[Issue #30](https://github.com/kiyohara1021/project-hub/issues/30)）で操作履歴の開始日・終了日による絞り込みを追加。残る差分は[ロードマップの棚卸し](docs/roadmap.md#仕様差分の棚卸し2026-11-03)を参照してください。
