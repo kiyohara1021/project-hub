@@ -185,7 +185,7 @@ PR #31 → #35 → #36 → #37をmerge commitで順次mainへ反映。アプリ�
 - 対象は既存のproject-hub専用Hosted Supabase（Tokyo）であることと、適用済み6バージョン・追加RPC未存在を照合。SQL Editorでリポジトリの007→008を原文のまま、事前条件・履歴登録・schema reloadを含む単一トランザクションで適用し、8バージョンを確認してから対応アプリをマージした。ローカルseedと負荷fixtureは本番へ送っていない。
 - `read_members`はSECURITY INVOKER、`add_member_once`はSECURITY DEFINER、双方の所有者はproject_hub_owner、search_pathは空。authenticatedのEXECUTEは許可、anonは拒否。private.member_requestsはRLS有効、authenticatedのSELECT/INSERTとanonのSELECTは拒否を照合した。
 - 所有者がブラウザで管理者ログインし、デモスペースAの3名・既存ロール・未完了タスク件数（メンバー1件、他0件）・未解決課題0件を確認。管理者条件のメンバーAPIも件数とnextCursorを返した。
-- 所属追加は初期ロール閲覧者、UUIDと全プロジェクト閲覧の確認、Esc後の起点へのフォーカス復帰を確認。既存管理者IDへの追加要求は「既に所属」のエラーとなり、所属3名と管理者ロールを維持。新規所属の成功・ロール変更・削除は今回の本番スモークでは行っていない。成功経路・通信再送・3ロール拒否はローカルDB/E2EとCIで確認済み。
+- 所属追加は初期ロール閲覧者、UUIDと全プロジェクト閲覧の確認、Esc後の起点へのフォーカス復帰を確認。既存管理者IDへの追加要求は「既に所属」のエラーとなり、所属3名と管理者ロールを維持。新規所属の成功・ロール変更・削除は今回の本番スモークでは行っていない。成功経路・通信再送・admin/member/viewerの権限境界はローカルDB/E2EとCIで確認済み。
 - 操作履歴で2026-11-02の同日指定・limit=1による検索と次ページを確認。開始日/終了日を保持し、絞り込み再送信でcursorが解除され先頭へ戻ることを確認した。
 - 匿名HTTPのdashboard/projects/tasks/issues/members/activityはすべて401 UNAUTHENTICATED / private,no-store。異なるOriginからの所属追加は403 INVALID_ORIGIN。パスワード・Cookie・JWTを抽出/保存/ログ出力していない。
 
