@@ -45,3 +45,14 @@ test("360pxの追加確認・入力保持・通信再試行・成功とフォー
     await trigger.click();await page.keyboard.press("Escape");await expect(dialog).not.toBeVisible();await expect(trigger).toBeFocused();
   }finally{await f.cleanup();}
 });
+
+test("所属先切替では前のユーザーIDと確認状態を引き継がない",async({page})=>{
+  const first=await fixture(),second=await fixture();try {
+    await login(page,"admin");await page.goto(`/members?workspace=${first.wid}`);
+    await page.getByRole("button",{name:"メンバーを追加",exact:true}).click();const dialog=page.getByRole("dialog");
+    await dialog.getByLabel("登録済みユーザーID",{exact:true}).fill(first.uid);await dialog.getByLabel("追加するロール",{exact:true}).selectOption("admin");
+    await dialog.getByRole("button",{name:"追加内容を確認",exact:true}).click();await dialog.getByRole("button",{name:"キャンセル",exact:true}).click();
+    await page.getByLabel("ワークスペース",{exact:true}).selectOption(second.wid);await page.getByRole("button",{name:"絞り込む",exact:true}).click();
+    await page.getByRole("button",{name:"メンバーを追加",exact:true}).click();await expect(dialog.getByLabel("登録済みユーザーID",{exact:true})).toHaveValue("");await expect(dialog.getByLabel("追加するロール",{exact:true})).toHaveValue("viewer");await expect(dialog.getByRole("button",{name:"追加内容を確認",exact:true})).toBeVisible();
+  }finally{await first.cleanup();await second.cleanup();}
+});
