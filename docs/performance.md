@@ -42,3 +42,7 @@ Chrome 156 / macOS、Chrome DevTools公式CLI 1.12.0で取得したラボ計測�
 - 生トレース/ネットワーク記録はローカル成果物に留め、Cookie・パスワードや生データをリポジトリへ追加しない。公開資料は集計結果だけを記載する。
 
 参考: [Web Vitalsの基準とラボ/実ユーザー計測の違い](https://web.dev/articles/vitals)、[Chrome DevTools公式CLI](https://github.com/ChromeDevTools/chrome-devtools-mcp/blob/main/docs/cli.md)。
+
+## 反映後の追加確認
+
+2026-11-03、PR #28の本番反映（SHA `85bfee11e291c4da087b0c79c8cbde409bc010e5`）後、カンバンのid/name不足のIssueは解消。再読み込みで別途`/favicon.ico`の404を検出した。上記281リクエストの読み込み計測とは別の観測である。SVGアイコンとメタデータ、従来のfavicon.icoからSVGへの恒久リダイレクトを追加する。
