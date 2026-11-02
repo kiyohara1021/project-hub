@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: { default: "ProjectHub", template: "%s | ProjectHub" },
   description: "プロジェクト・タスク・課題をまとめて管理するアプリ",
   robots: { index: false, follow: false },
+  icons: { icon: "/favicon.svg" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

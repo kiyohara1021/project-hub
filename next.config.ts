@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [{ source: "/favicon.ico", destination: "/favicon.svg", permanent: true }];
+  },
   async headers() {
     return [{source:"/:path*",headers:[
       {key:"X-Content-Type-Options",value:"nosniff"},
