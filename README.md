@@ -55,3 +55,5 @@ P5後の仕様差分: [期間検索仕様](docs/specs/012-activity-date-filter.m
 メンバー一覧は[担当件数仕様](docs/specs/013-member-assignment-counts.md)（[Issue #32](https://github.com/kiyohara1021/project-hub/issues/32)）に沿って、計画中・進行中の未完了タスク数と未解決課題数を表示します。
 
 登録済みユーザーの所属追加は[仕様014](docs/specs/014-add-workspace-member.md)（Issue #33）。管理者が事前確認したユーザーIDとロールを指定し、確認後に所属を追加できます。候補検索・ユーザー作成・メール送信は行いません。
+
+一覧APIのローカル負荷検証は`pnpm build`後に`pnpm test:load`を実行。100プロジェクト・1,000タスクでprojects/tasks一覧を測定し、専用fixtureを削除します。[条件・測定結果](docs/performance.md#100プロジェクト1000タスクのローカル一覧api検証)を参照してください。

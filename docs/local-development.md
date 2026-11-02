@@ -99,3 +99,9 @@ admin/memberは課題追加・編集・削除が可能。状態変更は編集�
 [仕様014](specs/014-add-workspace-member.md)。追記マイグレーション適用後、管理者のメンバー画面に「メンバーを追加」が表示される。登録済み架空ユーザーのUUIDとロールを確認して追加する。UUIDは管理用のローカルAuth管理画面で事前確認し、候補検索やメール送信は行わない。再送は24時間同じ受付結果となり、後から解除した所属を戻す場合は新しい入力として送信する。
 
 `node --test tests/database/member-add.test.mjs` と `pnpm test:auth tests/auth/member-add.spec.ts` でDB/API/UIを検証する。
+
+## 一覧APIのローカル負荷検証
+
+`pnpm build` の後、`pnpm test:load` を実行する。ローカルSupabaseと登録済みadminのseedが必要。ポート3104は検証用に空け、DBテスト・別の負荷計測と同時に走らせない。スクリプトは専用workspaceへ100プロジェクト・1,000タスクを作り、通常ログインのCookieでprojects/tasks一覧（各25/100件）を測定して削除する。資格情報やCookieは出力しない。
+
+各条件5回のウォームアップ後50回を直列で測定し、本文受信・JSON解析を含むmin/p50/p95/maxをJSONで出力する。p95が1秒を超える条件があれば終了コード1。プロセスの強制終了などで削除できなかった場合は、架空名「一覧性能検証の架空ワークスペース」の残存をローカルDBだけで確認する。詳細な条件・制約は[仕様015](specs/015-list-api-load-check.md)を参照。
