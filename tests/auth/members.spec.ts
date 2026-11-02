@@ -1,4 +1,5 @@
 import {test,expect,type Page} from "@playwright/test";
+import {localSettings,adminClient,login as dbLogin,checked} from "../../scripts/local-supabase.mjs";
 const wid="11111111-1111-4111-8111-111111111111",origin="http://127.0.0.1:3101";
 async function login(page:Page,alias:string){await page.goto("/login");await page.getByLabel("メールアドレス").fill(`${alias}@example.invalid`);await page.getByLabel("パスワード",{exact:true}).fill("Local-Demo-Only-2026!");await page.getByRole("button",{name:"ログイン",exact:true}).click();await expect(page).toHaveURL(/\/workspaces$/);}
 test("管理者が360pxでロール変更・競合復旧・最後の管理者保護を確認",async({page})=>{
@@ -19,7 +20,6 @@ test("メンバー一覧のページ送り・絞り込み・API権限と入力�
 });
 
 test("担当数を全ロールで閲覧し、絞り込みと360pxの表示を維持",async({page})=>{
- const {localSettings,adminClient,login:dbLogin,checked}=await import("../../scripts/local-supabase.mjs");
  const settings=localSettings(),service=adminClient(settings);const owner=await dbLogin(settings,"admin"),assigned=await dbLogin(settings,"member"),viewer=await dbLogin(settings,"viewer");
  const space=checked(await owner.client.rpc("create_workspace",{p_name:"画面担当数検証の架空スペース"}));
  try{
