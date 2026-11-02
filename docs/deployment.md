@@ -1,51 +1,59 @@
-# Vercel Hobby 公開・運用手順
+# 公開・運用手順
 
-2026-11-01確認。対象は個人非商用・架空データのみのProjectHub。正規URLは https://project-hub-zeta-nine.vercel.app 。2026-11-02にProductionをAPP_MODE=connectedへ切り替え、専用Hosted Supabaseへ接続済み。PreviewはDB未接続の画面デモを維持する。公開先の権限・性能確認は以下の公開記録を参照。
+ProjectHubをVercelとSupabaseで公開・運用するための手順です。開発環境の起動とテストは[ローカル開発手順](local-development.md)、機能の実装状況は[ロードマップ](roadmap.md)を参照してください。
 
-## 構成と環境変数
+## 現在の構成
 
-| 環境 | モード | DB |
+2026年11月3日確認。公開アプリは登録済みアカウントで利用できます。
+
+| 項目 | 設定・状態 |
+|---|---|
+| 公開URL | [project-hub-zeta-nine.vercel.app](https://project-hub-zeta-nine.vercel.app) |
+| アプリ | Vercel / project-hub / Productionブランチはmain |
+| 実行リージョン | Tokyo（hnd1） |
+| データベース | 専用Supabase / project-hub / Tokyo（ap-northeast-1） |
+| 本番モード | `APP_MODE=connected` |
+| Preview | `APP_MODE=preview`。DBに接続せず固定データを表示 |
+| マイグレーション | 001〜008を適用済み |
+| 利用範囲 | 個人の学習・デモ用途。実在の顧客情報や業務データは登録しない |
+
+Vercel Hobbyの利用条件と上限は公開・変更時に再確認します。無料枠の容量やバックアップを保証として扱わず、上限に近づいた場合は停止・縮小も含めて構成を見直します。
+
+## 環境変数
+
+開発と本番は別のDBを使用します。Previewには本番DBの接続情報を設定しません。
+
+| 変数 | Preview | Production |
 |---|---|---|
-| ローカル開発 | connected | ローカルSupabase専用 |
-| Vercel Preview | preview | 接続しない。固定画面の動作確認 |
-| Vercel Production（画面デモ公開） | preview | 接続しない |
-| Vercel Production（ログイン付き） | connected | 専用Hosted Supabase。開発DBと共有しない |
+| `APP_MODE` | `preview` | `connected` |
+| `APP_ORIGIN` | 不要 | 公開URLのHTTPSオリジン。末尾の`/`なし |
+| `SUPABASE_URL` | 未設定 | `https://<project-ref>.supabase.co` |
+| `SUPABASE_PUBLISHABLE_KEY` | 未設定 | 対象DBのpublishableキー、またはlegacy anonキー |
 
-Vercelの個人HobbyアカウントでGitHubのPrivateリポジトリをImportし、Root Directoryはリポジトリのルート、Production Branchはmain、Node.jsは24.xを使用する。Framework・Install/Build Commandはvercel.jsonを使用。自動デプロイで未検証のコミットを本番に出さないよう、公開開始前にProductionの自動反映設定と運用を確認する。
+管理鍵・DBパスワード・SupabaseアクセストークンはVercelアプリに登録しません。`SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SECRET_KEY`とそれらの`NEXT_PUBLIC`版は設定検査で拒否します。アプリ用のSupabase変数に`NEXT_PUBLIC`接頭辞は不要です。
 
-| 変数 | Preview | Production connected |
-|---|---|---|
-| APP_MODE | preview | connected |
-| APP_ORIGIN | 不要 | 実際にアクセスする正規HTTPSオリジン。末尾/なし |
-| SUPABASE_URL | 未設定 | `https://<project-ref>.supabase.co` |
-| SUPABASE_PUBLISHABLE_KEY | 未設定 | 対象DBのpublishableキー、またはlegacy anonキー |
+`.env.local`やローカル検証用パスワードはアップロードせず、Previewへの環境変数の一括コピーも避けます。
 
-管理鍵・DBパスワード・SupabaseアクセストークンはVercelアプリに登録しない。`SUPABASE_SERVICE_ROLE_KEY`/`SUPABASE_SECRET_KEY`とそれらのNEXT_PUBLIC版を検査で拒否する。アプリのSupabase変数にNEXT_PUBLIC接頭辞は不要。.env.localやローカルユーザーの共通パスワードをアップロードしない。Vercel PreviewにProductionの接続設定を一括コピーしない。
+| コマンド | 用途 |
+|---|---|
+| `pnpm check:deploy` | 実行プロセスの環境変数を検査 |
+| `pnpm build:vercel` | 設定検査に成功した場合だけビルド |
+| `pnpm build` | 通常のローカル・CIビルド |
 
-初回に画面デモだけ公開する場合は、ProductionもAPP_MODE=preview、DB変数なしで開始できる。ログインやデータ保存は使えないと画面へ表示する。接続モード公開時に環境変数を設定し直して再デプロイする。
+設定検査は`.env`を自動で読み込みません。また、値の形式検査であり、DBへの接続やアクセス権限の確認は別途必要です。
 
-`pnpm check:deploy`は実行プロセスの環境変数を検査する（.envを自動読込しない）。`pnpm build:vercel`は検査に成功した場合だけビルドする。通常のローカル開発/CIは`pnpm build`を使う。検査は形式確認に限定し、DB接続やアクセス権限の保証はしない。
+## 初回セットアップ
 
-## Hosted Supabaseの準備
+### Supabase
 
-1. ProjectHub専用プロジェクトを作成し、所有者・リージョン・無料枠を確認する。有料機能/追加課金を自動的に有効化しない。
-2. アプリ用にURLとpublishableキーを取得する。デプロイ・管理用の資格情報は別管理し、リポジトリに保存しない。
-3. CLIで対象project-refを照合してからlinkし、migration listとdry-runで適用予定を確認する。ローカルと同じマイグレーション6件を順番に適用する。
+1. ProjectHub専用プロジェクトを作成し、対象プロジェクト・所有者・リージョンを照合します。
+2. アプリ用URLとpublishableキーを取得します。管理用の資格情報は別管理し、リポジトリに保存しません。
+3. 以下の手順でマイグレーションを確認し、未適用分だけを順番に反映します。
+4. Authで一般サインアップを無効化し、メール・パスワード認証を設定します。Site URLは`APP_ORIGIN`と一致させます。ローカルの`config.toml`が本番へ自動反映されるとはみなさず、管理画面で確認します。
+5. `admin@example.invalid`などのテスト用アカウントを、メール送信なしで事前登録します。本番専用のパスワードを使用し、ローカルの共通パスワードは再利用しません。
+6. Authトリガーで作られたprofileの表示名を設定し、最初のワークスペースと管理者を作成します。
 
-```sh
-pnpm exec supabase login
-pnpm exec supabase link --project-ref <対象project-ref>
-pnpm exec supabase migration list --linked
-pnpm exec supabase db push --linked --dry-run
-pnpm exec supabase db push --linked
-pnpm exec supabase migration list --linked
-```
-
-`db reset --linked`と`--include-seed`は使わない。supabase/seed.sql、scripts/seed-local.mjs、tests/databaseはローカル専用。既存のschemaを持つ別アプリのDBへ適用しない。CLIの認証情報・パスワードは安全な対話入力/秘密設定を使用し、コマンド引数や履歴へ書かない。
-
-4. DashboardのAuthで一般サインアップを無効化。メール/パスワード認証を有効にし、メール送信・招待・OAuth・パスワード再発行は今回提供しない。ローカルconfig.tomlがHosted側へ自動反映されるとはみなさず個別確認する。Site URLは正規APP_ORIGINと一致させ、ワイルドカードのリダイレクト許可を増やさない。
-5. 管理画面から`admin@example.invalid`等の架空アドレスで、メール送信せず事前確認済みユーザーを作成。クラウド専用の強いパスワードを設定し、ローカル共通パスワードを再利用しない。ログイン情報は公開README・画面・Issueに書かない。
-6. profilesはAuthトリガーで作成される。表示名を架空名にし、初期workspaceと最初のadmin所属を設定する。次はSQL Editor用のひな形。`AUTH_USER_UUID`を手順5のUIDに置換し、対象プロジェクトを照合して実行する。既存ユーザーへの二重所属作成に使わない。
+初期所属を設定するSQLの例です。`AUTH_USER_UUID`を手順5のUIDへ置換し、対象プロジェクトと未登録であることを確認してから実行します。
 
 ```sql
 begin;
@@ -59,134 +67,88 @@ select id,'AUTH_USER_UUID'::uuid,'admin' from space;
 commit;
 ```
 
-以降のプロジェクト・タスク・課題はログインしたアプリで架空内容を作成する。member/viewer検証用ユーザーも架空アドレスで事前作成し、Dashboardで対象workspaceの所属だけを設定する。一般招待UIは未実装。管理用SQLの履歴actorが初期データ扱いとなる点を確認する。
+以後の所属追加はアプリの管理者画面で行えます。対象ユーザーのUUIDは事前に確認してください。ユーザー作成・候補検索・メール招待はアプリの対象外です。管理用SQLで設定した初期データの履歴は、ログインユーザーによる操作とは区別して表示されます。
 
-## デプロイ前後の確認
+### Vercel
 
-- PRのCIが成功し、mainにマージされたコミットSHAを記録。Productionの公開対象がそのSHAか照合する。
-- VercelのDeployment Protectionと公開範囲を確認。ログ・ソースのアクセス制御はVercel管理画面で確認する。vercel.jsonへpublicキーは追加しない（実デプロイのスキーマで拒否される）。noindexは検索除外用でありログイン/公開範囲を制限しない。
-- 初回DB反映→環境変数→デプロイの順。APP_ORIGINは実際の正規URLと一致させる。別エイリアスURLからの変更操作はOrigin検査で拒否されるため、利用URLを一本化する。
-- 未ログインで6画面がログインへ移動し、6種のGET APIが401を返す。画面デモの場合は認証フォームを出さず、DB APIは503となる。
-- admin/member/viewerで閲覧と変更許可を確認し、他workspaceのUUIDで404、viewerによる変更403を確認。通常ユーザーのJWTでactivity_logs直接書込が拒否されることも確認する。管理鍵のリクエストをブラウザに渡さない。
-- 架空プロジェクトとタスク/課題を作成・更新・削除し、ダッシュボードと履歴に反映されることを確認。最後のadmin保護、ログアウト後API401、CookieにSecureが付くことと、同じ正規オリジンで継続利用できることを確認。
-- スマートフォン幅360pxとPC、Tab/Shift+Tab/Escape、スクロール、正規URLでのOrigin検査を確認。公開先で読み込み性能を計測し、ローカルの速度を本番の保証として扱わない。
-- Functionsログに例外・資格情報が出ていないか、DBログに権限エラーがないかを確認する。実データを使った検証は行わない。
+リポジトリをImportし、Root Directoryをリポジトリのルート、Production Branchを`main`、Node.jsを24.xに設定します。Framework・Install/Build Commandは`vercel.json`を使用します。
 
-## 障害時・切り戻し
+Productionの環境変数を設定し、公開対象コミットとDBの適用状況を確認してデプロイします。Deployment Protectionとソース・ログの公開範囲も管理画面で確認します。`noindex`は検索除外用であり、アクセス制限の代わりにはなりません。
 
-- フロントエンドの不具合: Vercelで直前の検証済みDeploymentへ切り戻し、そのデプロイの環境変数とAPP_ORIGINを確認。DBは自動では戻らない。
-- DB変更は追記マイグレーションを基本とし、既存6件を書換えない。互換性がない変更の前はバックアップと復元手順を確認。無料枠で利用できる保護の範囲を確認し、有料バックアップがあると仮定しない。
-- 公開停止が必要ならVercelのアクセス保護/公開停止を使う。APP_MODE=previewは固定画面が表示されるためアクセス停止の代替ではない。
-- 鍵漏洩時はSupabaseで失効/再発行し、Vercel変数を更新して再デプロイ。ログやIssueへ漏洩値を貼らない。
-- 初回と変更後はVercel/SupabaseのUsageを確認。非商用の前提が変わったらプラン適合を再確認する。
+## 更新時の手順
 
-## 公開記録（P5-2で記入）
+1. PRのCIとレビューを完了し、対象コミットSHAを記録します。
+2. DB変更がある場合は、対象プロジェクトと適用済みバージョンを照合し、未適用マイグレーションの内容と順序を確認します。
+3. 対応するDB変更を先に適用し、RPC・RLS・実行権限を確認します。
+4. PRをmainへマージし、VercelでReady・Production Current・正規URL割当・SourceのSHAを照合します。
+5. 次節の公開後確認を実施し、日付・対象SHA・検証範囲・未検証事項を記録します。
 
-| 項目 | 状態 |
+CLIを使う場合の手順です。認証情報・パスワードは対話入力や秘密設定を使い、コマンド引数や履歴へ書きません。
+
+```sh
+pnpm exec supabase login
+pnpm exec supabase link --project-ref <対象project-ref>
+pnpm exec supabase migration list --linked
+pnpm exec supabase db push --linked --dry-run
+pnpm exec supabase db push --linked
+pnpm exec supabase migration list --linked
+```
+
+SQL Editorで適用する場合も、リポジトリの原文と順序を守り、成功後のマイグレーション履歴を照合します。既存マイグレーションは書き換えず、変更は追記します。
+
+`db reset --linked`と`--include-seed`は使用しません。`supabase/seed.sql`、`scripts/seed-local.mjs`、`tests/database`、`pnpm test:load`はローカル専用です。
+
+## 公開後の確認
+
+| 確認すること | 確認方法 |
 |---|---|
-| Vercelアカウント/Project | ProjectHub Personal（Hobby）/ project-hub 作成済み |
-| Supabaseプロジェクト/6件反映 | project-hub / Tokyo（ap-northeast-1）、6件反映済み。7テーブルのRLS・匿名読取不可・直接書込不可を確認 |
-| 正規URL/初回公開確認SHA | https://project-hub-zeta-nine.vercel.app / cba33556e76fc4428815ecf1cc5c52c168b7bea8 |
-| 本番Auth・RLS・Origin・Cookie検証 | 一般登録・匿名ログイン無効、Site URL設定済み。匿名の6 APIは401、変更APIの異なるOriginは403。管理者・メンバーの保存/更新と3ロールのログイン・画面権限を確認。実認証での禁止API・他workspace拒否・Cookie属性の追加確認を継続 |
-| 公開先モバイル/キーボード・性能/Usage | 画面デモ6画面のPC/360px表示・横溢れなし・モバイルメニューEnter/Escapeとフォーカス復帰を確認。性能/Usageの詳細確認は未実施 |
+| 未認証時の制御 | 6画面がログインへ誘導され、6種の読取APIが401 / no-storeとなる |
+| 権限・所属境界 | admin/member/viewerの許可・拒否、別ワークスペースの404、直接書き込み拒否を確認 |
+| 変更操作 | サンプルの作成・更新とダッシュボード・操作履歴への反映、最後の管理者保護を確認 |
+| Origin・Cookie | 正規URLから操作でき、異なるOriginは拒否される。HTTPSのSecure属性とログアウト後401を確認 |
+| 画面操作 | PCと360px幅、Tab/Shift+Tab/Escape、フォーカス復帰、横スクロールを確認 |
+| エラー・利用量 | Functions/DBログ、Vercel/SupabaseのUsageを確認。資格情報を記録しない |
+| 性能 | 測定条件と対象データ量を記録。ローカル実測と本番実測を区別する |
 
-公式資料（確認日: 2026-11-01）: [Hobbyの個人非商用条件](https://vercel.com/docs/plans/hobby)、[Node.js対応バージョン](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)、[Vercelプロジェクト設定](https://vercel.com/docs/project-configuration)、[環境変数のスコープ](https://vercel.com/docs/environment-variables)、[Supabase環境管理](https://supabase.com/docs/guides/deployment/managing-environments)。公開直前にも条件を確認する。
+App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあるため、画面の未認証制御はステータスだけで判定しません。画面デモモードでは、DB APIは503となります。
 
-### 初回画面デモ公開の検証
+本番APIの拒否・Cookie確認には`python3 scripts/verify-production.py`を利用できます。引数は`--origin --workspace --other-workspace --project --output`です。パスワードは対話入力し保存しません。変更APIには必須項目を欠くJSONを送り、検証でデータを作成・更新しない構成です。
 
-2026-11-01、Production Deployment `A9jo26fjHaLFgRBsQXv1fv7t1gUn`がReady。mainのアプリコードを公開し、DB接続変数は設定していない。画面デモの公開はログイン付き本番の完了条件とは別に扱う。
+## 障害時の対応
 
-- 匿名HTTPで6画面と/loginが200。nosniff、frame DENY、noindex/nofollowを確認。
-- /loginに認証フォームなし。プロジェクトGET APIは503かつno-store。
-- 公開ブラウザで6画面遷移と360pxの横溢れなしを確認。メニューのキーボード操作も確認。
-- 初回は非対応のvercel.json publicキーで失敗し、PR #21で削除後に成功。公式JSONスキーマでキーと型も照合。
-- ソース/ログの匿名取得可否は、ダッシュボードURLへのHTTP 200だけで判断しない。Vercel管理画面の保護設定確認は継続する。
+- アプリの不具合は、Vercelで直前の検証済みDeploymentへ切り戻します。その時点の対象Deploymentと環境変数・`APP_ORIGIN`を確認してください。DBは自動で戻りません。
+- DBの互換性を失う変更の前には、利用できるバックアップと復元手順を確認します。有料バックアップがあることを前提にしません。
+- 公開停止にはVercelのアクセス保護・公開停止を使用します。`APP_MODE=preview`への変更は画面デモを表示するため、停止の代わりにはなりません。
+- 鍵漏洩時はSupabaseで失効・再発行し、Vercelの設定を更新して再デプロイします。漏洩値をログやIssueへ貼り付けません。
 
-残作業はIssue #19。専用DB作成、マイグレーション・Auth・初期所属設定、Productionだけconnectedへ変更、実ユーザーJWTでのRLS/Origin/Cookie検証と公開先性能/Usage記録を行う。ローカル用の共通パスワードやseedは転用しない。
+## 本番反映・検証記録
 
-### ログイン付きProduction接続（2026-11-02）
+<a id="公開記録p5-2で記入"></a>
+<a id="p5後の仕様差分の本番反映2026-11-03"></a>
 
-- Production Deployment `FiF56xztdxNYnbGaFTdAQBxPY9JU`がReady。アプリSHAは`bb8b796876bb085592359f8ec8049a64151c7e6c`。正規URLへ割当済み。
-- ProductionだけAPP_MODE=connected、APP_ORIGINとHosted Supabase URL/公開用publishableキーを設定。管理鍵・DBパスワードはVercelへ渡していない。PreviewはAPP_MODE=previewだけ。
-- 空の専用DBを照合してから、SQL Editorで既存6マイグレーションを単一トランザクションとして適用。成功後にsupabase_migrations.schema_migrationsへ6バージョンを記録。既存マイグレーション本文は改変していない。ローカルseed/共通パスワードは未使用。
-- DBパスワードと3人のAuthユーザーのパスワードは所有者本人が画面で設定。架空アドレスのadmin/member/viewerをAuto confirmで作成し、初期workspaceの各ロールへ所属設定した。外部メール招待は行っていない。
-- 管理者の実ログインで架空プロジェクト作成・進行中への更新、担当/優先度付きタスク作成と状態移動、課題作成と解決、監査ログ反映、ログアウトを確認。
-- 匿名HTTPの6画面は/loginへ誘導する。App RouterはリダイレクトをHTTP200のHTML内meta refreshで返す場合があるため、ステータスだけを判定基準にしない。6 APIの未認証401/no-storeと異なるOriginの403も確認済み。
-- VercelのStandard Protection（Require Log In）とProtected Sourcemapsは有効な既存設定を確認。保護を無効化したり、迂回トークンを作成していない。
-- Supabase Data APIへ公開キーで匿名アクセスし、7テーブルとread_dashboard RPCが401/42501で拒否されることも確認。
-- Vercel UsageのFast Data Transferは確認時点で6.51MB/100GB。課金機能の追加・プラン変更は行っていない。
+2026年11月3日、期間検索・メンバー担当件数・登録済みユーザーの所属追加を反映しました。詳細な作業ログと過去の公開履歴は[2026年11月の記録](history/deployment-2026-11.md)に保存しています。
 
-メンバー・閲覧者の本番ログインと画面権限は下記の通り確認。実認証での禁止API・他workspace拒否・Cookie属性と性能の記録は継続する。過去の画面デモ公開の検証結果は、その時点の記録として上に残す。
+| 項目 | 確認結果 |
+|---|---|
+| 対応PR | #31 → #35 → #36 → #37の順にマージ |
+| アプリ基準SHA | `1d62e7100589dfdebe6fc9d88f437d127e439397` |
+| Vercel Deployment | `7w5B6Jx8HfUijpYzWyVDY5YgdCb8` |
+| 公開状態 | Ready / Production Current / 正規URL割当とSourceを照合 |
+| DB | 007→008を先行適用し、履歴8件・RPC所有者・実行権限・固定search_path・再送記録のRLSを照合 |
+| ローカル・CI | 各PRのverify/database-auth成功。統合時のDBテスト10件・認証E2E28件成功 |
 
-### メンバー・閲覧者のProduction確認（2026-11-02）
+今回の本番確認は、管理者の担当件数表示・メンバーAPI・所属追加の確認画面と重複拒否・Escape後のフォーカス復帰・期間検索とページ送りを対象としています。匿名の6種APIは401 / private,no-store、異なるOriginからの所属追加は403でした。
 
-所有者がそれぞれのパスワードを公開サイトで入力し、ログイン状況とメンバー一覧で本人とロールを照合した。パスワード・Cookie/JWTの値は取得していない。
+新規所属作成の成功操作、member/viewerの再ログイン、本番での360px幅確認と100プロジェクト・1,000タスクの負荷試験は、この追加確認では実施していません。既存の本番検証、ローカル・CIの検証結果と区別してください。性能の条件と結果は[性能計測記録](performance.md)を参照してください。
 
-| 確認対象 | メンバー（デモメンバー02） | 閲覧者（デモメンバー03） |
-|---|---|---|
-| プロジェクト一覧 | 閲覧専用、作成/編集操作なし | 閲覧専用、作成/編集操作なし |
-| カンバン | 架空タスクを進行中からレビューへ移動し、保存成功 | 同じタスクをレビュー列で閲覧。追加/編集/状態変更操作なし |
-| 課題一覧 | 架空課題の担当を未割当から自分へ更新し、一覧に反映 | 更新後の担当と解決済み状態を閲覧。追加/編集操作なし |
-| メンバー一覧 | 自分のメンバーロールを確認、読み取り専用 | 自分の閲覧者ロールを確認、読み取り専用 |
-| 操作履歴 | タスク/課題の更新が本人名義で記録 | メンバーによる更新を閲覧 |
-| ダッシュボード | 進行中1件、全1タスク、自分のタスクがレビューで表示 | 同じ集計を表示、自分の未完了タスクはなし |
+## 参考資料
 
-メンバー・閲覧者は確認後にログアウト済み。これらはUIの権限制御と許可された保存・読み取りの確認であり、禁止された変更APIへ実認証リクエストを送った検証ではない。Issue #19は、他workspace拒否・Cookie属性・公開先性能などの残作業を含むため完了扱いにしない。
+以下は導入時に参照した公式資料です。利用条件・プラン上限・管理画面の仕様は変更されるため、公開・構成変更時には最新の内容を確認してください。
 
-### 追加検証と表記整理（2026-11-02）
-
-- UI共通部と入力ダイアログの開発向け説明を整理。利用条件・データ方針は本資料/CONTRIBUTINGで管理する。
-- 本番APIの拒否/Origin/Cookieを検証する`python3 scripts/verify-production.py`を追加。引数は`--origin --workspace --other-workspace --project --output`。パスワードは対話入力し保存しない。Cookie値も出力しない。変更APIには必須項目を欠く空JSONだけを送り、権限チェックが後退してもデータを作成/更新できない入力とする。ローカルseed/共通パスワードを本番へ送らない。
-- 他workspaceの検証用に、誰も所属しない空の「権限確認用スペースB」を専用DBへ作成し、SQLで所属0件を確認。既存アカウントへ権限を追加していない。
-- [リポジトリの公開前確認](publication-review.md)を記録。Public化は実行していない。
-
-- Usage確認時点: Supabaseのproject-hub単体はDB 26.01MB（上限0.5GB）、MAU 3、Egress/Storage表示0GB。組織全体もFree枠内。Vercelのproject-hubはFast Data Transfer 9.65MB/100GB、Fast Origin Transfer 3.25MB/10GB、Fluid Provisioned Memory 0.11GB-Hrs/360GB-Hrs。Vercel表示期間はOct 2–Nov 1、SupabaseはOct 10–Nov 10。表示の丸め・更新遅延を含むスナップショットであり、継続的な上限保証ではない。
-
-### 認証済みAPI・Cookieの本番検証（2026-11-02）
-
-所有者が対話入力したメンバー/閲覧者の実セッションで46項目すべて成功。各ロールの6読取APIは200/no-store。両ロールのプロジェクト作成とメンバー管理、閲覧者のタスク/課題作成は403/FORBIDDEN。異なるOrigin・null・Origin未指定は403/INVALID_ORIGIN。実在し所属0件の別workspaceに対する6読取APIは404/NOT_FOUND。ログアウト後は401へ戻る。
-
-実際のログイン応答のCookieはSecure、SameSite=Lax、Path=/、host-only。HttpOnlyはSupabase SSRの現行設定ではfalseであり、HttpOnlyを確認したという扱いにはしない。Cookie値・パスワードは記録していない。初回のPython CA未設定はmacOSの信頼済みCAを使用して解消し、入力前にHTTPS事前確認を行う。
-
-読取API12回の単発実測は1,380–3,535ms、中央値1,702ms。負荷試験・Core Web Vitalsではない。レスポンスのx-vercel-idで実行拠点iad1を確認し、Supabase Tokyoとの距離を減らすためvercel.jsonに単一リージョンhnd1を設定。Hobbyの1リージョン範囲内で、反映後の応答確認を行う。
-
-切り戻し基準は変更前のReady Production（Deployment GAuCwh3r3s5xnGNyQPnY4CTKkL35、SHA e95487b61b1787490122034d80ba1aac9ebf58ad）。今回DB変更なし。HobbyのInstant Rollbackは直前のProductionのみで、過去ビルド時の環境変数へ戻り、DBデータは戻らない。必要なら基準コミットへのrevert PRと現在の環境設定での再ビルドを使う。切り戻し自体は未実行。
-
-参考: [Functionsのリージョン](https://vercel.com/docs/functions/configuring-functions/region)、[Instant Rollback](https://vercel.com/docs/instant-rollback)。
-
-### 表記整理・Tokyo配置の公開後確認（2026-11-02）
-
-- PR #25のSHA `aba80eb885435ca38ef5ea146e66297e751eb31f`をProduction Deployment `8pMhXGiuvU3KPxE9DGDaRGkQ3tku`へ反映しReadyと正規URLを確認。HTTP応答のx-vercel-idでhnd1を確認。
-- 本番のDB接続モード6画面を360px/1280pxで表示し、全画面で横溢れなし。常設の開発向け注記・固定ユーザー表示がないことを確認。サンプルプロジェクト説明に残った非商用表記も、対象IDと旧本文を限定して通常の説明へ更新した。
-- 本文スキップ、メニューのEnter/Tab/Shift+Tab/Escape、タスク/課題追加ダイアログのフォーカス保持と閉じた後の起点復帰を本番で確認。これらの検証ではレコード作成・削除は実行しない。
-- 同一ブラウザ/同一メンバーセッションで6読取APIを1回ずつ測定。変更前は1,069–2,083ms（中央値1,715ms）、Tokyo配置後は399–2,270ms（中央値536ms）。すべてデータを取得。後者の初回dashboardは2,270msで、残る5件は399–660ms。
-- 計測値はブラウザ操作ツールの往復を含む単発のGET完了時間。ネットワーク・ウォーム状態を制御したベンチマークや負荷試験、Core Web Vitalsではない。詳細な描画指標はChrome DevTools MCP未接続のため未計測であり、上記API計測と区別する。
-- Usageと切り戻し基準は前節の通り。新たなDBマイグレーションはなし。最新デプロイからの即時切り戻し対象は、その時点でVercelが提示する直前Productionを確認して選択する。
-
-Issue #19の本番公開確認は、認証/ロール・API拒否・所属境界・Origin/Cookie・監査ログ・DB接続後の表示/キーボード・API応答/Usage・切り戻し基準の記録をもって完了。Core Web Vitals・負荷試験・DB復元訓練を実施したという意味ではない。
-
-### 追加の詳細ブラウザ計測（2026-11-02 / Issue #27）
-
-Chrome DevTools公式CLIで描画/操作の計測を追加した。[条件・集計・制約](performance.md)を参照。22回の読み込みでLCP最大1,008ms、CLS最大0.08。別のモバイル操作トレースのINPは142ms。実ユーザーp75の評価や負荷試験ではない。公開前記録の「詳細描画指標は未計測」はその時点の状態であり、この追加計測をもって更新する。
-
-ユーザーがPublic化によるコード・Git履歴・Actionsログの公開を了承し、GitHubリポジトリをPublicへ変更済み。認証なしのGitHub APIでも確認した。アプリのログイン制限やDB権限は変更していない。
-
-## P5後の仕様差分の反映順序
-
-2026-11-03に期間検索・メンバー担当件数・登録済みユーザーの所属追加を本番反映済み（結果は次節）。ローカル負荷検証スクリプトもmainへ反映した。適用時の依存順序は PR #31 → #35 → #36 → #37。PRを順次レビュー・マージし、メンバー担当件数の`202611030007_member_assignments.sql`、所属追加の`202611030008_add_member.sql`をこの順にProduction Supabaseへ適用する。DBスキーマ・RPC・実行権限が追加されるため、Productionの適用結果と権限を確認してから対応するアプリを反映する。マイグレーション名はリポジトリの実ファイルを正とし、先行する適用済みファイルを書き換えない。
-
-`pnpm test:load`は専用fixtureを使うローカル回帰確認で、本番性能検証ではない。本番に向けて実行せず、測定条件と限界は[性能記録](performance.md#100プロジェクト1000タスクのローカル一覧api検証)を参照する。
-
-
-### P5後の仕様差分の本番反映（2026-11-03）
-
-PR #31 → #35 → #36 → #37をmerge commitで順次mainへ反映。アプリ基準SHAは`1d62e7100589dfdebe6fc9d88f437d127e439397`、Vercel Deploymentは`7w5B6Jx8HfUijpYzWyVDY5YgdCb8`。Production Ready・Currentと正規URL割当、Source main/1d62e71をVercel管理画面で照合した。各PRのverify/database-authとVercel Previewは成功済み。統合時のローカルDBテスト10件・認証E2E28件も成功している。
-
-- 対象は既存のproject-hub専用Hosted Supabase（Tokyo）であることと、適用済み6バージョン・追加RPC未存在を照合。SQL Editorでリポジトリの007→008を原文のまま、事前条件・履歴登録・schema reloadを含む単一トランザクションで適用し、8バージョンを確認してから対応アプリをマージした。ローカルseedと負荷fixtureは本番へ送っていない。
-- `read_members`はSECURITY INVOKER、`add_member_once`はSECURITY DEFINER、双方の所有者はproject_hub_owner、search_pathは空。authenticatedのEXECUTEは許可、anonは拒否。private.member_requestsはRLS有効、authenticatedのSELECT/INSERTとanonのSELECTは拒否を照合した。
-- 所有者がブラウザで管理者ログインし、デモスペースAの3名・既存ロール・未完了タスク件数（メンバー1件、他0件）・未解決課題0件を確認。管理者条件のメンバーAPIも件数とnextCursorを返した。
-- 所属追加は初期ロール閲覧者、UUIDと全プロジェクト閲覧の確認、Esc後の起点へのフォーカス復帰を確認。既存管理者IDへの追加要求は「既に所属」のエラーとなり、所属3名と管理者ロールを維持。新規所属の成功・ロール変更・削除は今回の本番スモークでは行っていない。成功経路・通信再送・admin/member/viewerの権限境界はローカルDB/E2EとCIで確認済み。
-- 操作履歴で2026-11-02の同日指定・limit=1による検索と次ページを確認。開始日/終了日を保持し、絞り込み再送信でcursorが解除され先頭へ戻ることを確認した。
-- 匿名HTTPのdashboard/projects/tasks/issues/members/activityはすべて401 UNAUTHENTICATED / private,no-store。異なるOriginからの所属追加は403 INVALID_ORIGIN。パスワード・Cookie・JWTを抽出/保存/ログ出力していない。
-
-この追加確認は管理者の本番画面・読取・安全な重複拒否と匿名/Originの境界が対象。今回の本番スマートフォン幅検証、member/viewerの再ログイン、新規所属作成、本番の100プロジェクト/1,000タスク負荷試験を実施したという意味ではない。既存のローカル・CIの結果と区別する。
+- [Vercel Hobby](https://vercel.com/docs/plans/hobby)
+- [VercelのNode.js対応](https://vercel.com/docs/functions/runtimes/node-js/node-js-versions)
+- [Vercelプロジェクト設定](https://vercel.com/docs/project-configuration)
+- [Vercel環境変数のスコープ](https://vercel.com/docs/environment-variables)
+- [Supabaseの環境管理](https://supabase.com/docs/guides/deployment/managing-environments)
+- [Vercel Functionsのリージョン](https://vercel.com/docs/functions/configuring-functions/region)
+- [Vercel Instant Rollback](https://vercel.com/docs/instant-rollback)
