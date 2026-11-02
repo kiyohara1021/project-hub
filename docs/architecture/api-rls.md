@@ -92,3 +92,7 @@ GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-a
 ## 操作履歴の期間検索
 
 [期間検索仕様](../specs/012-activity-date-filter.md)（Issue #30）でGET activityへfrom/toを追加。日本時間のYYYY-MM-DDを両端含みで検索する。空欄は制限なし、不正日付・逆転・重複は400。既存の条件とカーソルを併用し、RLS・テーブル・ERの変更はない。
+
+## メンバー担当件数
+
+[担当件数仕様](../specs/013-member-assignment-counts.md)（Issue #32）で一覧GETの各要素へtask_count / issue_countを追加。SECURITY INVOKERのread_members RPCが所属・role/UUIDカーソル・limitを検証し、planned/active内の未完了タスクと未解決課題をDB集計する。通常JWTのRLS・SELECT権限を維持する。詳細GET・所属変更APIの契約は維持し、業務テーブル・書込権限の変更はない。

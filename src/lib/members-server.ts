@@ -1,13 +1,13 @@
 import {projectAccess,ProjectError,uuid,rpcError} from "./projects-server";
-import {memberRoles,type Member,type MemberRole} from "./member-types";
+import {memberRoles,type Member,type MemberRole,type MemberPage} from "./member-types";
 export const memberFields="user_id,role,version,joined_at,profiles!memberships_user_id_fkey(display_name)";
 export async function readMembers(wid:string,query:URLSearchParams) {
  const client=await projectAccess(wid);const role=query.get("role")??"";const cursor=query.get("cursor");const raw=query.get("limit")??"25";const limit=Number(raw);
  if([...query.keys()].some(k=>!["role","cursor","limit"].includes(k)||query.getAll(k).length>1)||(role&&!memberRoles.includes(role as MemberRole))||(cursor!==null&&!uuid.test(cursor))||!/^\d+$/.test(raw)||limit<1||limit>100) throw new ProjectError(400,"INVALID_INPUT","検索条件を確認してください");
- let db=client.from("memberships").select(memberFields).eq("workspace_id",wid).order("user_id").limit(limit+1);
- if(role)db=db.eq("role",role);if(cursor)db=db.gt("user_id",cursor);
- const result=await db;if(result.error)throw new ProjectError(500,"READ_FAILED","メンバーを取得できませんでした");
- const data=result.data.slice(0,limit) as unknown as Member[];return {data,nextCursor:result.data.length>limit?data.at(-1)!.user_id:null};
+ const result=await client.rpc("read_members",{p_workspace_id:wid,p_role:role||null,p_cursor:cursor,p_limit:limit});
+ if(result.error?.code==="P0002")throw new ProjectError(404,"NOT_FOUND","見つかりませんでした");
+ if(result.error)throw new ProjectError(500,"READ_FAILED","メンバーを取得できませんでした");
+ return result.data as MemberPage;
 }
 export async function readMember(wid:string,uid:string) {
  const client=await projectAccess(wid);if(!uuid.test(uid))throw new ProjectError(400,"INVALID_INPUT","IDを確認してください");
