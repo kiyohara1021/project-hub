@@ -173,6 +173,20 @@ Chrome DevTools公式CLIで描画/操作の計測を追加した。[条件・集
 
 ## P5後の仕様差分の反映順序
 
-2026-11-03時点で、期間検索・メンバー担当件数・登録済みユーザーの所属追加・ローカル負荷検証は本番未反映。依存順序は PR #31 → #35 → #36 → #37。PRを順次レビュー・マージし、メンバー担当件数の`202611030007_member_assignments.sql`、所属追加の`202611030008_add_member.sql`をこの順にProduction Supabaseへ適用する。DBスキーマ・RPC・実行権限が追加されるため、Productionの適用結果と権限を確認してから対応するアプリを反映する。マイグレーション名はリポジトリの実ファイルを正とし、先行する適用済みファイルを書き換えない。
+2026-11-03に期間検索・メンバー担当件数・登録済みユーザーの所属追加を本番反映済み（結果は次節）。ローカル負荷検証スクリプトもmainへ反映した。適用時の依存順序は PR #31 → #35 → #36 → #37。PRを順次レビュー・マージし、メンバー担当件数の`202611030007_member_assignments.sql`、所属追加の`202611030008_add_member.sql`をこの順にProduction Supabaseへ適用する。DBスキーマ・RPC・実行権限が追加されるため、Productionの適用結果と権限を確認してから対応するアプリを反映する。マイグレーション名はリポジトリの実ファイルを正とし、先行する適用済みファイルを書き換えない。
 
 `pnpm test:load`は専用fixtureを使うローカル回帰確認で、本番性能検証ではない。本番に向けて実行せず、測定条件と限界は[性能記録](performance.md#100プロジェクト1000タスクのローカル一覧api検証)を参照する。
+
+
+### P5後の仕様差分の本番反映（2026-11-03）
+
+PR #31 → #35 → #36 → #37をmerge commitで順次mainへ反映。アプリ基準SHAは`1d62e7100589dfdebe6fc9d88f437d127e439397`、Vercel Deploymentは`7w5B6Jx8HfUijpYzWyVDY5YgdCb8`。Production Ready・Currentと正規URL割当、Source main/1d62e71をVercel管理画面で照合した。各PRのverify/database-authとVercel Previewは成功済み。統合時のローカルDBテスト10件・認証E2E28件も成功している。
+
+- 対象は既存のproject-hub専用Hosted Supabase（Tokyo）であることと、適用済み6バージョン・追加RPC未存在を照合。SQL Editorでリポジトリの007→008を原文のまま、事前条件・履歴登録・schema reloadを含む単一トランザクションで適用し、8バージョンを確認してから対応アプリをマージした。ローカルseedと負荷fixtureは本番へ送っていない。
+- `read_members`はSECURITY INVOKER、`add_member_once`はSECURITY DEFINER、双方の所有者はproject_hub_owner、search_pathは空。authenticatedのEXECUTEは許可、anonは拒否。private.member_requestsはRLS有効、authenticatedのSELECT/INSERTとanonのSELECTは拒否を照合した。
+- 所有者がブラウザで管理者ログインし、デモスペースAの3名・既存ロール・未完了タスク件数（メンバー1件、他0件）・未解決課題0件を確認。管理者条件のメンバーAPIも件数とnextCursorを返した。
+- 所属追加は初期ロール閲覧者、UUIDと全プロジェクト閲覧の確認、Esc後の起点へのフォーカス復帰を確認。既存管理者IDへの追加要求は「既に所属」のエラーとなり、所属3名と管理者ロールを維持。新規所属の成功・ロール変更・削除は今回の本番スモークでは行っていない。成功経路・通信再送・admin/member/viewerの権限境界はローカルDB/E2EとCIで確認済み。
+- 操作履歴で2026-11-02の同日指定・limit=1による検索と次ページを確認。開始日/終了日を保持し、絞り込み再送信でcursorが解除され先頭へ戻ることを確認した。
+- 匿名HTTPのdashboard/projects/tasks/issues/members/activityはすべて401 UNAUTHENTICATED / private,no-store。異なるOriginからの所属追加は403 INVALID_ORIGIN。パスワード・Cookie・JWTを抽出/保存/ログ出力していない。
+
+この追加確認は管理者の本番画面・読取・安全な重複拒否と匿名/Originの境界が対象。今回の本番スマートフォン幅検証、member/viewerの再ログイン、新規所属作成、本番の100プロジェクト/1,000タスク負荷試験を実施したという意味ではない。既存のローカル・CIの結果と区別する。
