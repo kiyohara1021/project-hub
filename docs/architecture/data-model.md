@@ -12,6 +12,8 @@ erDiagram
  WORKSPACES ||--o{ PROJECTS : owns
  PROJECTS ||--o{ TASKS : contains
  PROJECTS ||--o{ ISSUES : tracks
+ ISSUES ||--o{ ISSUE_COMMENTS : contains
+ PROFILES ||--o{ ISSUE_COMMENTS : authors
  MEMBERSHIPS o|--o{ TASKS : assigned
  MEMBERSHIPS o|--o{ ISSUES : assigned
  WORKSPACES ||--o{ ACTIVITY_LOGS : records
@@ -31,6 +33,7 @@ erDiagram
 | projects | `id` PK、`workspace_id` FK、`name, description, status, due_date, version, created_at, updated_at`、UNIQUE(workspace_id,id) | プロジェクト情報。削除の代わりにアーカイブを使用 |
 | tasks | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, position, version, created_at, updated_at` | カンバンのタスク。positionはbigint |
 | issues | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, version, created_at, updated_at` | 課題情報 |
+| issue_comments | `id` PK、`workspace_id, project_id, issue_id` 複合FK issues、`author_id` FK profiles、`author_display_name, body, version, created_at, updated_at` | 投稿時の表示名と本文。課題削除にCASCADE |
 | activity_logs | `id` PK、`workspace_id` FK、`project_id, actor_id` nullable、`actor_display_name, entity_type, entity_id, action, changes, created_at` | 読み取り専用の操作履歴。changesはjsonb |
 
 | 項目 | 許可値・ルール |
@@ -53,7 +56,7 @@ tasks / issuesの `(workspace_id, project_id)` はprojectsの `(workspace_id, id
 
 ### 操作履歴
 
-プロジェクト・タスク・課題・所属の変更時にDBトリガーが記録を追加します。操作者は `auth.uid()` から取得し、表示名は `actor_display_name` にスナップショットを保存します。未認証の管理用初期設定は、初期データの操作者名として記録されます。
+プロジェクト・タスク・課題・所属・コメントの変更時にDBトリガーが記録を追加します。操作者は `auth.uid()` から取得し、表示名は `actor_display_name` にスナップショットを保存します。未認証の管理用初期設定は、初期データの操作者名として記録されます。
 
 changesには変更前後のstatus・role・versionを保存し、本文や資格情報は含めません。更新と監査記録は同じトランザクションで確定します。履歴から現在の対象へ移動する場合、対象がすでに削除されていれば404になります。
 
@@ -66,6 +69,7 @@ changesには変更前後のstatus・role・versionを保存し、本文や資�
 | private.project_requests | `workspace_id, actor_id, request_key` | workspace / profile FK、`payload, result, expires_at` |
 | private.task_requests | `workspace_id, project_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at` |
 | private.issue_requests | `workspace_id, project_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at` |
+| private.comment_requests | `workspace_id, project_id, issue_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at`。issueへのFKなし |
 | private.member_requests | `workspace_id, actor_id, request_key` | workspace / profile FK、`payload, response, expires_at` |
 
 payloadとresult / responseはjsonbです。監査ログと異なり、再送に必要な作成入力と受付結果を保管します。所属追加の記録にはユーザーID・ロール・初回所属情報を保存します。パスワードやトークンは保存しません。
@@ -88,6 +92,11 @@ payloadとresult / responseはjsonbです。監査ログと異なり、再送に
 | 課題の状態別取得 | issues(workspace_id, project_id, status, id) |
 | 課題のページ送り | issues(workspace_id, project_id, created_at DESC, id DESC) |
 | 担当別集計 | tasks / issues(workspace_id, assignee_id) |
+| 課題コメント | issue_comments(workspace_id, project_id, issue_id, created_at DESC, id DESC) |
 | 操作履歴 | activity_logs(workspace_id, created_at DESC, id DESC) |
 
 サンプルデータと検証用アカウントの扱いは[開発ルール](../../CONTRIBUTING.md)にまとめています。
+
+## 課題コメントの保持と削除
+
+issuesにUNIQUE(workspace_id,project_id,id)を追加し、issue_commentsの親課題を複合FKで保証します。本文は1〜5,000文字、投稿者は投稿時の表示名を保存します。所属解除・改名で過去の表示名を置き換えません。課題削除時はコメントをCASCADE削除し、操作履歴とprivate.comment_requestsの受付結果は保持します。再送記録は24時間経過後の次回投稿時に削除し、コメントの復元には使いません。[仕様016](../specs/016-issue-comments.md)を参照してください。

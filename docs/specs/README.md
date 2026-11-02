@@ -21,6 +21,7 @@
 | [013](013-member-assignment-counts.md) | メンバー担当件数 | 007を拡張 |
 | [014](014-add-workspace-member.md) | 登録済みユーザーの所属追加 | 007を拡張 |
 | [015](015-list-api-load-check.md) | ローカル一覧APIの負荷検証 | 本番ブラウザ測定とは別の検証 |
+| [016](016-issue-comments.md) | 課題コメント | 006を拡張。投稿・時系列表示・編集・削除 |
 
 ## 過去の仕様を読むとき
 

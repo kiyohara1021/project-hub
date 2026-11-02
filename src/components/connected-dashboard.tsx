@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 function dateTime(value: string) { return new Intl.DateTimeFormat("ja-JP", { timeZone:"Asia/Tokyo",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false }).format(new Date(value)); }
-const entityLabels: Record<string,string> = { projects:"プロジェクト",tasks:"タスク",issues:"課題",memberships:"メンバー" };
+const entityLabels: Record<string,string> = { projects:"プロジェクト",tasks:"タスク",issues:"課題",memberships:"メンバー",issue_comments:"課題コメント" };
 const actionLabels: Record<string,string> = { INSERT:"追加",UPDATE:"更新",DELETE:"削除" };
 
 export async function ConnectedDashboard({ search }: { search: Record<string,string | string[] | undefined> }) {
