@@ -49,3 +49,30 @@ test("履歴読取障害を安全なエラーに変換し再試行で復旧、�
   await page.getByRole("button",{name:"再試行する",exact:true}).click();await expect(page.getByRole("heading",{level:1,name:"操作履歴",exact:true})).toBeVisible();
   await page.goto(`/dashboard?workspace=${wid}`);await page.getByRole("link",{name:"操作履歴をすべて見る →",exact:true}).click();await expect(page).toHaveURL(`/activity?workspace=${wid}`);
 });
+
+test("期間検索は日本時間の両端日を含み、マイクロ秒境界・片側指定・ページ送りを扱う",async({page})=>{
+  const project=await fixture(page);const api=`/api/v1/workspaces/${wid}/activity?project=${project.id}`;
+  const stamps=["2026-10-31T14:59:59.999999Z","2026-10-31T15:00:00Z","2026-11-01T14:59:59.999999Z","2026-11-01T15:00:00Z","2024-02-29T00:00:00Z"];
+  const original:ActivityPage=await(await page.request.get(api)).json();
+  for(let i=0;i<stamps.length;i++)localSql(`update public.activity_logs set created_at='${stamps[i]}' where id='${original.data[i].id}'`);
+  async function ids(query:string){const response=await page.request.get(`${api}&${query}`);expect(response.status()).toBe(200);return ((await response.json()) as ActivityPage).data.map(e=>e.id);}
+  expect(await ids("from=2026-11-01&to=2026-11-01")).toEqual([original.data[2].id,original.data[1].id]);
+  expect(await ids("from=2026-11-01")).toHaveLength(3);
+  expect(await ids("to=2026-11-01")).toHaveLength(4);
+  expect(await ids("from=2024-02-29&to=2024-02-29")).toEqual([original.data[4].id]);
+  expect(await ids("from=&to=")).toHaveLength(5);
+  expect(await ids("from=0001-01-01&to=9999-12-31")).toHaveLength(5);
+  for(const query of ["from=2026-02-29","to=2026-04-31","from=0000-01-01","to=10000-01-01","from=2026-1-01","from=invalid","to=2026-11-01T00:00:00Z","from=2026-11-02&to=2026-11-01","from=2026-11-01&from=2026-11-01","to=&to="]){
+    expect((await page.request.get(`${api}&${query}`)).status(),query).toBe(400);
+  }
+  await login(page,"viewer");await page.setViewportSize({width:360,height:800});
+  await page.goto(`/activity?workspace=${wid}&project=${project.id}&limit=1`);
+  await page.getByLabel("開始日（日本時間）").fill("2026-11-01");await page.getByLabel("終了日（日本時間）").fill("2026-11-01");await page.getByRole("button",{name:"絞り込む",exact:true}).click();
+  await expect(page.getByRole("article")).toHaveCount(1);await expect(page.getByRole("article").getByRole("time")).toHaveText("2026/11/01 23:59:59");
+  await page.getByRole("link",{name:"次のページ →",exact:true}).click();await expect(page).toHaveURL(/cursor=/);await expect(page.getByLabel("開始日（日本時間）")).toHaveValue("2026-11-01");await expect(page.getByRole("article").getByRole("time")).toHaveText("2026/11/01 00:00:00");
+  await page.getByRole("article").getByRole("link",{name:"この操作者で絞る",exact:true}).click();await expect(page).not.toHaveURL(/cursor=/);await expect(page).toHaveURL(/from=2026-11-01/);
+  await page.getByRole("link",{name:"操作者の絞り込みを解除",exact:true}).click();await expect(page.getByLabel("終了日（日本時間）")).toHaveValue("2026-11-01");
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole("link",{name:"リセット",exact:true}).click();await expect(page.getByLabel("開始日（日本時間）")).toHaveValue("");await expect(page).not.toHaveURL(/from=/);
+  await page.goto(`/activity?workspace=${wid}&from=2026-11-02&to=2026-11-01`);await expect(page.getByText("検索条件を確認してください",{exact:true})).toBeVisible();
+});
