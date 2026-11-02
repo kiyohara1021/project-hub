@@ -14,4 +14,4 @@ export async function readMember(wid:string,uid:string) {
  const result=await client.from("memberships").select(memberFields).eq("workspace_id",wid).eq("user_id",uid).maybeSingle();
  if(result.error)throw new ProjectError(500,"READ_FAILED","メンバーを取得できませんでした");if(!result.data)throw new ProjectError(404,"NOT_FOUND","見つかりませんでした");return result.data as unknown as Member;
 }
-export function memberRpcError(error:{code:string;message:string}) {return error.message==="LAST_ADMIN"?new ProjectError(409,"LAST_ADMIN","最後の管理者は変更・所属解除できません。先に別のメンバーを管理者にしてください。"):rpcError(error);}
+export function memberRpcError(error:{code:string;message:string}) {return error.message==="ALREADY_MEMBER"?new ProjectError(409,"ALREADY_MEMBER","このユーザーは既に所属しています。一覧で現在のロールを確認してください。"):error.message==="LAST_ADMIN"?new ProjectError(409,"LAST_ADMIN","最後の管理者は変更・所属解除できません。先に別のメンバーを管理者にしてください。"):rpcError(error);}

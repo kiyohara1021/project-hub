@@ -96,3 +96,7 @@ GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-a
 ## メンバー担当件数
 
 [担当件数仕様](../specs/013-member-assignment-counts.md)（Issue #32）で一覧GETの各要素へtask_count / issue_countを追加。SECURITY INVOKERのread_members RPCが所属・role/UUIDカーソル・limitを検証し、planned/active内の未完了タスクと未解決課題をDB集計する。通常JWTのRLS・SELECT権限を維持する。詳細GET・所属変更APIの契約は維持し、業務テーブル・書込権限の変更はない。
+
+## 登録済みユーザーの所属追加
+
+[仕様014](../specs/014-add-workspace-member.md)（Issue #33）。adminのみPOST `/api/v1/workspaces/:wid/members`へ `{user_id,role}` とIdempotency-Keyを送る。成功201、未登録UUID404、既存所属409。既知UUIDの直接指定に限定しprofilesのRLS・検索範囲は拡大しない。`add_member_once` がworkspaceをロックして管理権限を再確認し、所属・監査・24時間のprivate再送記録を同時保存する。再送は元の受付結果だけを返し、その後の変更・解除を上書きしない。メール・ユーザー作成は対象外。
