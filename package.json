@@ -22,7 +22,8 @@
     "db:env": "node scripts/local-env.mjs",
     "build:vercel": "node scripts/check-deployment.mjs && next build",
     "check:deploy": "node scripts/check-deployment.mjs",
-    "test:release": "node --test tests/release/*.test.mjs"
+    "test:release": "node --test tests/release/*.test.mjs",
+    "test:load": "node scripts/check-list-performance.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
