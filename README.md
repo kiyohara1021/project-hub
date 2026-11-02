@@ -16,6 +16,7 @@
 - [6画面の仕様・SVG](docs/design/screens.md)
 - [ロードマップ](docs/roadmap.md)
 - [Vercel公開・運用手順](docs/deployment.md)
+- [ブラウザ性能の計測結果](docs/performance.md)
 - [開発ルール](CONTRIBUTING.md)
 
 ## 起動・確認
