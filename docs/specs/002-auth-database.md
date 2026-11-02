@@ -1,16 +1,18 @@
 # P2-1: 認証・DB・ワークスペース分離
 
+> 実装時の仕様（対応済み）です。「対象外」はこの段階の作業範囲を示します。現在の動作は[基本仕様](../specification.md)、追加・変更の関係は[仕様一覧](README.md)を参照してください。
+
 関連: [Issue #3](https://github.com/kiyohara1021/project-hub/issues/3)。基本設計/API・RLS設計の最初の実装単位。
 
 ## 受け入れ条件
 
-- AC1: ローカルSupabaseに7テーブルと制約を再作成できる。架空ユーザー5名を投入する。
+- AC1: ローカルSupabaseに7テーブルと制約を再作成できる。テストユーザー5名を投入する。
 - AC2: 全テーブルはRLSで所属workspaceに隔離され、anonと無所属ユーザーに業務データを返さない。プロフィールは自分と共通workspaceの所属者だけ。
 - AC3: 認証済みユーザーはworkspaceを作成してadminになる。project作成/更新、所属ロール変更/解除はadminのみ。最後のadmin解除とversion競合を拒否し、履歴を同時記録する。
 - AC4: authenticatedの直接テーブル書込と履歴偽造を拒否する。タスク・課題はP3/P4のRPC完成まで読み取り専用。
 - AC5: 明示的に `APP_MODE=connected` を設定した場合だけDB接続画面 `/workspaces` を有効にする。未認証ならログインへ。ログイン/ログアウトは同一OriginのPOSTだけを受け付ける。
 - AC6: `GET /api/v1/workspaces/:wid/projects` は検証済みユーザーJWTでDBへ接続する。401/404、UUID・limit不正、一覧のページ送りに対応。service_roleはアプリに配置しない。
-- AC7: 架空のadmin/member/viewer、別workspace、無所属の実JWTで許可/拒否を検証し、認証画面のE2Eと既存プレビューのCIを通す。
+- AC7: テスト用のadmin/member/viewer、別workspace、無所属の実JWTで許可/拒否を検証し、認証画面のE2Eと既存プレビューのCIを通す。
 
 ## 実装範囲と差分
 

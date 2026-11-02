@@ -1,6 +1,17 @@
-# ローカル認証・DB開発
+# ローカル開発手順
 
-Dockerを起動し、Node.js 24 / pnpm 9.15.0を使用する。クラウドSupabaseは不要。
+Node.js 24 / pnpm 9.15.0を使用します。DB・認証を使う場合はDockerも起動してください。本手順はローカル環境専用です。
+
+## DB接続なしで起動する
+
+```sh
+pnpm install --frozen-lockfile
+APP_MODE=preview pnpm dev
+```
+
+[ダッシュボード](http://127.0.0.1:3000/dashboard)で固定のサンプル画面を確認できます。ログインや保存操作は利用できません。
+
+## DB・認証を使って起動する
 
 ```sh
 pnpm install --frozen-lockfile
@@ -10,13 +21,9 @@ pnpm db:env
 pnpm dev
 ```
 
-http://127.0.0.1:3000/dashboard を開くと未認証の場合はログインへ移動する。ログイン後はダッシュボードで所属先の集計を確認できる。プロジェクト一覧で名前を選ぶとカンバンへ、課題リンクを選ぶと課題一覧へ移動する。管理者はプロジェクト管理、管理者/メンバーはタスク・課題管理が可能。閲覧者とアーカイブ済みプロジェクトは読み取り専用。管理者はメンバーのロール変更・所属解除も可能。操作履歴は読み取り専用でDBの記録を表示。
+[ログイン画面](http://127.0.0.1:3000/login)を開き、次のテストアカウントでログインしてください。
 
-## 架空のログイン情報
-
-ローカル専用。共通パスワードは `Local-Demo-Only-2026!`。リモート・本番に使用しない。
-
-| メール | 表示名 | 所属・権限 |
+| メールアドレス | 表示名 | 所属・ロール |
 |---|---|---|
 | admin@example.invalid | デモメンバー01 | デモスペースA・管理者 |
 | member@example.invalid | デモメンバー02 | デモスペースA・メンバー |
@@ -24,84 +31,85 @@ http://127.0.0.1:3000/dashboard を開くと未認証の場合はログインへ
 | outside@example.invalid | デモメンバー04 | デモスペースB・管理者 |
 | unassigned@example.invalid | デモメンバー05 | 所属なし |
 
-`db:seed` はCLIのローカル接続情報だけを使い、127.0.0.1:54321以外を拒否する。登録済みユーザーを再利用し、架空データをupsertする。`db:env` は管理鍵を含めず、無視対象の `.env.local` に公開用接続鍵だけを書く。別設定の既存ファイルは上書きしない。
+共通パスワードは`Local-Demo-Only-2026!`です。ローカルのテスト専用で、本番では使用しません。
 
-APP_ORIGINはブラウザで開くURLのoriginと完全一致させる。初期値は http://127.0.0.1:3000 。ポートやホストを変更する場合はこの設定も変更する。ログイン/ログアウトと書込APIはこのOriginだけを許可する。Supabase URLは別のローカルAPI（54321）。
+`db:seed`はSupabase CLIのローカル接続情報を使い、`127.0.0.1:54321`以外を拒否します。登録済みユーザーを再利用し、サンプルデータをupsertします。`db:env`は公開用接続鍵を`.env.local`へ書き込み、別設定の既存ファイルは上書きしません。管理鍵は含めません。
 
-## 再構築・テスト
+### 環境変数
+
+| 変数 | ローカルDB接続時の設定 |
+|---|---|
+| APP_MODE | `connected` |
+| APP_ORIGIN | `http://127.0.0.1:3000` |
+| SUPABASE_URL | ローカルSupabaseのURL（通常は`http://127.0.0.1:54321`） |
+| SUPABASE_PUBLISHABLE_KEY | CLIから取得したローカル公開用接続鍵 |
+
+`APP_ORIGIN`はブラウザで開くURLのoriginと完全一致させます。ホストやポートを変更した場合は、この設定も変更してください。書込APIとログイン・ログアウトは指定したOriginだけを許可します。
+
+## テスト
+
+DB・認証テストの前にDockerとローカルSupabaseを起動し、seedと`.env.local`を準備します。
 
 ```sh
-# このリポジトリのローカルDBを初期化する。クラウドには接続しない。
-pnpm db:reset
+pnpm db:start
 pnpm db:seed
-pnpm test:db
 pnpm db:env
 pnpm lint
 pnpm typecheck
 pnpm build
 pnpm exec playwright install chromium
+pnpm test:release
+pnpm test:db
 pnpm test:e2e
 pnpm test:auth
 ```
 
-DBテストは所属解除や同時降格まで実行し、検証用workspaceを追加する。初期状態へ戻すには `db:reset` と `db:seed` を実行する。認証テストは3101、プレビューのE2Eは3100を占有するため、そのポートの手動起動サーバーを先に停止する。認証テストはlocalhostを許可した固定Originへ自動設定する。
+| コマンド | 確認内容 | 使用ポート |
+|---|---|---|
+| `pnpm lint` / `pnpm typecheck` | 静的解析・型の整合 | — |
+| `pnpm build` | 本番用ビルド | — |
+| `pnpm test:release` | 環境変数の検査・Cookie設定 | — |
+| `pnpm test:db` | RLS、更新RPC、競合、再送、集計、監査ログ | Supabase 54321 |
+| `pnpm test:e2e` | DB未接続の画面デモ | 3100 |
+| `pnpm test:auth` | DB接続・認証を含む画面/API操作 | 3101 |
+| `pnpm test:load` | 一覧APIのローカル性能 | 3104 |
 
-終了時は `pnpm db:stop`。ローカルデータはバックアップされる。一般登録は無効、メール/SMS送信は行わない。`.env.local` やCLIの接続鍵をコミットしない。クラウドへ移す際はこのseedを適用せず、別の設定とユーザー管理手順を用意する。
+Playwrightはビルド済みのアプリを起動します。各ポートの手動起動サーバーは先に停止してください。Windows/Linuxではブラウザの依存ライブラリが必要な場合があります。CIは`playwright install --with-deps chromium`を使用します。
 
-## 今回のDB契約
+DBテストと認証E2Eは**順番に実行**してください。検証中は共有seedのロール変更や、障害復旧を確認するための一時的な読取権限の変更を行います。同時実行すると相互に干渉します。負荷検証も他のDBテストと同時に実行しません。
 
-実装済みRPC: create_workspace / create_project / update_project / set_member_role / remove_member / create_project_once / edit_project / create_task_once / edit_task / delete_task / move_task / read_dashboard / create_issue_once / edit_issue / delete_issue / change_member。所属追加・プロフィール変更は後続段階。
+### 一部のテストだけを実行する
 
-一覧APIはq（名前部分一致）/status/limit(1〜100)/cursorを受け付け、created_at DESC,id DESCでページングする。cursorはAPIが返す不透明な文字列をそのまま渡す。未対応/重複パラメーターは400。APIはservice_roleを使わず、cookieのJWTを検証してRLS付きで読み取る。
+```sh
+node --test tests/database/member-add.test.mjs
+pnpm test:auth tests/auth/member-add.spec.ts
+```
 
-POST `/api/v1/workspaces/:wid/projects` はIdempotency-Key必須。24時間は同じ本文・キーで再試行しても同じ作成結果を返す。本文を変えた再送は409。PATCH `.../projects/:pid` はversion必須で、古いversionは409。画面は失敗時の入力を保持し、競合時は「入力を破棄して最新版を読み直す」を明示的に選択できる。期限切れの再送記録は同じworkspace/actorが次に作成した時に削除するため、厳密な24時間後の物理削除ではない。
+機能ごとの対象は[機能別仕様](specs/README.md)を参照してください。APIの入出力やRPC一覧は[API・認可設計](architecture/api-rls.md)へ集約しています。
 
-参考（2026-11-01確認）: [Supabase SSR](https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs&queryGroups=framework)、[ローカル開発](https://supabase.com/docs/guides/local-development/cli/getting-started)。
+### 一覧APIの性能を測定する
 
-## カンバン操作
+```sh
+pnpm build
+pnpm test:load
+```
 
-プロジェクト一覧から名前を選び、列ごとに25件ずつ表示する。「さらに読み込む」で続きへ進む。担当者/優先度を選択して絞り込み、リセットで解除する。スマートフォンは表示状態を選んで1列ずつ操作する。
+ローカルのadminアカウントを使い、専用ワークスペースへ100プロジェクト・1,000タスクを作成します。通常ログインのCookieでプロジェクト一覧とタスク一覧を測定し、終了時に検証データを削除します。各条件5回のウォームアップ後に50回を直列で測定し、min/p50/p95/maxをJSON出力します。p95が1秒を超える条件があれば終了コード1です。
 
-管理者/メンバーはタスクを追加し、編集から担当・優先度・期限を変更できる。削除には確認が必要。PCではカードを別列の余白へドラッグすると列末尾へ、カード上へ落とすとその前へ移動する。状態メニューと「上へ」ボタンはキーボード/モバイル向けの代替操作。
+強制終了などでデータが残った場合は、ローカルDBで検証用ワークスペースを確認してください。現在の識別名は`一覧性能検証の架空ワークスペース`です。これはスクリプト内の既存名称で、照合のためそのまま記載しています。測定条件と限界は[仕様015](specs/015-list-api-load-check.md)、結果は[性能測定記録](performance.md)を参照してください。
 
-移動後は列を再取得するため、追加読込済みでも最初の25件に戻る。他ユーザーの並び替えがあった場合も、再読み込みで整合させる。作成の再送時にも権限とアーカイブ状態を検査する。DBテストは共通の架空データを変更するためファイルを直列実行し、所属解除テスト後は初期メンバーを復元する。
+## DBの再構築と終了
 
-supabase/config.tomlはローカル専用で、反復テスト用のログイン枠を設定している。本番の認証設定はこのファイルをそのまま使わず別途検討する。
+```sh
+# ローカルDBを初期化し、サンプルデータを入れ直す
+pnpm db:reset
+pnpm db:seed
+pnpm db:env
 
-## ダッシュボード
+# ローカルSupabaseを停止する
+pnpm db:stop
+```
 
-ワークスペースを選び「最新の状況を取得」で更新する。完了率はアーカイブ以外の全タスクに対する完了数の割合（0件は0%）で、プロジェクト別の率を平均しない。期限超過は日本時間で今日より前の未完了タスク。未解決課題はopen/investigatingで、課題一覧の作成・解決・再開・削除も次の取得時に反映される。
+テストを強制終了し、ロールや権限が戻らなかった場合も再構築します。`db:reset`はローカルDBのデータを消すため、保持したい変更がある場合は先に退避してください。
 
-プロジェクト進捗・自分の未完了タスク・最近の操作はそれぞれ最大5件。最近の操作だけはアーカイブも含むworkspace全体から取得し、本文や変更内容ペイロードを返さない。自分のタスクのリンクは担当者と `column` をカンバンへ引き継ぐ。
-
-集計RPCはSECURITY INVOKERでRLSを維持し、1,001件のテストでもHTTPの行数上限で切り捨てないことを検証している。日付境界とSECURITY INVOKERの検証は `scripts/local-sql.mjs` からローカルDockerコンテナだけに固定SQLを実行する。認証画面テストは専用fixtureと一時的な関数実行権限の剥奪で障害復旧も確認し、finallyで権限を復元するため、テストの強制終了時は `pnpm db:reset` で再構築する。
-
-## 課題管理
-
-プロジェクト一覧またはカンバンから課題一覧へ進む。既定は未解決・調査中だけを表示し、「すべて」「解決済み」「終了」も選べる。件名、状態、優先度、担当者を組み合わせて検索でき、25件ずつページを送る。PCは表、スマートフォン/タブレットはカード表示で、「説明を見る」から本文を確認する。
-
-admin/memberは課題追加・編集・削除が可能。状態変更は編集ダイアログで選択し、確認して保存する。解決後は既定の一覧から消えるため、解決済みで検索して再開する。削除も確認が必要。409は入力を保持し、明示操作で最新版を読み直す。作成の再送は24時間、同じ本文とキーなら同じ作成結果を返し、再送時にも現在の権限・アーカイブ状態を検証する。
-
-## メンバー管理
-
-`/members?workspace=11111111-1111-4111-8111-111111111111`で架空メンバーを表示。adminで権限管理、member/viewerで読取専用を確認。最後の管理者の所属解除は拒否される。新規招待・外部メール送信は未対応。DB/E2Eに所属解除の副作用・競合・最後の管理者保護を追加。
-
-## 操作履歴
-
-`/activity?workspace=11111111-1111-4111-8111-111111111111`で所属先の記録を表示。操作・対象種別を選択し、各履歴のリンクから操作者・プロジェクトで絞り込む。条件変更/ページ送りは条件を保持、所属先切替でリセット。ログは日本時間と当時の操作者名を表示し、現在の氏名や本文を補完しない。既存のactivity_logs/RLS/インデックスを使用し、新規マイグレーションは不要。[仕様](specs/008-connected-activity.md)。
-
-## 公開準備の検証
-
-`pnpm test:release`はクラウド設定検査のテスト。`pnpm build:vercel`は環境変数の形式確認後にビルドします（.env自動読込なし）。ローカル用URLのまま本番接続を許可しません。通常ローカルビルドは`pnpm build`。実際の公開は[公開手順](deployment.md)を参照。ローカル専用のseed/DBテストをリモートに向けないでください。
-
-## 登録済みユーザーの所属追加
-
-[仕様014](specs/014-add-workspace-member.md)。追記マイグレーション適用後、管理者のメンバー画面に「メンバーを追加」が表示される。登録済み架空ユーザーのUUIDとロールを確認して追加する。UUIDは管理用のローカルAuth管理画面で事前確認し、候補検索やメール送信は行わない。再送は24時間同じ受付結果となり、後から解除した所属を戻す場合は新しい入力として送信する。
-
-`node --test tests/database/member-add.test.mjs` と `pnpm test:auth tests/auth/member-add.spec.ts` でDB/API/UIを検証する。
-
-## 一覧APIのローカル負荷検証
-
-`pnpm build` の後、`pnpm test:load` を実行する。ローカルSupabaseと登録済みadminのseedが必要。ポート3104は検証用に空け、DBテスト・別の負荷計測と同時に走らせない。スクリプトは専用workspaceへ100プロジェクト・1,000タスクを作り、通常ログインのCookieでprojects/tasks一覧（各25/100件）を測定して削除する。資格情報やCookieは出力しない。
-
-各条件5回のウォームアップ後50回を直列で測定し、本文受信・JSON解析を含むmin/p50/p95/maxをJSONで出力する。p95が1秒を超える条件があれば終了コード1。プロセスの強制終了などで削除できなかった場合は、架空名「一覧性能検証の架空ワークスペース」の残存をローカルDBだけで確認する。詳細な条件・制約は[仕様015](specs/015-list-api-load-check.md)を参照。
+一般登録は無効で、外部へのメール・SMS送信は行いません。`supabase/config.toml`はローカル専用です。本番設定は[デプロイ・運用手順](deployment.md)に従い、ローカルseed・共通パスワード・管理鍵を転用しないでください。

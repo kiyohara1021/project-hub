@@ -1,102 +1,139 @@
-# API・RLS設計
+# APIとアクセス制御
 
-## 実装状況
+DB接続モードで提供するAPIと認可の仕様です。画面からの操作も、以下のAPIと通常ユーザーのJWTを使います。機能ごとの受け入れ条件は[仕様一覧](../specs/)、データの構造は[データモデル](data-model.md)を参照してください。
 
-P2で認証・プロジェクト管理、P3でタスクと集計、P4-1で課題CRUD・再送対応、P4-2でメンバー一覧・ロール変更・所属解除、P4-3で操作履歴一覧を実装。現在の契約・対象外は[履歴仕様](../specs/008-connected-activity.md)、[メンバー仕様](../specs/007-connected-members.md)、[課題仕様](../specs/006-connected-issues.md)、[ダッシュボード仕様](../specs/005-connected-dashboard.md)、[カンバン仕様](../specs/004-connected-kanban.md)、[ローカル手順](../local-development.md)を参照。以下は今後を含む基本設計であり、全APIの実装済み保証ではない。HTTP変更は32KiBのJSONのみ、契約の全項目を必須とし、不明なキーを拒否する。タスクの状態変更は専用moveルートでbefore_idを指定し、position自体は入力として受け付けない。タスク・課題の変更はadmin/memberに許可、アーカイブ内では拒否する。
+## 共通ルール
 
-課題GETはq/status/priority/assignee/limit/cursorで絞り込み、statusの既定unresolvedはopen/investigatingに対応する。作成はopen、編集でresolved/closedを含む状態を変更できる。所属・親プロジェクト・アーカイブのガードはタスクと共通で、ダッシュボードの課題数は同じissuesテーブルを集計する。
+- ベースパスは `/api/v1/workspaces/:wid`。`:wid` はワークスペースのUUIDです。
+- セッションCookieを検証し、ユーザーのJWTでSupabaseに接続します。通常の画面・APIで管理キー（service_role）は使いません。
+- 所属するワークスペース内の全プロジェクトを閲覧できます。無所属と対象の不存在は、どちらも404です。
+- 変更要求は `APP_ORIGIN` と同じOriginからだけ受け付けます。JSONの上限は32KiBです。本文の全項目を必須とし、不明なキーを拒否します。未設定の担当・期限は `null` を送ります。
+- 業務APIのJSON応答には `Cache-Control: private, no-store` を付けます。認証済みデータを共有キャッシュしません。
 
-ダッシュボードGETは追加クエリーを受け付けず、集計日と本人はDBの現在時刻・auth.uid()から決定する。read_dashboardはSECURITY INVOKERでテーブルのRLSとSELECT権限を維持する。役割に関係なく所属者はworkspace全体を集計できるが、個人タスクは呼出者本人に限定。進捗・タスク・ログの表示上限5件と、全件数を使う集計は別に処理する。
-
-## API契約
-
-Next.js Route Handlersの `/api/v1`。セッションcookieを検証しユーザーJWTでSupabaseに接続する。通常操作でservice_roleを使用しない。
-
-以下のパスは `/workspaces/:wid` を接頭辞に持つ。
-
-| メソッド・パス | 入出力・用途 | ロール |
+| ロール | 閲覧 | 変更できるもの |
 |---|---|---|
-| GET /dashboard | 進捗・期限超過・未解決課題集計 | 所属者 |
-| GET /projects | q/status/cursor/limitで一覧 | 所属者 |
-| POST /projects | name,description,due_dateで作成 | admin |
-| PATCH /projects/:pid | name,status,due_date,versionで編集 | admin |
-| GET /projects/:pid/tasks | status/assignee/cursor/limitで一覧 | 所属者 |
-| POST /projects/:pid/tasks | title,description,priority,assignee_id,due_date | admin/member |
-| PATCH /projects/:pid/tasks/:id | 編集・status/position/version | admin/member |
-| DELETE /projects/:pid/tasks/:id | version必須 | admin/member |
-| GET・POST /projects/:pid/issues | 一覧・課題作成 | 読取は所属者、作成はadmin/member |
-| PATCH・DELETE /projects/:pid/issues/:id | 編集・削除、version必須 | admin/member |
-| GET /members | 架空表示名・ロール・担当数 | 所属者 |
-| POST /members | 登録済みデモuser_id,role | admin |
-| PATCH /members/:uid | role変更 | admin |
-| DELETE /members/:uid | 担当解除と所属削除 | admin |
-| GET /activity | project/action/entity/actor/from/to/cursor/limit、読取専用 | 所属者 |
+| admin（管理者） | 所属先の全データ | プロジェクト、タスク、課題、メンバー所属 |
+| member（メンバー） | 所属先の全データ | タスク、課題 |
+| viewer（閲覧者） | 所属先の全データ | なし |
 
-ログイン・ログアウト・callbackはSupabase Authの別ルート。招待メールと一般登録は初期対象外。ローカルで架空ユーザーを事前作成する。
+アーカイブ済みプロジェクトのタスク・課題は、全ロールで閲覧専用です。管理者はプロジェクト情報の編集とアーカイブからの復元ができます。
 
-課題の作成入力はtitle/description/priority/assignee_id/due_date、更新にはstatusも許可。タスクも課題も状態の初期値はそれぞれtodo/open。
+## エンドポイント
 
-作成201、更新200、削除204。一覧は `{ "data": [], "nextCursor": null }`、単一は `{ "data": { "id": "uuid", "version": 1 } }`。日時はISO 8601 UTC、期限はYYYY-MM-DD。
+以下はすべてベースパスからの相対パスです。`pid`、`tid`、`iid`、`uid` はそれぞれプロジェクト、タスク、課題、ユーザーのUUIDです。
 
-400入力不正、401未認証、403ロール不足、404無所属/不存在、409競合・最後のadmin削除、429過剰要求、500内部失敗。エラーは `{ "error": { "code": "VERSION_CONFLICT", "message": "再読み込みしてください", "requestId": "..." } }`。SQLや秘密情報を返さない。
+| メソッド・パス | 用途・本文 | 権限・成功応答 |
+|---|---|---|
+| GET /dashboard | ワークスペースの集計。クエリー指定不可 | 所属者 / 200 |
+| GET /projects | プロジェクト一覧 | 所属者 / 200 |
+| POST /projects | `name, description, due_date` | admin / 201 |
+| GET /projects/:pid | プロジェクト取得 | 所属者 / 200 |
+| PATCH /projects/:pid | `name, description, due_date, status, version` | admin / 200 |
+| GET /projects/:pid/tasks | タスク一覧 | 所属者 / 200 |
+| POST /projects/:pid/tasks | `title, description, priority, assignee_id, due_date` | admin・member / 201 |
+| GET /projects/:pid/tasks/:tid | タスク取得 | 所属者 / 200 |
+| PATCH /projects/:pid/tasks/:tid | 作成と同じ5項目 + `version` | admin・member / 200 |
+| POST /projects/:pid/tasks/:tid/move | `status, before_id, version` | admin・member / 200 |
+| DELETE /projects/:pid/tasks/:tid | `version` | admin・member / 204 |
+| GET /projects/:pid/issues | 課題一覧 | 所属者 / 200 |
+| POST /projects/:pid/issues | `title, description, priority, assignee_id, due_date` | admin・member / 201 |
+| GET /projects/:pid/issues/:iid | 課題取得 | 所属者 / 200 |
+| PATCH /projects/:pid/issues/:iid | 作成と同じ5項目 + `status, version` | admin・member / 200 |
+| DELETE /projects/:pid/issues/:iid | `version` | admin・member / 204 |
+| GET /members | メンバー一覧・担当件数 | 所属者 / 200 |
+| POST /members | 登録済みユーザーの `user_id, role` | admin / 201 |
+| GET /members/:uid | 所属情報取得（担当件数は含まない） | 所属者 / 200 |
+| PATCH /members/:uid | `role, version` | admin / 204 |
+| DELETE /members/:uid | `version`。担当解除と所属解除 | admin / 204 |
+| GET /activity | 操作履歴。変更APIは提供しない | 所属者 / 200 |
 
-limitは1〜100、初期25。通常一覧はcreated_at DESC,id DESC、履歴も同順。カンバンはstatusごとにposition ASC,id ASC。カーソルはソート値とidを含み形式検証。全変更は単一トランザクションのRPCで権限・所属・アーカイブ・versionを確認する。UPDATEのversion条件に一致しなければ409。カンバン移動はproject行をロックして順序とversionを更新し、失敗時に楽観的UIを戻す。POSTはIdempotency-Keyをactor/workspace/path単位に24時間保持し、同じキーで異なる本文は409。
+プロジェクトの削除APIはありません。アーカイブで代替します。タスク編集では状態・位置を変更せず、専用のmove APIを使います。`before_id` は移動先で直後に続くタスクID、`null` は列の末尾です。`position` 自体は入力に含めません。
+
+## 一覧の検索とページ送り
+
+`limit` は既定25、1〜100です。`cursor` はAPIが返した値をそのまま渡します。未知・重複したクエリー、無効なenum・UUID・limit・cursorは400です。
+
+| 一覧 | 検索条件（limit・cursor以外） | 並び順・既定値 |
+|---|---|---|
+| projects | `q, status` | created_at DESC、id DESC。qは名前の部分一致 |
+| tasks | `status, priority, assignee` | position ASC、id ASC。statusは既定todo |
+| issues | `q, status, priority, assignee` | created_at DESC、id DESC。statusは既定unresolved（open・investigating）、allで全状態 |
+| members | `role` | user_id ASC。cursorもユーザーUUID |
+| activity | `action, entity, project, actor, from, to` | created_at DESC、id DESC |
+
+タスク・課題の `assignee` はユーザーUUIDまたは `unassigned`（未割当）です。課題のqは件名の部分一致です。
+
+操作履歴のactionはINSERT / UPDATE / DELETE、entityはprojects / tasks / issues / membershipsです。project・actorはUUIDで指定でき、削除済み対象や所属解除済み操作者の記録も検索できます。from・toは日本時間の `YYYY-MM-DD` で、両端の日を含みます。片側指定・空欄は許可し、存在しない日付や開始日と終了日の逆転は400です。詳細は[期間検索仕様](../specs/012-activity-date-filter.md)を参照してください。
+
+## 応答とエラー
+
+一覧は `{ "data": [], "nextCursor": null }`、単一取得・作成・更新は `{ "data": {...} }` です。ダッシュボードは集計結果をdataに返します。204は本文を返しません。日時はUTCのISO 8601、期限は `YYYY-MM-DD` です。
+
+| HTTP | 主な原因 |
+|---|---|
+| 400 | 入力・検索条件・送信キーが不正 |
+| 401 | 未認証 |
+| 403 | ロール不足、Origin不一致 |
+| 404 | 無所属、対象不存在、登録されていないユーザーID |
+| 409 | version競合、送信キーの本文違い、アーカイブ内変更、最後の管理者の変更・解除、既存所属への追加 |
+| 413 / 415 | 本文サイズ超過 / JSON以外の変更要求 |
+| 500 / 503 | 内部処理失敗 / 接続設定なし |
+
+業務APIのエラー形式は次のとおりです。SQLや資格情報は応答へ含めません。
+
+```json
+{
+  "error": {
+    "code": "VERSION_CONFLICT",
+    "message": "他の操作で更新されました。最新版を読み直してください。",
+    "requestId": "..."
+  }
+}
+```
+
+## 更新競合と再送
+
+編集・削除・タスク移動には取得時の `version` が必要です。不一致なら409となり、画面では入力を保持して最新版の取得を案内します。変更と操作履歴は同じDBトランザクションで確定します。タスク移動はプロジェクト行をロックし、列の順序とversionを更新します。
+
+プロジェクト・タスク・課題の作成と所属追加には `Idempotency-Key` が必須です。1〜128文字の英数字・`_`・`-` を受け付けます。タスクのmove APIには不要です。
+
+- キーはワークスペース・操作者・作成対象の種類で分離します。タスク・課題ではさらにプロジェクトで分離します。
+- 24時間以内の同じキー・同じ本文は初回の成功応答を返します。異なる本文なら409です。
+- 再送時も現在の権限を検査します。タスク・課題ではアーカイブ状態も検査します。
+- 保存後に対象を変更・削除しても、再送は当時の受付結果を返すだけで、データを復元・上書きしません。
+- 期限切れの記録は、同じワークスペース・操作者が次にその種類の作成APIを呼んだときに削除します。
+
+## 集計とメンバー管理
+
+ダッシュボードの `read_dashboard` とメンバー一覧の `read_members` はSECURITY INVOKERで実行し、呼出者のSELECT権限とRLSを維持します。どちらもDB内で全件を集計し、取得行数の上限による切り捨てを防ぎます。
+
+ダッシュボードはアーカイブを除外し、完了率・期限超過・未解決課題を集計します。自分の未完了タスクは本人だけが対象です。プロジェクト進捗・自分のタスク・最近の操作は各5件を表示しますが、集計値の件数制限ではありません。最近の操作にはアーカイブも含みます。
+
+メンバー一覧の `task_count` はplanned / active内のtodo / doing / review、`issue_count` は同じ範囲のopen / investigatingです。詳細GETの応答に担当件数は含めません。[担当件数仕様](../specs/013-member-assignment-counts.md)を参照してください。
+
+所属追加は既知の登録済みユーザーIDの直接指定です。プロフィール候補検索、ユーザー作成、メール送信は行いません。既存所属は409 `ALREADY_MEMBER` とし、ロールを上書きしません。所属変更・解除ではワークスペース行をロックし、最後の管理者を失う操作を409 `LAST_ADMIN` で拒否します。[所属追加仕様](../specs/014-add-workspace-member.md)と[メンバー管理仕様](../specs/007-connected-members.md)を参照してください。
 
 ## 認可・RLS
 
-実装前の設計。public業務テーブルは全てRLSを有効化。anonは全拒否。authenticatedも所属のない行は拒否。UI非表示は認可の代わりにならない。
+7つのpublic業務テーブルはすべてRLSを有効にしています。anonのアクセスとauthenticatedの直接書き込みを拒否し、変更は許可したRPCに限定します。UI上の非表示だけでは認可しません。
 
-| テーブル | SELECT | 変更 |
+| テーブル | authenticatedのSELECT | 変更経路 |
 |---|---|---|
-| profiles | 自分・共通workspaceの所属者のid/表示名 | 自分の表示名だけ専用RPC |
-| workspaces | 所属者 | 初期作成RPCのみ |
-| memberships | 同じworkspace所属者 | admin RPCのみ |
-| projects | 所属者 | admin RPCのみ |
-| tasks/issues | 所属者 | admin/member RPCのみ |
-| activity_logs | 所属者 | DBトリガーのみ |
+| profiles | 自分、または共通ワークスペースの所属者 | Auth登録時のトリガー・管理用の初期設定。プロフィール編集APIはなし |
+| workspaces | 所属先 | 初期作成RPC。通常画面に作成UIはなし |
+| memberships | 所属先のメンバー | 管理者向けRPC |
+| projects | 所属先 | 管理者向けRPC |
+| tasks / issues | 所属先 | 管理者・メンバー向けRPC |
+| activity_logs | 所属先 | 変更時のDBトリガーのみ |
 
-authenticatedの直接テーブル書込権限をREVOKEし、許可したRPCにだけEXECUTEをGRANT。SELECTをRLSで保護する。通常利用者は履歴を変更・削除できない。
+`private.is_member`・`is_admin`・`can_read_profile` は、所属表のRLS再帰を避けるためのSECURITY DEFINER関数です。変更RPCもSECURITY DEFINERですが、操作者は `auth.uid()` から確定し、所属・ロール・親子関係・versionをDB内で再検査します。所有者はログイン不可の専用ロール、search_pathは空、参照先は完全修飾です。再送記録のprivateテーブルもRLSを有効にし、通常ユーザーの直接アクセスを許可しません。
 
-```sql
--- 概念例。実装時に全テーブルへ展開して検証する
-alter table public.projects enable row level security;
-create policy projects_read on public.projects
-for select to authenticated
-using (private.is_member(workspace_id));
-```
+操作履歴は当時の操作者名を保存し、本文・トークンを記録しません。APIはchangesから許可されたstatus・role・versionだけを取り出します。対象や操作者の現在の行との結合を必須にしないため、削除・所属解除後も記録を保持します。DB管理者による改変まで検知する仕組みではありません。
 
-private.is_member/has_roleはsecurity definer、search_path=''、完全修飾参照。auth.uid()がNULLならfalse。API非公開スキーマに配置し、所属表RLSの再帰を防ぐ。限定した所有者で実行しPUBLIC権限を剥奪、必要なauthenticatedだけに実行許可。任意actor_idを引数にしない。
+## 認証・公開設定と検証
 
-変更RPCはRLSを迂回し得るため、auth.uid()からactorを確定して必要ロール・行のworkspace一致を明示検証する。workspace_id/project_idの書換えを禁止し、アーカイブ内の変更を拒否。所属変更はworkspace行をFOR UPDATEでロックし、最後のadminを失う変更を拒否。初期workspaceと作成者adminは同時作成する。
+ログインは `POST /auth/login`、ログアウトは `POST /auth/logout` です。事前登録済みアカウントのメール・パスワード認証を使用します。一般登録と招待は対象外です。
 
-履歴トリガーは変更項目名と状態など許可した値だけ記録し、本文・トークンを保存しない。actorとchangesはクライアント入力を信用しない。変更と履歴は同時確定。DB管理者による変更まで防ぐ改ざん証明機構ではない。service_roleをブラウザ・通常APIに配置しない。
+Vercel PreviewはDB未接続、本番の接続モードは正規HTTPSオリジンと公開用Supabaseキーを指定します。HTTPSのセッションCookieはSecureを付け、画面にnoindex / nofollow、nosniff、frame DENYなどを設定します。環境ごとの手順と実測したCookie属性は[公開・運用手順](../deployment.md)を参照してください。
 
-## 必須テスト
-
-未認証、無所属、別workspace、viewer、member、adminそれぞれのJWTで全テーブルと全RPCの許可/拒否を確認。ID推測、担当すり替え、workspace変更、直接REST書込、自己昇格、履歴偽造、最後のadminの同時削除、アーカイブへの書込、version競合、集計からの漏洩を検証する。
-
-参考: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security)。
-
-## メンバー管理（P4-2）
-
-[仕様](../specs/007-connected-members.md)。GET `/workspaces/:wid/members`（role/cursor/limit）、GET/PATCH/DELETE `/workspaces/:wid/members/:uid`（全て`/api/v1`配下）。PATCH `{role,version}`、DELETE `{version}`、成功204。全所属者が閲覧、adminだけ変更。Origin/JSON32KiB/キー/UUID/versionを検証。`change_member` RPCがworkspaceをロックして競合409・最後のadmin409を拒否。担当解除・監査は原子的に保存。招待・全プロフィール検索・メール送信はなし。
-
-## 操作履歴（P4-3）
-
-GET `/api/v1/workspaces/:wid/activity`は[履歴仕様](../specs/008-connected-activity.md)に従う。既存RLSを通常JWTで適用し、変更APIは提供しない。履歴のchangesは許可済みのstatus/role/versionだけを再抽出して返す。actor表示は保存済みスナップショットを使い、現在のprofileや対象との内部結合による記録の欠落を避ける。削除済み対象/退会済み操作者もproject/actorで検索できる。
-
-## 公開設定（P5-1）
-
-[公開準備仕様](../specs/009-release-readiness.md)と[運用手順](../deployment.md)を参照。PreviewはDB未接続、Productionのconnectedは正規HTTPSオリジンと公開用Supabaseキーを明示する。Server/Proxyで同一のCookie設定を使い、HTTPSではSecureを付与。全画面にnoindex/nofollow・nosniff・frame DENY等のヘッダーを追加。既存APIの認可/RLS・ER/テーブル定義の変更はない。
-
-## 操作履歴の期間検索
-
-[期間検索仕様](../specs/012-activity-date-filter.md)（Issue #30）でGET activityへfrom/toを追加。日本時間のYYYY-MM-DDを両端含みで検索する。空欄は制限なし、不正日付・逆転・重複は400。既存の条件とカーソルを併用し、RLS・テーブル・ERの変更はない。
-
-## メンバー担当件数
-
-[担当件数仕様](../specs/013-member-assignment-counts.md)（Issue #32）で一覧GETの各要素へtask_count / issue_countを追加。SECURITY INVOKERのread_members RPCが所属・role/UUIDカーソル・limitを検証し、planned/active内の未完了タスクと未解決課題をDB集計する。通常JWTのRLS・SELECT権限を維持する。詳細GET・所属変更APIの契約は維持し、業務テーブル・書込権限の変更はない。
-
-## 登録済みユーザーの所属追加
-
-[仕様014](../specs/014-add-workspace-member.md)（Issue #33）。adminのみPOST `/api/v1/workspaces/:wid/members`へ `{user_id,role}` とIdempotency-Keyを送る。成功201、未登録UUID404、既存所属409。既知UUIDの直接指定に限定しprofilesのRLS・検索範囲は拡大しない。`add_member_once` がworkspaceをロックして管理権限を再確認し、所属・監査・24時間のprivate再送記録を同時保存する。再送は元の受付結果だけを返し、その後の変更・解除を上書きしない。メール・ユーザー作成は対象外。
+DBテストではロール・所属・直接書き込み拒否・監査・同時再送・最後の管理者・アーカイブ・version競合を確認します。認証E2EではAPI境界、フォーム、検索とページ送り、失敗復旧、キーボード・モバイル操作を確認します。実行方法は[ローカル開発手順](../local-development.md)にまとめています。

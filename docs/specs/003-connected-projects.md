@@ -1,5 +1,7 @@
 # P2-2: プロジェクト一覧と作成・編集
 
+> 実装時の仕様（対応済み）です。「対象外」はこの段階の作業範囲を示します。現在の動作は[基本仕様](../specification.md)、追加・変更の関係は[仕様一覧](README.md)を参照してください。
+
 関連: [Issue #5](https://github.com/kiyohara1021/project-hub/issues/5)
 
 ## 受け入れ条件
