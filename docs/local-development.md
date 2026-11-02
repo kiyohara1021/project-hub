@@ -93,3 +93,9 @@ admin/memberは課題追加・編集・削除が可能。状態変更は編集�
 ## 公開準備の検証
 
 `pnpm test:release`はクラウド設定検査のテスト。`pnpm build:vercel`は環境変数の形式確認後にビルドします（.env自動読込なし）。ローカル用URLのまま本番接続を許可しません。通常ローカルビルドは`pnpm build`。実際の公開は[公開手順](deployment.md)を参照。ローカル専用のseed/DBテストをリモートに向けないでください。
+
+## 登録済みユーザーの所属追加
+
+[仕様014](specs/014-add-workspace-member.md)。追記マイグレーション適用後、管理者のメンバー画面に「メンバーを追加」が表示される。登録済み架空ユーザーのUUIDとロールを確認して追加する。UUIDは管理用のローカルAuth管理画面で事前確認し、候補検索やメール送信は行わない。再送は24時間同じ受付結果となり、後から解除した所属を戻す場合は新しい入力として送信する。
+
+`node --test tests/database/member-add.test.mjs` と `pnpm test:auth tests/auth/member-add.spec.ts` でDB/API/UIを検証する。

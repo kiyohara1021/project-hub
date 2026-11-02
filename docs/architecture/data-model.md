@@ -51,3 +51,15 @@ P4-2: membershipsにversion（integer、初期1）を追加。更新トリガー
 P4-3: 操作履歴一覧は既存activity_logsとactivity_list_idx(workspace_id,created_at DESC,id DESC)を使用。ER・列の追加なし。actor_id/project_id/entity_idは履歴の識別用に保持し、現在の行との存在確認・結合を必須にしない。表示名はactor_display_nameスナップショットを参照。
 
 メンバー担当数はread_members RPCで既存のmemberships・profiles・projects・tasks・issuesを読み取る。集計テーブル・列・ER・トリガーの変更はない。既存tasks/issues(workspace_id,assignee_id)索引を使用する。
+
+## 所属追加の再送記録
+
+[仕様014](../specs/014-add-workspace-member.md)でAPI非公開の`private.member_requests`を追加する。業務ERの関係は変更しない。
+
+| 列 | 用途 |
+|---|---|
+| workspace_id / actor_id / request_key | 複合主キー。workspace / profilesを参照 |
+| payload / response | UUID・roleの入力と初回受付結果。本文・メール・トークンは保存しない |
+| expires_at | 24時間。同workspace/actorの次回所属追加時に期限切れを削除 |
+
+RLS有効・通常ロールへの直接権限なし。workspace削除は初期対象外で、テスト用workspaceを消す場合はこの記録も先に削除する。既存memberships INSERTトリガーが監査を生成する。
