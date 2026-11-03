@@ -11,7 +11,10 @@ export class ProjectError extends Error {
 export function json(data: unknown, status = 200) { return NextResponse.json(data, { status, headers: { "Cache-Control": "private, no-store" } }); }
 export function apiError(error: unknown) {
   const e = error instanceof ProjectError ? error : new ProjectError(500, "INTERNAL_ERROR", "処理できませんでした。再試行してください。");
-  return json({ error: { code: e.code, message: e.message, requestId: crypto.randomUUID() } }, e.status);
+  const requestId = crypto.randomUUID();
+  // 応答のrequestIdからサーバーログを追えるようにする。応答本文にはSQLや内部情報を含めない。
+  if (e.status >= 500) console.error(JSON.stringify({ level: "error", requestId, status: e.status, code: e.code, cause: error instanceof ProjectError ? undefined : String(error) }));
+  return json({ error: { code: e.code, message: e.message, requestId } }, e.status);
 }
 export async function projectAccess(wid: string, write: boolean | "task" | "issue" = false) {
   if (!supabaseConfig()) throw new ProjectError(503, "NOT_CONFIGURED", "接続が設定されていません");

@@ -107,7 +107,7 @@ SQL Editorで適用する場合も、リポジトリの原文と順序を守り�
 | 変更操作 | サンプルの作成・更新とダッシュボード・操作履歴への反映、最後の管理者保護を確認 |
 | Origin・Cookie | 正規URLから操作でき、異なるOriginは拒否される。HTTPSのSecure属性とログアウト後401を確認 |
 | 画面操作 | PCと360px幅、Tab/Shift+Tab/Escape、フォーカス復帰、横スクロールを確認 |
-| エラー・利用量 | Functions/DBログ、Vercel/SupabaseのUsageを確認。資格情報を記録しない |
+| エラー・利用量 | Functions/DBログ（5xxはrequestId付きのJSONで出力）、Vercel/SupabaseのUsageを確認。資格情報を記録しない |
 | 性能 | 測定条件と対象データ量を記録。ローカル実測と本番実測を区別する |
 
 App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあるため、画面の未認証制御はステータスだけで判定しません。画面デモモードでは、DB APIは503となります。
