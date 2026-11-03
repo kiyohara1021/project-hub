@@ -5,6 +5,7 @@ import { supabaseConfig } from "@/lib/supabase/config";
 import { PageHeading, EmptyState } from "@/components/page-parts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ProfileEditor } from "@/components/profile-editor";
 
 export const metadata = { title: "ログイン状況" };
 export default async function Workspaces() {
@@ -18,6 +19,7 @@ export default async function Workspaces() {
   if (workspaceResult.error || projectResult.error || profileResult.error) throw new Error("Database read failed");
   return <><PageHeading title="ログイン状況" description="ログイン中のユーザーと所属先を確認できます。" />
     <p className="mb-4 text-sm">ログイン中: {profileResult.data.display_name}</p>
+    <ProfileEditor key={profileResult.data.display_name} displayName={profileResult.data.display_name} />
     <Link href="/projects" className="mb-5 inline-block text-sm text-blue-700 underline">プロジェクト一覧へ →</Link>
     <form action="/auth/logout" method="post" className="mb-6"><Button variant="outline">ログアウト</Button></form>
     {!workspaceResult.data.length ? <EmptyState title="所属ワークスペースがありません" description="このユーザーには業務データの閲覧権限がありません。" /> :
