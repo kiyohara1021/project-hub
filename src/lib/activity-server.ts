@@ -1,4 +1,4 @@
-import {projectAccess,ProjectError,uuid} from "./projects-server";
+import {projectAccess,ProjectError,uuid,afterTimeCursor,encodeTimeCursor} from "./projects-server";
 import {activityEntities,activityActions,type Activity,type ActivityPage,type ActivityState} from "./activity-types";
 import {projectStatuses} from "./project-types";
 import {taskStatuses} from "./task-types";
@@ -38,15 +38,8 @@ export async function readActivity(wid:string,query:URLSearchParams):Promise<Act
     .eq("workspace_id",wid).order("created_at",{ascending:false}).order("id",{ascending:false}).limit(limit+1);
   if(action)db=db.eq("action",action);if(entity)db=db.eq("entity_type",entity);if(project)db=db.eq("project_id",project);if(actor)db=db.eq("actor_id",actor);
   if(start)db=db.gte("created_at",start);if(end)db=db.lt("created_at",end);
-  if(cursor!==null){
-    if(cursor.length>256||!/^[a-zA-Z0-9_-]+$/.test(cursor))throw invalid();
-    try{
-      const value=JSON.parse(Buffer.from(cursor,"base64url").toString("utf8"));
-      if(!value||typeof value.time!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(value.time)||!Number.isFinite(Date.parse(value.time))||value.time.startsWith("0000")||new Date(value.time).toISOString().slice(0,10)!==value.time.slice(0,10)||typeof value.id!=="string"||!uuid.test(value.id))throw invalid();
-      db=db.or(`created_at.lt.${value.time},and(created_at.eq.${value.time},id.lt.${value.id})`);
-    }catch{throw invalid();}
-  }
+  if(cursor!==null)db=db.or(afterTimeCursor(cursor));
   const result=await db;if(result.error)throw new ProjectError(500,"READ_FAILED","操作履歴を取得できませんでした");
   const data=result.data.slice(0,limit).map(row=>({...row,changes:{before:safeState(row.changes?.before,row.entity_type),after:safeState(row.changes?.after,row.entity_type)}})) as Activity[];
-  const last=data.at(-1);return {data,nextCursor:result.data.length>limit&&last?Buffer.from(JSON.stringify({time:last.created_at,id:last.id})).toString("base64url"):null};
+  const last=data.at(-1);return {data,nextCursor:result.data.length>limit&&last?encodeTimeCursor(last):null};
 }

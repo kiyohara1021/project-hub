@@ -9,6 +9,31 @@ export class ProjectError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
 }
 export function json(data: unknown, status = 200) { return NextResponse.json(data, { status, headers: { "Cache-Control": "private, no-store" } }); }
+export function noContent() { return new Response(null, { status: 204, headers: { "Cache-Control": "private, no-store" } }); }
+// 作成系APIの再送防止キー。1〜128文字の英数字・_・-を受け付ける。
+export function idempotencyKey(request: Request) {
+  const key = request.headers.get("Idempotency-Key");
+  if (!key || !/^[A-Za-z0-9_-]{1,128}$/.test(key)) throw new ProjectError(400, "INVALID_KEY", "送信キーを確認してください");
+  return key;
+}
+const cursorTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/;
+// created_at DESC, id DESC の一覧で使うカーソル。不正値は400として扱う。
+export function encodeTimeCursor(row: { created_at: string; id: string }) {
+  return Buffer.from(JSON.stringify({ time: row.created_at, id: row.id })).toString("base64url");
+}
+export function decodeTimeCursor(cursor: string): { time: string; id: string } {
+  const invalid = () => new ProjectError(400, "INVALID_INPUT", "検索条件を確認してください");
+  if (cursor.length > 256 || !/^[a-zA-Z0-9_-]+$/.test(cursor)) throw invalid();
+  let value: { time?: unknown; id?: unknown };
+  try { value = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")); } catch { throw invalid(); }
+  if (!value || typeof value.time !== "string" || !cursorTime.test(value.time) || !Number.isFinite(Date.parse(value.time)) || value.time.startsWith("0000") || new Date(value.time).toISOString().slice(0, 10) !== value.time.slice(0, 10) || typeof value.id !== "string" || !uuid.test(value.id)) throw invalid();
+  return { time: value.time, id: value.id };
+}
+/** cursorより後ろ（created_at DESC, id DESC）の行に絞り込むPostgRESTの条件。 */
+export function afterTimeCursor(cursor: string) {
+  const { time, id } = decodeTimeCursor(cursor);
+  return `created_at.lt.${time},and(created_at.eq.${time},id.lt.${id})`;
+}
 export function apiError(error: unknown) {
   const e = error instanceof ProjectError ? error : new ProjectError(500, "INTERNAL_ERROR", "処理できませんでした。再試行してください。");
   return json({ error: { code: e.code, message: e.message, requestId: crypto.randomUUID() } }, e.status);
@@ -82,16 +107,9 @@ export async function readProjectPage(wid: string, query: URLSearchParams): Prom
   let db = client.from("projects").select(fields).eq("workspace_id", wid).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(limit + 1);
   if (q) db = db.ilike("name", `%${q.replace(/[\\%_]/g, "\\$&")}%`);
   if (status) db = db.eq("status", status);
-  if (cursor) {
-    if (cursor.length > 256 || !/^[a-zA-Z0-9_-]+$/.test(cursor)) throw invalid();
-    try {
-      const value = JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-      if (typeof value.time !== "string" || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(value.time) || !Number.isFinite(Date.parse(value.time)) || value.time.startsWith("0000") || new Date(value.time).toISOString().slice(0,10) !== value.time.slice(0,10) || typeof value.id !== "string" || !uuid.test(value.id)) throw invalid();
-      db = db.or(`created_at.lt.${value.time},and(created_at.eq.${value.time},id.lt.${value.id})`);
-    } catch { throw invalid(); }
-  }
+  if (cursor) db = db.or(afterTimeCursor(cursor));
   const result = await db;
   if (result.error) throw new ProjectError(500, "READ_FAILED", "一覧を取得できませんでした");
   const rows = result.data.slice(0, limit) as Project[]; const last = rows.at(-1);
-  return { data: rows, nextCursor: result.data.length > limit && last ? Buffer.from(JSON.stringify({ time: last.created_at, id: last.id })).toString("base64url") : null };
+  return { data: rows, nextCursor: result.data.length > limit && last ? encodeTimeCursor(last) : null };
 }
