@@ -17,7 +17,8 @@ export default async function Workspaces() {
   const projectResult = await client.from("projects").select("id,workspace_id,name,status").order("created_at");
   if (workspaceResult.error || projectResult.error || profileResult.error) throw new Error("Database read failed");
   return <><PageHeading title="ログイン状況" description="ログイン中のユーザーと所属先を確認できます。" />
-    <p className="mb-4 text-sm">ログイン中: {profileResult.data.display_name}</p>
+    <p className="mb-2 text-sm">ログイン中: {profileResult.data.display_name}</p>
+    <p className="mb-4 break-all text-xs text-slate-500">ユーザーID: <span className="font-mono">{data.claims.sub}</span>（所属追加を依頼するときに管理者へ伝えてください）</p>
     <Link href="/projects" className="mb-5 inline-block text-sm text-blue-700 underline">プロジェクト一覧へ →</Link>
     <form action="/auth/logout" method="post" className="mb-6"><Button variant="outline">ログアウト</Button></form>
     {!workspaceResult.data.length ? <EmptyState title="所属ワークスペースがありません" description="このユーザーには業務データの閲覧権限がありません。" /> :
