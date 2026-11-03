@@ -14,7 +14,7 @@ ProjectHubをVercelとSupabaseで公開・運用するための手順です。�
 | データベース | 専用Supabase / project-hub / Tokyo（ap-northeast-1） |
 | 本番モード | `APP_MODE=connected` |
 | Preview | `APP_MODE=preview`。DBに接続せず固定データを表示 |
-| マイグレーション | 001〜008を適用済み。009以降は反映前の検証中 |
+| マイグレーション | 001〜011を適用済み（2026-11-04） |
 | 利用範囲 | 個人の学習・デモ用途。実在の顧客情報や業務データは登録しない |
 
 Vercel Hobbyの利用条件と上限は公開・変更時に再確認します。無料枠の容量やバックアップを保証として扱わず、上限に近づいた場合は停止・縮小も含めて構成を見直します。
@@ -158,3 +158,16 @@ App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあ�
 [課題コメント仕様](specs/016-issue-comments.md)の反映には`202611030009_issue_comments.sql`が必要です。適用済み008までの履歴を照合し、009をアプリより先に適用してください。追加RPCの所有者・固定search_path・EXECUTE、issue_commentsのRLS・SELECTだけの直接権限とprivate.comment_requestsへの直接アクセス拒否を確認します。課題削除時にコメントをCASCADE削除しますが、監査と再送記録は保持します。
 
 ローカルでは投稿/編集/確認削除・32KiB入力制限・再送・競合・所属/投稿者/アーカイブ境界をDB/認証E2Eで検証します。本番では適用とデプロイのSHA・確認した操作を別に記録してください。
+
+
+### コメント・表示名・タスク移動の追加反映（2026-11-04）
+
+PR #42をマージし、コミット`c1ef8458dcd68fcf7b7258bed9d1f96823736b1f`のVercelデプロイ成功を確認しました。本番の正規URLで表示名フォームとコメント欄を表示しています。
+
+- 本番DBの適用済み8件を先に確認し、リポジトリの009→010→011と履歴登録を単一トランザクションで適用。履歴11件・最新`202611030011`を読戻し確認。
+- 追加コメントRPC・`move_task`・`update_my_profile`の計5関数はproject_hub_owner所有、SECURITY DEFINER、空のsearch_path。anonのEXECUTEは拒否し、authenticatedは許可。issue_commentsはRLS有効、authenticatedは直接SELECTのみ。private.comment_requestsの直接SELECT/INSERT/UPDATE/DELETEは拒否。
+- 管理者の本番画面で、現在の表示名を維持した保存成功と、既存の解決済み課題へのコメント投稿・表示・編集成功を確認しました。確認コメントは記録として残しています。
+- ローカルDB13件・認証E2E34件・公開設定4件、画面デモE2E7件成功（1件対象外skip）。CIのverify/database-authとVercel Previewも成功。
+- 本番でのコメント削除、別ロールでの再ログイン、競合・再送・大量件数の検証は今回未実施です。これらはローカルDB/E2Eの検証と区別します。
+
+Codex Security CLIは`b56728d`の170ファイルをレビュー後、候補検証中に利用上限で停止しました（scan ID: `67486714-f278-477b-a8e7-f16c2e380cab`）。未完了のため「脆弱性なし」とは扱いません。追加の#43〜#46は当該スキャンの対象外です。
