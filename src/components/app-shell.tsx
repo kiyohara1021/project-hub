@@ -22,7 +22,7 @@ function Navigation({ mobile = false, connected = false }: { mobile?: boolean; c
     const workspace=query.get("workspace");
     const scoped=workspace ? `?${new URLSearchParams({workspace})}` : "";
     let target=connected && ["ダッシュボード","プロジェクト一覧","メンバー","操作履歴"].includes(label) ? `${href}${scoped}` : href;
-    if (connected && label === "カンバン") target=path.endsWith("/board") ? `${path}?${query}` : /^\/projects\/[^/]+\/issues$/.test(path) ? `${path.replace(/\/issues$/, "/board")}${scoped}` : `/projects${scoped}`;
+    if (connected && label === "カンバン") target=path.endsWith("/board") ? `${path}${query.toString() ? `?${query}` : ""}` : /^\/projects\/[^/]+\/issues$/.test(path) ? `${path.replace(/\/issues$/, "/board")}${scoped}` : `/projects${scoped}`;
     if (connected && label === "課題一覧") target=/^\/projects\/[^/]+\/(board|issues)$/.test(path) ? `${path.replace(/\/(board|issues)$/, "/issues")}${scoped}` : `/projects${scoped}`;
     const active = connected && label === "カンバン" ? path.endsWith("/board") : connected && label === "課題一覧" ? path.endsWith("/issues") : path === href;
     const link = <Link href={target} aria-current={active ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${active ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-700 hover:text-white"}`}><Icon size={18} aria-hidden="true" />{label}</Link>;
