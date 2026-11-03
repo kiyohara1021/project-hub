@@ -14,7 +14,7 @@ ProjectHubをVercelとSupabaseで公開・運用するための手順です。�
 | データベース | 専用Supabase / project-hub / Tokyo（ap-northeast-1） |
 | 本番モード | `APP_MODE=connected` |
 | Preview | `APP_MODE=preview`。DBに接続せず固定データを表示 |
-| マイグレーション | 001〜008を適用済み |
+| マイグレーション | 001〜008を適用済み。009以降は反映前の検証中 |
 | 利用範囲 | 個人の学習・デモ用途。実在の顧客情報や業務データは登録しない |
 
 Vercel Hobbyの利用条件と上限は公開・変更時に再確認します。無料枠の容量やバックアップを保証として扱わず、上限に近づいた場合は停止・縮小も含めて構成を見直します。
@@ -152,3 +152,9 @@ App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあ�
 - [Supabaseの環境管理](https://supabase.com/docs/guides/deployment/managing-environments)
 - [Vercel Functionsのリージョン](https://vercel.com/docs/functions/configuring-functions/region)
 - [Vercel Instant Rollback](https://vercel.com/docs/instant-rollback)
+
+## 課題コメントの更新手順
+
+[課題コメント仕様](specs/016-issue-comments.md)の反映には`202611030009_issue_comments.sql`が必要です。適用済み008までの履歴を照合し、009をアプリより先に適用してください。追加RPCの所有者・固定search_path・EXECUTE、issue_commentsのRLS・SELECTだけの直接権限とprivate.comment_requestsへの直接アクセス拒否を確認します。課題削除時にコメントをCASCADE削除しますが、監査と再送記録は保持します。
+
+ローカルでは投稿/編集/確認削除・32KiB入力制限・再送・競合・所属/投稿者/アーカイブ境界をDB/認証E2Eで検証します。本番では適用とデプロイのSHA・確認した操作を別に記録してください。
