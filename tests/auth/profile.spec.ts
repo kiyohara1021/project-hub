@@ -22,8 +22,8 @@ test("360pxで表示名を変更し、メンバー一覧へ反映・通信失敗
   try {
     await login(page);await page.setViewportSize({width:360,height:800});const input=page.getByLabel("表示名",{exact:true});await input.fill("表示名を変更した閲覧者");
     let first=true;await page.route("**/api/v1/me/profile",async route=>{if(first){first=false;return route.abort();}return route.continue();});
-    await page.getByRole("button",{name:"表示名を保存",exact:true}).click();await expect(page.getByRole("alert")).toContainText("再試行");await expect(input).toHaveValue("表示名を変更した閲覧者");
-    await page.getByRole("button",{name:"表示名を保存",exact:true}).click();await expect(page.getByRole("status")).toContainText("表示名を保存しました");await expect(page.getByText("ログイン中: 表示名を変更した閲覧者",{exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await page.getByRole("button",{name:"表示名を保存",exact:true}).click();await expect(page.getByRole("form",{name:"表示名の変更"}).getByRole("alert")).toContainText("再試行");await expect(input).toHaveValue("表示名を変更した閲覧者");
+    await page.getByRole("button",{name:"表示名を保存",exact:true}).click();await expect(page.getByRole("form",{name:"表示名の変更"}).getByRole("status")).toContainText("表示名を保存しました");await expect(page.getByText("ログイン中: 表示名を変更した閲覧者",{exact:true})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     await page.goto(`/members?workspace=${member.workspace_id}`);await expect(page.getByRole("article",{name:"表示名を変更した閲覧者",exact:true})).toBeVisible();
   }finally{checked(await service.from("profiles").update({display_name:original}).eq("id",actor.user.id));}
 });
