@@ -56,3 +56,29 @@ test("タスクCRUD、同時再送、全列の順序、権限・アーカイブ�
   assert.equal(race[0].error,null);
   assert.ok(!race[1].error || race[1].error.code==="55000");
 });
+
+test("移動で振り直しても、移動していないタスクのversionと履歴は変わらない", async () => {
+  const settings = localSettings();
+  const owner = await login(settings,"admin"); const member = await login(settings,"member");
+  const project = checked(await owner.client.rpc("create_project", { p_workspace_id: workspaceA, p_name: "並び替え検証の架空プロジェクト" }));
+  const scope = { p_workspace_id: workspaceA, p_project_id: project.id };
+  const make = title => member.client.rpc("create_task_once",{ ...scope,p_title:title,p_description:"",p_priority:"medium",p_assignee_id:null,p_due_date:null,p_key:randomUUID() });
+  const a = checked(await make("並び替えA")); const b = checked(await make("並び替えB")); const c = checked(await make("並び替えC"));
+  const logCount = async () => checked(await owner.client.from("activity_logs").select("id").eq("project_id",project.id)).length;
+  const before = await logCount();
+  // Cを先頭へ動かすと、AとBのpositionは1024ずつ後ろへずれる
+  const moved = checked(await member.client.rpc("move_task",{ ...scope,p_task_id:c.id,p_status:"todo",p_before_id:a.id,p_version:c.version }));
+  const rows = checked(await owner.client.from("tasks").select("id,position,version,updated_at").eq("project_id",project.id).order("position"));
+  assert.deepEqual(rows.map(t=>t.id),[c.id,a.id,b.id]);
+  assert.deepEqual(rows.map(t=>t.position),[1024,2048,3072]);
+  assert.equal(moved.version,c.version+1);
+  for (const original of [a,b]) {
+    const row = rows.find(t=>t.id===original.id);
+    assert.equal(row.version,original.version,"移動していないタスクのversionは変わらない");
+    assert.equal(row.updated_at,original.updated_at,"移動していないタスクのupdated_atは変わらない");
+  }
+  assert.equal(await logCount(),before+1,"1回の移動で履歴は1件だけ増える");
+  // 別のユーザーが移動前に開いた版のままでも、Aを編集できる
+  const edited = checked(await owner.client.rpc("edit_task",{ ...scope,p_task_id:a.id,p_title:"並び替えA更新",p_description:"",p_priority:"medium",p_assignee_id:null,p_due_date:null,p_version:a.version }));
+  assert.equal(edited.version,a.version+1);
+});
