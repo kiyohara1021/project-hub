@@ -7,9 +7,9 @@ import {localSettings,login,checked,workspaceA,workspaceB} from "../../scripts/l
 test("課題の再送・状態変更・集計・競合・権限・アーカイブ・削除履歴",async()=>{
   const settings=localSettings();const owner=await login(settings,"admin");const member=await login(settings,"member");const viewer=await login(settings,"viewer");const outside=await login(settings,"outside");const unassigned=await login(settings,"unassigned");
   const anon=createClient(settings.API_URL,settings.ANON_KEY,{auth:{persistSession:false}});
-  const project=checked(await owner.client.rpc("create_project",{p_workspace_id:workspaceA,p_name:"課題検証の架空プロジェクト"}));
+  const project=checked(await owner.client.rpc("create_project",{p_workspace_id:workspaceA,p_name:"課題検証のテスト用プロジェクト"}));
   const scope={p_workspace_id:workspaceA,p_project_id:project.id};
-  const input={...scope,p_title:"課題検証A",p_description:"架空の説明",p_priority:"high",p_assignee_id:member.user.id,p_due_date:"2026-12-01",p_key:randomUUID()};
+  const input={...scope,p_title:"課題検証A",p_description:"テスト用の説明",p_priority:"high",p_assignee_id:member.user.id,p_due_date:"2026-12-01",p_key:randomUUID()};
   const count=async()=>checked(await member.client.rpc("read_dashboard",{p_workspace_id:workspaceA})).metrics.open_issues;
   const before=await count();
   assert.equal((await anon.rpc("create_issue_once",input)).error?.code,"42501");

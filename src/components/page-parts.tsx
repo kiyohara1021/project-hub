@@ -12,6 +12,6 @@ export function DataList({ title, headings, rows }: { title: string; headings: s
   return <Card><CardHeader><CardTitle>{title}</CardTitle></CardHeader><CardContent>
     <div className="hidden md:block"><table className="w-full text-left text-sm"><caption className="sr-only">{title}</caption><thead><tr>{headings.map(h => <th scope="col" key={h} className="border-b bg-slate-50 px-4 py-3 font-medium text-slate-500">{h}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j} className="border-b px-4 py-6">{cell}</td>)}</tr>)}</tbody></table></div>
     <ul className="space-y-4 md:hidden">{rows.map((row, i) => <li key={i} className="rounded-lg border p-4"><dl className="space-y-3">{row.map((cell, j) => <div key={j}><dt className="text-xs text-slate-500">{headings[j]}</dt><dd className="mt-1 break-words text-sm">{cell}</dd></div>)}</dl></li>)}</ul>
-    <p className="mt-5 text-xs text-slate-500">全{rows.length}件 · 架空データ</p>
+    <p className="mt-5 text-xs text-slate-500">全{rows.length}件 · サンプルデータ</p>
   </CardContent></Card>;
 }

@@ -63,10 +63,10 @@ try{
   const settings=localSettings();service=adminClient(settings);
   stage="server-start";await start(settings);
   stage="fixture-owner-login";const owner=await login(settings,"admin");
-  stage="fixture-workspace";wid=checked(await owner.client.rpc("create_workspace",{p_name:"一覧性能検証の架空ワークスペース"}));
-  const projects=Array.from({length:100},(_,i)=>({id:randomUUID(),workspace_id:wid,name:`一覧性能検証の架空プロジェクト${String(i+1).padStart(3,"0")}`,status:"active"}));
+  stage="fixture-workspace";wid=checked(await owner.client.rpc("create_workspace",{p_name:"一覧性能検証のテスト用ワークスペース"}));
+  const projects=Array.from({length:100},(_,i)=>({id:randomUUID(),workspace_id:wid,name:`一覧性能検証のテスト用プロジェクト${String(i+1).padStart(3,"0")}`,status:"active"}));
   stage="fixture-projects";checked(await service.from("projects").insert(projects));
-  const tasks=Array.from({length:1000},(_,i)=>({workspace_id:wid,project_id:projects[i<901?0:i-900].id,title:`一覧性能検証の架空タスク${i+1}`,status:"todo",position:i*1024}));
+  const tasks=Array.from({length:1000},(_,i)=>({workspace_id:wid,project_id:projects[i<901?0:i-900].id,title:`一覧性能検証のテスト用タスク${i+1}`,status:"todo",position:i*1024}));
   stage="fixture-tasks";for(let i=0;i<tasks.length;i+=100){ensureRunning();checked(await service.from("tasks").insert(tasks.slice(i,i+100)));}
   for(const [table,count]of [["projects",100],["tasks",1000]]){
     const result=await service.from(table).select("id",{count:"exact",head:true}).eq("workspace_id",wid);checked(result);if(result.count!==count)throw new Error("FIXTURE_COUNT_INVALID");

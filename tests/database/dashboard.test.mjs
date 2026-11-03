@@ -24,25 +24,25 @@ test("1000行超の集計、重み付き進捗、境界日、0件、所属と本
     const day=empty.today; const yesterday=new Date(Date.parse(day)-86400000).toISOString().slice(0,10);
     const ids=[randomUUID(),randomUUID(),randomUUID()];
     checked(await admin.from("projects").insert([
-      {id:ids[0],workspace_id:wid,name:"集計用の架空プロジェクト",status:"active"},
-      {id:ids[1],workspace_id:wid,name:"0件の架空プロジェクト",status:"planned"},
-      {id:ids[2],workspace_id:wid,name:"除外する架空プロジェクト",status:"archived"},
+      {id:ids[0],workspace_id:wid,name:"集計用のテスト用プロジェクト",status:"active"},
+      {id:ids[1],workspace_id:wid,name:"0件のテスト用プロジェクト",status:"planned"},
+      {id:ids[2],workspace_id:wid,name:"除外するテスト用プロジェクト",status:"archived"},
     ]));
     // 1001件をSQL側で集計。HTTPの行数上限1000を越えても全件を数える。
     for(let start=0;start<1001;start+=400) {
       const rows=Array.from({length:Math.min(400,1001-start)},(_,offset)=>{
         const index=start+offset;
-        return {workspace_id:wid,project_id:ids[0],title:`集計用の架空タスク${index}`,status:index<500?"done":"doing",assignee_id:index>=500?member.user.id:null,due_date:index===500?yesterday:index===501?day:null};
+        return {workspace_id:wid,project_id:ids[0],title:`集計用のテスト用タスク${index}`,status:index<500?"done":"doing",assignee_id:index>=500?member.user.id:null,due_date:index===500?yesterday:index===501?day:null};
       });
       checked(await admin.from("tasks").insert(rows));
     }
-    checked(await admin.from("tasks").insert({workspace_id:wid,project_id:ids[2],title:"集計しない架空タスク",status:"todo",assignee_id:member.user.id,due_date:yesterday}));
+    checked(await admin.from("tasks").insert({workspace_id:wid,project_id:ids[2],title:"集計しないテスト用タスク",status:"todo",assignee_id:member.user.id,due_date:yesterday}));
     checked(await admin.from("issues").insert([
-      {workspace_id:wid,project_id:ids[0],title:"未解決の架空課題",status:"open"},
-      {workspace_id:wid,project_id:ids[0],title:"調査中の架空課題",status:"investigating"},
-      {workspace_id:wid,project_id:ids[0],title:"解決済みの架空課題",status:"resolved"},
-      {workspace_id:wid,project_id:ids[0],title:"終了した架空課題",status:"closed"},
-      {workspace_id:wid,project_id:ids[2],title:"除外する架空課題",status:"open"},
+      {workspace_id:wid,project_id:ids[0],title:"未解決のテスト用課題",status:"open"},
+      {workspace_id:wid,project_id:ids[0],title:"調査中のテスト用課題",status:"investigating"},
+      {workspace_id:wid,project_id:ids[0],title:"解決済みのテスト用課題",status:"resolved"},
+      {workspace_id:wid,project_id:ids[0],title:"終了したテスト用課題",status:"closed"},
+      {workspace_id:wid,project_id:ids[2],title:"除外するテスト用課題",status:"open"},
     ]));
     const data=checked(await member.client.rpc("read_dashboard",{p_workspace_id:wid}));
     assert.deepEqual(data.metrics,{active_projects:1,task_total:1001,task_done:500,completion_percent:50,overdue_tasks:1,open_issues:2});

@@ -21,12 +21,12 @@ test("メンバー一覧のページ送り・絞り込み・API権限と入力�
 
 test("担当数を全ロールで閲覧し、絞り込みと360pxの表示を維持",async({page})=>{
  const settings=localSettings(),service=adminClient(settings);const owner=await dbLogin(settings,"admin"),assigned=await dbLogin(settings,"member"),viewer=await dbLogin(settings,"viewer");
- const space=checked(await owner.client.rpc("create_workspace",{p_name:"画面担当数検証の架空スペース"}));
+ const space=checked(await owner.client.rpc("create_workspace",{p_name:"画面担当数検証のテスト用スペース"}));
  try{
   checked(await service.from("memberships").insert([{workspace_id:space,user_id:assigned.user.id,role:"member"},{workspace_id:space,user_id:viewer.user.id,role:"viewer"}]));
-  const project=checked(await owner.client.rpc("create_project",{p_workspace_id:space,p_name:"画面担当数検証の架空プロジェクト"}));
-  checked(await service.from("tasks").insert([{workspace_id:space,project_id:project.id,title:"未完了の架空担当",status:"todo",assignee_id:assigned.user.id},{workspace_id:space,project_id:project.id,title:"完了した架空担当",status:"done",assignee_id:assigned.user.id}]));
-  checked(await service.from("issues").insert([{workspace_id:space,project_id:project.id,title:"未解決の架空担当",assignee_id:assigned.user.id,status:"open"},{workspace_id:space,project_id:project.id,title:"調査中の架空担当",assignee_id:assigned.user.id,status:"investigating"}]));
+  const project=checked(await owner.client.rpc("create_project",{p_workspace_id:space,p_name:"画面担当数検証のテスト用プロジェクト"}));
+  checked(await service.from("tasks").insert([{workspace_id:space,project_id:project.id,title:"未完了のテスト用担当",status:"todo",assignee_id:assigned.user.id},{workspace_id:space,project_id:project.id,title:"完了したテスト用担当",status:"done",assignee_id:assigned.user.id}]));
+  checked(await service.from("issues").insert([{workspace_id:space,project_id:project.id,title:"未解決のテスト用担当",assignee_id:assigned.user.id,status:"open"},{workspace_id:space,project_id:project.id,title:"調査中のテスト用担当",assignee_id:assigned.user.id,status:"investigating"}]));
   for(const alias of ["admin","member","viewer"]){
    await login(page,alias);const response=await page.request.get(`/api/v1/workspaces/${space}/members?role=member&limit=1`);expect(response.status()).toBe(200);const result=await response.json();expect(result.data[0]).toMatchObject({user_id:assigned.user.id,task_count:1,issue_count:2});expect(result.nextCursor).toBeNull();
   }

@@ -39,7 +39,7 @@ test("実JWTでワークスペース分離、RPC、制約、履歴を確認", as
   const denied = async (client, name, args, code = "42501") => assert.equal((await client.rpc(name, args)).error?.code, code, name);
   for (const alias of ["member", "viewer", "outside", "unassigned"]) {
     const client = accounts[alias].client;
-    await denied(client, "create_project", { p_workspace_id: workspaceA, p_name: "不許可の架空データ" });
+    await denied(client, "create_project", { p_workspace_id: workspaceA, p_name: "不許可のテスト用データ" });
     await denied(client, "set_member_role", { p_workspace_id: workspaceA, p_user_id: accounts.member.user.id, p_role: "admin" });
     await denied(client, "remove_member", { p_workspace_id: workspaceA, p_user_id: accounts.admin.user.id });
     await denied(client, "update_project", { p_workspace_id: workspaceA, p_project_id: projectA, p_name: "変更不可", p_status: "active", p_due_date: null, p_version: 1 });
@@ -51,8 +51,8 @@ test("実JWTでワークスペース分離、RPC、制約、履歴を確認", as
   await denied(owner, "set_member_role", { p_workspace_id: workspaceA, p_user_id: accounts.admin.user.id, p_role: "member" }, "23514");
   await denied(owner, "remove_member", { p_workspace_id: workspaceA, p_user_id: accounts.admin.user.id }, "23514");
 
-  const created = checked(await owner.rpc("create_project", { p_workspace_id: workspaceA, p_name: "検証用の架空プロジェクト" }));
-  const args = { p_workspace_id: workspaceA, p_project_id: created.id, p_name: "検証用の架空プロジェクト更新", p_status: "active", p_due_date: "2026-11-20", p_version: 1 };
+  const created = checked(await owner.rpc("create_project", { p_workspace_id: workspaceA, p_name: "検証用のテスト用プロジェクト" }));
+  const args = { p_workspace_id: workspaceA, p_project_id: created.id, p_name: "検証用のテスト用プロジェクト更新", p_status: "active", p_due_date: "2026-11-20", p_version: 1 };
   const updated = checked(await owner.rpc("update_project", args));
   assert.equal(updated.version, 2);
   await denied(owner, "update_project", args, "40001");

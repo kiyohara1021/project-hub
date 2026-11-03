@@ -1,7 +1,7 @@
 export const projects = [
-  { id: "demo-a", name: "架空プロジェクトA", description: "画面と入力の基本を整える", progress: 60, due: "2026/11/20" },
-  { id: "demo-b", name: "架空プロジェクトB", description: "検索と一覧の使いやすさを考える", progress: 40, due: "2026/11/25" },
-  { id: "demo-c", name: "架空プロジェクトC", description: "操作と表示を確認する", progress: 50, due: "2026/12/10" },
+  { id: "demo-a", name: "サンプルプロジェクトA", description: "画面と入力の基本を整える", progress: 60, due: "2026/11/20" },
+  { id: "demo-b", name: "サンプルプロジェクトB", description: "検索と一覧の使いやすさを考える", progress: 40, due: "2026/11/25" },
+  { id: "demo-c", name: "サンプルプロジェクトC", description: "操作と表示を確認する", progress: 50, due: "2026/12/10" },
 ] as const;
 
 export const columns = ["未着手", "進行中", "レビュー", "完了"] as const;
