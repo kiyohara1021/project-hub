@@ -45,3 +45,7 @@ pnpm test:e2e
 ```
 
 DB・認証テストと負荷検証の準備は[ローカル開発手順](docs/local-development.md#テスト)にまとめています。変更は仕様 → Issue → 実装・テスト → PRの順に進めます。詳しくは[CONTRIBUTING.md](CONTRIBUTING.md)を参照してください。
+
+## ライセンス
+
+[MIT](LICENSE)
