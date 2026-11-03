@@ -1,4 +1,4 @@
-import { projectAccess, ProjectError, uuid } from "./projects-server";
+import { projectAccess, ProjectError, uuid, afterTimeCursor, encodeTimeCursor } from "./projects-server";
 import { taskAccess, exactKeys, validateTask } from "./tasks-server";
 import { priorities, type Priority } from "./task-types";
 import { issueStatuses, type IssueStatus, type Issue, type IssuePage } from "./issue-types";
@@ -30,16 +30,9 @@ export async function queryIssues(client:Awaited<ReturnType<typeof projectAccess
   if(priority) db=db.eq("priority",priority);
   if(assignee) db=assignee==="unassigned"?db.is("assignee_id",null):db.eq("assignee_id",assignee);
   if(q) db=db.ilike("title",`%${q.replace(/[\\%_]/g,"\\$&")}%`);
-  if(cursor) {
-    if(cursor.length>256||!/^[a-zA-Z0-9_-]+$/.test(cursor)) throw invalid();
-    try {
-      const value=JSON.parse(Buffer.from(cursor,"base64url").toString("utf8"));
-      if(typeof value.time!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(value.time)||!Number.isFinite(Date.parse(value.time))||value.time.startsWith("0000")||new Date(value.time).toISOString().slice(0,10)!==value.time.slice(0,10)||typeof value.id!=="string"||!uuid.test(value.id)) throw invalid();
-      db=db.or(`created_at.lt.${value.time},and(created_at.eq.${value.time},id.lt.${value.id})`);
-    } catch {throw invalid();}
-  }
+  if(cursor) db=db.or(afterTimeCursor(cursor));
   const result=await db;
   if(result.error) throw new ProjectError(500,"READ_FAILED","課題を取得できませんでした");
   const rows=result.data.slice(0,limit) as Issue[]; const last=rows.at(-1);
-  return {data:rows,nextCursor:result.data.length>limit&&last?Buffer.from(JSON.stringify({time:last.created_at,id:last.id})).toString("base64url"):null};
+  return {data:rows,nextCursor:result.data.length>limit&&last?encodeTimeCursor(last):null};
 }

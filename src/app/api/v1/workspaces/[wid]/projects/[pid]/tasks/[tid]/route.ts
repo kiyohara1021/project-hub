@@ -1,4 +1,4 @@
-import { apiError, checkOrigin, json, readJson, ProjectError, uuid } from "@/lib/projects-server";
+import { apiError, checkOrigin, json, readJson, ProjectError, uuid, noContent } from "@/lib/projects-server";
 import { taskAccess, readTask, taskRpcError, validateTask, taskVersion, exactKeys } from "@/lib/tasks-server";
 type Context = { params: Promise<{ wid: string; pid: string; tid: string }> };
 export async function GET(_request: Request, { params }: Context) {
@@ -22,6 +22,6 @@ export async function DELETE(request: Request, { params }: Context) {
     const input = await readJson(request); exactKeys(input, ["version"]);
     const result = await client.rpc("delete_task", { p_workspace_id: wid, p_project_id: pid, p_task_id: tid, p_version: taskVersion(input.version) });
     if (result.error) throw taskRpcError(result.error);
-    return new Response(null, { status: 204, headers: { "Cache-Control": "private, no-store" } });
+    return noContent();
   } catch (error) { return apiError(error); }
 }
