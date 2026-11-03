@@ -12,15 +12,15 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 | ロール | 閲覧 | 変更できるもの |
 |---|---|---|
-| admin（管理者） | 所属先の全データ | プロジェクト、タスク、課題、メンバー所属 |
-| member（メンバー） | 所属先の全データ | タスク、課題 |
-| viewer（閲覧者） | 所属先の全データ | なし |
+| admin（管理者） | 所属先の全データ | プロジェクト、タスク、課題・コメント、メンバー所属 |
+| member（メンバー） | 所属先の全データ | タスク、課題・コメント（他者のコメントの変更は不可） |
+| viewer（閲覧者） | 所属先の全データ | 業務データの変更なし |
 
-アーカイブ済みプロジェクトのタスク・課題は、全ロールで閲覧専用です。管理者はプロジェクト情報の編集とアーカイブからの復元ができます。
+アーカイブ済みプロジェクトのタスク・課題・コメントは、全ロールで閲覧専用です。管理者はプロジェクト情報の編集とアーカイブからの復元ができます。
 
 ## エンドポイント
 
-以下はすべてベースパスからの相対パスです。`pid`、`tid`、`iid`、`uid` はそれぞれプロジェクト、タスク、課題、ユーザーのUUIDです。
+以下はすべてベースパスからの相対パスです。`pid`、`tid`、`iid`、`cid`、`uid` はそれぞれプロジェクト、タスク、課題、コメント、ユーザーのUUIDです。
 
 | メソッド・パス | 用途・本文 | 権限・成功応答 |
 |---|---|---|
@@ -40,6 +40,11 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 | GET /projects/:pid/issues/:iid | 課題取得 | 所属者 / 200 |
 | PATCH /projects/:pid/issues/:iid | 作成と同じ5項目 + `status, version` | admin・member / 200 |
 | DELETE /projects/:pid/issues/:iid | `version` | admin・member / 204 |
+| GET /projects/:pid/issues/:iid/comments | コメント一覧（limit/cursor） | 所属者 / 200 |
+| POST /projects/:pid/issues/:iid/comments | `body`、Idempotency-Key必須 | admin・member / 201 |
+| GET /projects/:pid/issues/:iid/comments/:cid | コメント取得 | 所属者 / 200 |
+| PATCH /projects/:pid/issues/:iid/comments/:cid | `body, version` | admin・投稿者本人のmember / 200 |
+| DELETE /projects/:pid/issues/:iid/comments/:cid | `version` | admin・投稿者本人のmember / 204 |
 | GET /members | メンバー一覧・担当件数 | 所属者 / 200 |
 | POST /members | 登録済みユーザーの `user_id, role` | admin / 201 |
 | GET /members/:uid | 所属情報取得（担当件数は含まない） | 所属者 / 200 |
@@ -48,6 +53,14 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 | GET /activity | 操作履歴。変更APIは提供しない | 所属者 / 200 |
 
 プロジェクトの削除APIはありません。アーカイブで代替します。タスク編集では状態・位置を変更せず、専用のmove APIを使います。`before_id` は移動先で直後に続くタスクID、`null` は列の末尾です。`position` 自体は入力に含めません。
+
+## 自分の表示名
+
+ワークスペースのAPIとは別に `PATCH /api/v1/me/profile` を提供します。本文は `{display_name}` のみ、成功は200 `{data:{id,display_name}}` です。認証済みの本人が所属やロールに関係なく利用できます。対象ユーザーIDは受け取りません。Origin、JSON32KiB、未知・欠落キーを検査し、応答は `private, no-store` です。
+
+前後の空白を取り除き、Unicodeの文字数で1〜80文字を受け付けます。空文字、長さ超過、NUL文字は400です。DBの `update_my_profile(p_display_name text)` でも同じ空白除去と長さ検証を行い、`auth.uid()` の行だけを更新します。所有者は `project_hub_owner`、`search_path` は空固定、実行は `authenticated` のみに許可します。プロフィールの直接更新権限は付与しません。
+
+変更後の表示名は、再取得したメンバー一覧・担当者候補と今後の操作履歴に反映します。過去の `actor_display_name` とコメントの投稿者名は記録当時の値を保持します。初期値「デモメンバー」は維持し、メールアドレス由来の情報を表示名へ自動転記しません。
 
 ## 一覧の検索とページ送り
 
@@ -58,12 +71,13 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 | projects | `q, status` | created_at DESC、id DESC。qは名前の部分一致 |
 | tasks | `status, priority, assignee` | position ASC、id ASC。statusは既定todo |
 | issues | `q, status, priority, assignee` | created_at DESC、id DESC。statusは既定unresolved（open・investigating）、allで全状態 |
+| comments | なし | created_at DESC、id DESC。親課題の範囲に限定 |
 | members | `role` | user_id ASC。cursorもユーザーUUID |
 | activity | `action, entity, project, actor, from, to` | created_at DESC、id DESC |
 
 タスク・課題の `assignee` はユーザーUUIDまたは `unassigned`（未割当）です。課題のqは件名の部分一致です。
 
-操作履歴のactionはINSERT / UPDATE / DELETE、entityはprojects / tasks / issues / membershipsです。project・actorはUUIDで指定でき、削除済み対象や所属解除済み操作者の記録も検索できます。from・toは日本時間の `YYYY-MM-DD` で、両端の日を含みます。片側指定・空欄は許可し、存在しない日付や開始日と終了日の逆転は400です。詳細は[期間検索仕様](../specs/012-activity-date-filter.md)を参照してください。
+操作履歴のactionはINSERT / UPDATE / DELETE、entityはprojects / tasks / issues / memberships / issue_commentsです。project・actorはUUIDで指定でき、削除済み対象や所属解除済み操作者の記録も検索できます。from・toは日本時間の `YYYY-MM-DD` で、両端の日を含みます。片側指定・空欄は許可し、存在しない日付や開始日と終了日の逆転は400です。詳細は[期間検索仕様](../specs/012-activity-date-filter.md)を参照してください。
 
 ## 応答とエラー
 
@@ -93,13 +107,13 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 ## 更新競合と再送
 
-編集・削除・タスク移動には取得時の `version` が必要です。不一致なら409となり、画面では入力を保持して最新版の取得を案内します。変更と操作履歴は同じDBトランザクションで確定します。タスク移動はプロジェクト行をロックし、列の順序とversionを更新します。
+プロジェクト・タスク・課題・所属・コメントの編集・削除・タスク移動には取得時の `version` が必要です。自分の表示名は現在値をそのまま置き換え、versionを使いません。不一致なら409となり、画面では入力を保持して最新版の取得を案内します。変更と操作履歴は同じDBトランザクションで確定します。タスク移動は既存のworkspace→projectの順にロックし、移動対象のversionだけを更新します。間隔不足時の再採番では他タスクのpositionだけを変更し、更新日時・version・操作履歴を増やしません。
 
-プロジェクト・タスク・課題の作成と所属追加には `Idempotency-Key` が必須です。1〜128文字の英数字・`_`・`-` を受け付けます。タスクのmove APIには不要です。
+プロジェクト・タスク・課題・コメントの作成と所属追加には `Idempotency-Key` が必須です。1〜128文字の英数字・`_`・`-` を受け付けます。タスクのmove APIには不要です。
 
-- キーはワークスペース・操作者・作成対象の種類で分離します。タスク・課題ではさらにプロジェクトで分離します。
+- キーはワークスペース・操作者・作成対象の種類で分離します。タスク・課題ではさらにプロジェクト、コメントではプロジェクト・課題で分離します。
 - 24時間以内の同じキー・同じ本文は初回の成功応答を返します。異なる本文なら409です。
-- 再送時も現在の権限を検査します。タスク・課題ではアーカイブ状態も検査します。
+- 再送時も現在の権限を検査します。タスク・課題・コメントではアーカイブ状態も検査します。
 - 保存後に対象を変更・削除しても、再送は当時の受付結果を返すだけで、データを復元・上書きしません。
 - 期限切れの記録は、同じワークスペース・操作者が次にその種類の作成APIを呼んだときに削除します。
 
@@ -115,15 +129,16 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 ## 認可・RLS
 
-7つのpublic業務テーブルはすべてRLSを有効にしています。anonのアクセスとauthenticatedの直接書き込みを拒否し、変更は許可したRPCに限定します。UI上の非表示だけでは認可しません。
+8つのpublic業務テーブルはすべてRLSを有効にしています。anonのアクセスとauthenticatedの直接書き込みを拒否し、変更は許可したRPCに限定します。UI上の非表示だけでは認可しません。
 
 | テーブル | authenticatedのSELECT | 変更経路 |
 |---|---|---|
-| profiles | 自分、または共通ワークスペースの所属者 | Auth登録時のトリガー・管理用の初期設定。プロフィール編集APIはなし |
+| profiles | 自分、または共通ワークスペースの所属者 | Auth登録時のトリガー・管理用の初期設定・本人限定のupdate_my_profile RPC |
 | workspaces | 所属先 | 初期作成RPC。通常画面に作成UIはなし |
 | memberships | 所属先のメンバー | 管理者向けRPC |
 | projects | 所属先 | 管理者向けRPC |
 | tasks / issues | 所属先 | 管理者・メンバー向けRPC |
+| issue_comments | 所属先の課題に属するコメント | 現在のadmin/memberの投稿、adminまたはmember本人の編集/削除RPC |
 | activity_logs | 所属先 | 変更時のDBトリガーのみ |
 
 `private.is_member`・`is_admin`・`can_read_profile` は、所属表のRLS再帰を避けるためのSECURITY DEFINER関数です。変更RPCもSECURITY DEFINERですが、操作者は `auth.uid()` から確定し、所属・ロール・親子関係・versionをDB内で再検査します。所有者はログイン不可の専用ロール、search_pathは空、参照先は完全修飾です。再送記録のprivateテーブルもRLSを有効にし、通常ユーザーの直接アクセスを許可しません。
@@ -137,3 +152,7 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 Vercel PreviewはDB未接続、本番の接続モードは正規HTTPSオリジンと公開用Supabaseキーを指定します。HTTPSのセッションCookieはSecureを付け、画面にnoindex / nofollow、nosniff、frame DENYなどを設定します。環境ごとの手順と実測したCookie属性は[公開・運用手順](../deployment.md)を参照してください。
 
 DBテストではロール・所属・直接書き込み拒否・監査・同時再送・最後の管理者・アーカイブ・version競合を確認します。認証E2EではAPI境界、フォーム、検索とページ送り、失敗復旧、キーボード・モバイル操作を確認します。実行方法は[ローカル開発手順](../local-development.md)にまとめています。
+
+## 課題コメント
+
+本文は前後の空白を除いて1〜5,000文字。投稿者・表示名・親ID・日時・version初期値はDBで確定します。更新・削除時は取得済みversionを競合検査用に送ります。作成はcreate_comment_once、編集はedit_comment、削除はdelete_comment RPCがworkspace→project→issue→commentの順にロックして親子関係・ロール・投稿者・version・アーカイブを検査します。課題削除時はコメントも削除し、監査と再送結果は保持します。本文は監査changesに含めません。詳細は[仕様016](../specs/016-issue-comments.md)。

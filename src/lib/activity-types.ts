@@ -3,11 +3,11 @@ import {taskLabels} from "./task-types";
 import {issueLabels} from "./issue-types";
 import {memberLabels} from "./member-types";
 
-export const activityEntities=["projects","tasks","issues","memberships"] as const;
+export const activityEntities=["projects","tasks","issues","memberships","issue_comments"] as const;
 export const activityActions=["INSERT","UPDATE","DELETE"] as const;
 export type ActivityEntity=typeof activityEntities[number];
 export type ActivityAction=typeof activityActions[number];
-export const entityLabels:Record<ActivityEntity,string>={projects:"プロジェクト",tasks:"タスク",issues:"課題",memberships:"メンバー"};
+export const entityLabels:Record<ActivityEntity,string>={projects:"プロジェクト",tasks:"タスク",issues:"課題",memberships:"メンバー",issue_comments:"課題コメント"};
 export const actionLabels:Record<ActivityAction,string>={INSERT:"追加",UPDATE:"更新",DELETE:"削除"};
 export type ActivityState={status?:string;role?:string;version?:number};
 export type Activity={id:string;workspace_id:string;project_id:string|null;actor_id:string|null;actor_display_name:string;entity_type:ActivityEntity;entity_id:string;action:ActivityAction;changes:{before:ActivityState;after:ActivityState};created_at:string};
