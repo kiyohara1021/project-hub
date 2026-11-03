@@ -7,11 +7,11 @@ test("作成の再送を直列化し、権限・本文違い・更新競合を�
   const settings = localSettings();
   const { client } = await login(settings, "admin");
   const key = randomUUID();
-  const input = { p_workspace_id: workspaceA, p_name: "再送検証の架空プロジェクト", p_description: "架空の説明", p_due_date: "2026-12-01", p_key: key };
+  const input = { p_workspace_id: workspaceA, p_name: "再送検証のテスト用プロジェクト", p_description: "テスト用の説明", p_due_date: "2026-12-01", p_key: key };
   const results = await Promise.all([client.rpc("create_project_once", input), client.rpc("create_project_once", input)]);
   const first = checked(results[0]); const second = checked(results[1]);
   assert.equal(first.id, second.id);
-  assert.equal(first.description, "架空の説明");
+  assert.equal(first.description, "テスト用の説明");
   assert.equal(checked(await client.from("activity_logs").select("id").eq("entity_id", first.id)).length, 1);
   assert.equal((await client.rpc("create_project_once", { ...input, p_name: "本文違い" })).error?.code, "40001");
   assert.equal((await client.rpc("create_project_once", { ...input, p_workspace_id: workspaceB })).error?.code, "42501");

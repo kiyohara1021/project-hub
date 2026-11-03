@@ -13,7 +13,7 @@ async function login(page: Page, alias = "admin") {
 }
 
 test("管理者の作成・編集・アーカイブ・復元とURL検索", async ({ page }) => {
-  const name = `画面検証の架空プロジェクト-${crypto.randomUUID().slice(0,8)}`;
+  const name = `画面検証のテスト用プロジェクト-${crypto.randomUUID().slice(0,8)}`;
   const updatedName = `${name}更新`;
   await login(page);
   await page.setViewportSize({ width: 360, height: 800 });
@@ -22,7 +22,7 @@ test("管理者の作成・編集・アーカイブ・復元とURL検索", async
   const dialog = page.getByRole("dialog");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await dialog.getByLabel("プロジェクト名", { exact: true }).fill(name);
-  await dialog.getByLabel("説明", { exact: true }).fill("架空の説明を保存");
+  await dialog.getByLabel("説明", { exact: true }).fill("テスト用の説明を保存");
   await dialog.getByLabel("期限（任意）").fill("2026-12-15");
   await dialog.getByRole("button", { name: "保存する" }).click();
   await expect(dialog).not.toBeVisible();
@@ -62,7 +62,7 @@ test("管理者の作成・編集・アーカイブ・復元とURL検索", async
 test("API入力・再送・権限・競合とダイアログの復旧", async ({ page }) => {
   await login(page);
   const headers = { origin, "Idempotency-Key": crypto.randomUUID() };
-  const body = { name: `競合検証の架空プロジェクト-${crypto.randomUUID().slice(0,8)}`, description: "", due_date: null };
+  const body = { name: `競合検証のテスト用プロジェクト-${crypto.randomUUID().slice(0,8)}`, description: "", due_date: null };
   const one = await page.request.post(api, { headers, data: body });
   expect(one.status()).toBe(201);
   const project = (await one.json()).data;
@@ -102,8 +102,8 @@ test("API入力・再送・権限・競合とダイアログの復旧", async ({
 test("閲覧者は変更できず、無所属と別workspaceを分離", async ({ page }) => {
   await login(page, "viewer");
   await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto(`/projects?workspace=${workspace}&q=${encodeURIComponent("架空プロジェクトA")}`);
-  await expect(page.getByRole("heading", { name: "架空プロジェクトA", exact: true })).toBeVisible();
+  await page.goto(`/projects?workspace=${workspace}&q=${encodeURIComponent("サンプルプロジェクトA")}`);
+  await expect(page.getByRole("heading", { name: "サンプルプロジェクトA", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "プロジェクト作成" })).not.toBeVisible();
   await expect(page.getByRole("button", { name: "編集", exact: true })).not.toBeVisible();
   const headers = { origin, "Idempotency-Key": crypto.randomUUID() };

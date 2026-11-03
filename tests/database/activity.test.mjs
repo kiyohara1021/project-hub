@@ -7,11 +7,11 @@ import {localSettings,login,adminClient,checked} from "../../scripts/local-supab
 test("履歴のスナップショット・削除後の保持・所属分離・直接改ざん拒否",async()=>{
   const settings=localSettings(),service=adminClient(settings);
   const owner=await login(settings,"admin"),member=await login(settings,"member"),viewer=await login(settings,"viewer"),outside=await login(settings,"outside");
-  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"履歴検証の架空スペース"}));
+  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"履歴検証のテスト用スペース"}));
   try{
     checked(await service.from("memberships").insert([{workspace_id:wid,user_id:member.user.id,role:"member"},{workspace_id:wid,user_id:viewer.user.id,role:"viewer"}]));
-    const project=checked(await owner.client.rpc("create_project",{p_workspace_id:wid,p_name:"履歴検証の架空プロジェクト"}));
-    const args={p_workspace_id:wid,p_project_id:project.id,p_title:"履歴の架空タスク",p_description:"記録しない架空本文",p_priority:"high",p_assignee_id:null,p_due_date:null,p_key:randomUUID()};
+    const project=checked(await owner.client.rpc("create_project",{p_workspace_id:wid,p_name:"履歴検証のテスト用プロジェクト"}));
+    const args={p_workspace_id:wid,p_project_id:project.id,p_title:"履歴のテスト用タスク",p_description:"記録しないテスト用本文",p_priority:"high",p_assignee_id:null,p_due_date:null,p_key:randomUUID()};
     const task=checked(await member.client.rpc("create_task_once",args));
     const before=checked(await owner.client.from("activity_logs").select("id").eq("workspace_id",wid));
     assert.equal((await member.client.rpc("edit_task",{p_workspace_id:wid,p_project_id:project.id,p_task_id:task.id,p_title:args.p_title,p_description:args.p_description,p_priority:"low",p_assignee_id:null,p_due_date:null,p_version:99})).error?.code,"40001");

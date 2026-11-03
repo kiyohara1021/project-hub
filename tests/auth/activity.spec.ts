@@ -5,9 +5,9 @@ const wid="11111111-1111-4111-8111-111111111111",other="22222222-2222-4222-8222-
 async function login(page:Page,alias:string){await page.goto("/login");await page.getByLabel("メールアドレス").fill(`${alias}@example.invalid`);await page.getByLabel("パスワード",{exact:true}).fill("Local-Demo-Only-2026!");await page.getByRole("button",{name:"ログイン",exact:true}).click();await expect(page).toHaveURL(/\/workspaces$/);}
 async function fixture(page:Page){
   await login(page,"admin");const headers={origin,"Idempotency-Key":crypto.randomUUID()};
-  const response=await page.request.post(`/api/v1/workspaces/${wid}/projects`,{headers,data:{name:"履歴画面検証の架空プロジェクト",description:"",due_date:null}});expect(response.status()).toBe(201);const project=(await response.json()).data;
+  const response=await page.request.post(`/api/v1/workspaces/${wid}/projects`,{headers,data:{name:"履歴画面検証のテスト用プロジェクト",description:"",due_date:null}});expect(response.status()).toBe(201);const project=(await response.json()).data;
   const base=`/api/v1/workspaces/${wid}/projects/${project.id}/tasks`;
-  const created=await page.request.post(base,{headers,data:{title:"履歴画面の架空タスク",description:"記録しない架空本文",priority:"high",assignee_id:null,due_date:null}});expect(created.status()).toBe(201);const task=(await created.json()).data;
+  const created=await page.request.post(base,{headers,data:{title:"履歴画面のテスト用タスク",description:"記録しないテスト用本文",priority:"high",assignee_id:null,due_date:null}});expect(created.status()).toBe(201);const task=(await created.json()).data;
   const moved=await page.request.post(`${base}/${task.id}/move`,{headers:{origin},data:{status:"doing",before_id:null,version:task.version}});expect(moved.status()).toBe(200);const current=(await moved.json()).data;
   expect((await page.request.delete(`${base}/${task.id}`,{headers:{origin},data:{version:current.version}})).status()).toBe(204);
   expect((await page.request.patch(`/api/v1/workspaces/${wid}/projects/${project.id}`,{headers:{origin},data:{name:project.name,description:"",status:"archived",due_date:null,version:project.version}})).status()).toBe(200);
@@ -20,7 +20,7 @@ test("削除・アーカイブ後の履歴を360pxで閲覧し、各絞り込み
   const project=await fixture(page);const api=`/api/v1/workspaces/${wid}/activity`;const query=`project=${project.id}&limit=2`;
   const all:Activity[]=[];let cursor:string|null=null;
   do{const response=await page.request.get(`${api}?${query}${cursor?`&cursor=${cursor}`:""}`);expect(response.status()).toBe(200);const result:ActivityPage=await response.json();all.push(...result.data);cursor=result.nextCursor;}while(cursor);
-  expect(all).toHaveLength(5);expect(new Set(all.map(e=>e.id)).size).toBe(5);expect(all.map(e=>e.id)).toEqual(all.map(e=>e.id).sort().reverse());expect(JSON.stringify(all)).not.toContain("記録しない架空本文");
+  expect(all).toHaveLength(5);expect(new Set(all.map(e=>e.id)).size).toBe(5);expect(all.map(e=>e.id)).toEqual(all.map(e=>e.id).sort().reverse());expect(JSON.stringify(all)).not.toContain("記録しないテスト用本文");
   await login(page,"viewer");await page.setViewportSize({width:360,height:800});await page.goto(`/activity?workspace=${wid}&${query}`);await expect(page.getByRole("article")).toHaveCount(2);await expect(page.getByRole("article").first().getByRole("time")).toHaveText("2026/11/01 09:00:00");
   await page.getByRole("link",{name:"次のページ →",exact:true}).click();await expect(page).toHaveURL(/cursor=/);await expect(page.getByRole("article")).toHaveCount(2);await page.getByRole("link",{name:"最初のページ",exact:true}).click();await expect(page).not.toHaveURL(/cursor=/);
   await page.getByLabel("対象種別で絞り込み").selectOption("tasks");await page.getByLabel("操作で絞り込み").selectOption("UPDATE");await page.getByRole("button",{name:"絞り込む",exact:true}).click();await expect(page).toHaveURL(new RegExp(`project=${project.id}`));await expect(page.getByRole("article")).toHaveCount(1);await expect(page.getByRole("article")).toContainText("未着手 → 状態: 進行中");
@@ -32,8 +32,8 @@ test("履歴APIの所属境界・入力検証・安全な変更値・空表示�
   const project=await fixture(page);const api=`/api/v1/workspaces/${wid}/activity`;
   const malformed=Buffer.from(JSON.stringify({time:"2026-02-30T00:00:00Z",id:project.id})).toString("base64url");
   for(const query of ["action=invalid","entity=profiles","limit=0","limit=101","limit=1.5","project=invalid","actor=invalid","cursor=","cursor=invalid",`cursor=${malformed}`,"action=INSERT&action=DELETE","unknown=1"])expect((await page.request.get(`${api}?${query}`)).status()).toBe(400);
-  localSql(`update public.activity_logs set changes=changes||'{"secret":"架空の非公開値"}'::jsonb||jsonb_build_object('after',changes->'after'||'{"description":"架空本文","role":"偽造ロール"}'::jsonb) where project_id='${project.id}' and entity_type='tasks'`);
-  const safe=await page.request.get(`${api}?project=${project.id}`);expect(safe.headers()["cache-control"]).toBe("private, no-store");expect(await safe.text()).not.toMatch(/架空の非公開値|架空本文|偽造ロール/);
+  localSql(`update public.activity_logs set changes=changes||'{"secret":"テスト用の非公開値"}'::jsonb||jsonb_build_object('after',changes->'after'||'{"description":"テスト用本文","role":"偽造ロール"}'::jsonb) where project_id='${project.id}' and entity_type='tasks'`);
+  const safe=await page.request.get(`${api}?project=${project.id}`);expect(safe.headers()["cache-control"]).toBe("private, no-store");expect(await safe.text()).not.toMatch(/テスト用の非公開値|テスト用本文|偽造ロール/);
   for(const method of ["post","patch","delete"] as const)expect((await page.request[method](api,{headers:{origin},data:{}})).status()).toBe(405);
   expect((await page.request.get(`/api/v1/workspaces/${other}/activity`)).status()).toBe(404);expect((await page.request.get('/api/v1/workspaces/invalid/activity')).status()).toBe(400);
   expect((await(await page.request.get(`${api}?project=${crypto.randomUUID()}`)).json()).data).toEqual([]);

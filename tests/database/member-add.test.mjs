@@ -9,7 +9,7 @@ test("所属追加は管理者限定で原子的・再送可能、既存の権�
   const settings=localSettings(),service=adminClient(settings);
   const owner=await login(settings,"admin"),member=await login(settings,"member"),viewer=await login(settings,"viewer"),outside=await login(settings,"outside"),target=await login(settings,"unassigned");
   const anon=createClient(settings.API_URL,settings.ANON_KEY,{auth:{persistSession:false}});
-  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"所属追加検証の架空スペース"}));
+  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"所属追加検証のテスト用スペース"}));
   try {
     checked(await service.from("memberships").insert([{workspace_id:wid,user_id:member.user.id,role:"member"},{workspace_id:wid,user_id:viewer.user.id,role:"viewer"}]));
     const args={p_workspace_id:wid,p_user_id:target.user.id,p_role:"viewer",p_key:randomUUID()};

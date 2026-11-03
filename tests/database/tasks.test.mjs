@@ -8,9 +8,9 @@ test("タスクCRUD、同時再送、全列の順序、権限・アーカイブ�
   const settings = localSettings(); const admin = adminClient(settings);
   const owner = await login(settings,"admin"); const member = await login(settings,"member");
   const viewer = await login(settings,"viewer"); const outside = await login(settings,"outside");
-  const project = checked(await owner.client.rpc("create_project", { p_workspace_id: workspaceA, p_name: "タスク検証の架空プロジェクト" }));
+  const project = checked(await owner.client.rpc("create_project", { p_workspace_id: workspaceA, p_name: "タスク検証のテスト用プロジェクト" }));
   const scope = { p_workspace_id: workspaceA, p_project_id: project.id };
-  const input = { ...scope, p_title: "タスク検証A", p_description: "架空の説明", p_priority: "high", p_assignee_id: member.user.id, p_due_date: "2026-12-01", p_key: randomUUID() };
+  const input = { ...scope, p_title: "タスク検証A", p_description: "テスト用の説明", p_priority: "high", p_assignee_id: member.user.id, p_due_date: "2026-12-01", p_key: randomUUID() };
   const created = await Promise.all([member.client.rpc("create_task_once",input),member.client.rpc("create_task_once",input)]);
   const a = checked(created[0]); assert.equal(a.id,checked(created[1]).id);
   assert.equal((await member.client.rpc("create_task_once", { ...input,p_title:"異なる本文" })).error?.code,"40001");
@@ -45,7 +45,7 @@ test("タスクCRUD、同時再送、全列の順序、権限・アーカイブ�
   const edit = { ...scope,p_task_id:c.id,p_title:"タスク検証C更新",p_description:"更新説明",p_priority:"low",p_assignee_id:null,p_due_date:null,p_version:moved.version };
   const edited = checked(await member.client.rpc("edit_task",edit)); assert.equal(edited.status,"doing");
   assert.equal((await member.client.rpc("edit_task",edit)).error?.code,"40001");
-  const otherProject = checked(await owner.client.rpc("create_project", { p_workspace_id:workspaceA,p_name:"別の架空プロジェクト" }));
+  const otherProject = checked(await owner.client.rpc("create_project", { p_workspace_id:workspaceA,p_name:"別のテスト用プロジェクト" }));
   assert.equal((await member.client.rpc("delete_task",{ ...scope,p_project_id:otherProject.id,p_task_id:c.id,p_version:edited.version })).error?.code,"P0002");
   assert.equal((await viewer.client.rpc("delete_task",{ ...scope,p_task_id:c.id,p_version:edited.version })).error?.code,"42501");
   checked(await owner.client.rpc("update_project",{ p_workspace_id:workspaceA,p_project_id:project.id,p_name:project.name,p_status:"archived",p_due_date:null,p_version:1 }));

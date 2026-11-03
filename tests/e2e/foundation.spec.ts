@@ -15,10 +15,10 @@ test("6画面への遷移と本文の表示", async ({ page }) => {
 
 test("検索、空状態、プロジェクトIDと404", async ({ page }) => {
   await page.goto("/projects");
-  await page.getByLabel("プロジェクト名で検索").fill("存在しない架空名");
+  await page.getByLabel("プロジェクト名で検索").fill("存在しないテスト用名");
   await expect(page.getByText("該当するデータがありません")).toBeVisible();
-  await page.getByLabel("プロジェクト名で検索").fill("架空プロジェクトB");
-  await page.getByRole("link", { name: "架空プロジェクトB", exact: true }).click();
+  await page.getByLabel("プロジェクト名で検索").fill("サンプルプロジェクトB");
+  await page.getByRole("link", { name: "サンプルプロジェクトB", exact: true }).click();
   await expect(page).toHaveURL("/projects/demo-b/board");
   await expect(page.getByText("タスクはまだありません")).toBeVisible();
   await page.getByRole("link", { name: "このプロジェクトの課題" }).click();

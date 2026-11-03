@@ -5,7 +5,7 @@ const origin="http://127.0.0.1:3101";
 async function login(page:Page,alias:string){await page.goto("/login");await page.getByLabel("メールアドレス").fill(`${alias}@example.invalid`);await page.getByLabel("パスワード",{exact:true}).fill("Local-Demo-Only-2026!");await page.getByRole("button",{name:"ログイン",exact:true}).click();await expect(page).toHaveURL(/\/workspaces$/);}
 async function fixture(){
   const settings=localSettings(),service=adminClient(settings),owner=await dbLogin(settings,"admin"),target=await dbLogin(settings,"unassigned"),viewer=await dbLogin(settings,"viewer"),member=await dbLogin(settings,"member");
-  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"所属追加画面検証の架空スペース"}));
+  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"所属追加画面検証のテスト用スペース"}));
   checked(await service.from("memberships").insert([{workspace_id:wid,user_id:viewer.user.id,role:"viewer"},{workspace_id:wid,user_id:member.user.id,role:"member"}]));
   return {wid,uid:target.user.id,async cleanup(){localSql(`delete from private.member_requests where workspace_id='${wid}'`);for(const table of ["memberships","activity_logs"])checked(await service.from(table).delete().eq("workspace_id",wid));checked(await service.from("workspaces").delete().eq("id",wid));}};
 }

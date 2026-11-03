@@ -11,29 +11,29 @@ test("担当件数は全件DB集計し、状態・アーカイブ・所属・権
  const anon=createClient(settings.API_URL,settings.ANON_KEY,{auth:{persistSession:false}});
  assert.equal((await anon.rpc("read_members",{p_workspace_id:workspaceA})).error?.code,"42501");
  assert.equal(localSql("select prosecdef,provolatile from pg_proc where oid='public.read_members(uuid,text,uuid,integer)'::regprocedure"),"f|s");
- const wid=checked(await owner.client.rpc("create_workspace",{p_name:"担当数検証の架空スペース"}));
- const otherWid=checked(await owner.client.rpc("create_workspace",{p_name:"担当数分離検証の架空スペース"}));
+ const wid=checked(await owner.client.rpc("create_workspace",{p_name:"担当数検証のテスト用スペース"}));
+ const otherWid=checked(await owner.client.rpc("create_workspace",{p_name:"担当数分離検証のテスト用スペース"}));
  try{
   checked(await service.from("memberships").insert([{workspace_id:wid,user_id:member.user.id,role:"member"},{workspace_id:wid,user_id:viewer.user.id,role:"viewer"},{workspace_id:otherWid,user_id:member.user.id,role:"member"}]));
   const args={p_workspace_id:wid};
   const empty=checked(await member.client.rpc("read_members",args));assert.equal(empty.data.length,3);assert.ok(empty.data.every(m=>m.task_count===0&&m.issue_count===0));
   const [active,planned,archived,other]=[randomUUID(),randomUUID(),randomUUID(),randomUUID()];
   checked(await service.from("projects").insert([
-   {id:active,workspace_id:wid,name:"担当数検証の架空プロジェクト",status:"active"},
-   {id:planned,workspace_id:wid,name:"計画中の架空プロジェクト",status:"planned"},
-   {id:archived,workspace_id:wid,name:"保管済みの架空プロジェクト",status:"archived"},
-   {id:other,workspace_id:otherWid,name:"別所属の架空プロジェクト",status:"active"},
+   {id:active,workspace_id:wid,name:"担当数検証のテスト用プロジェクト",status:"active"},
+   {id:planned,workspace_id:wid,name:"計画中のテスト用プロジェクト",status:"planned"},
+   {id:archived,workspace_id:wid,name:"保管済みのテスト用プロジェクト",status:"archived"},
+   {id:other,workspace_id:otherWid,name:"別所属のテスト用プロジェクト",status:"active"},
   ]));
   for(const table of ["tasks","issues"]){
-   for(let start=0;start<1001;start+=400)checked(await service.from(table).insert(Array.from({length:Math.min(400,1001-start)},(_,i)=>({workspace_id:wid,project_id:active,title:`担当数検証の架空項目${start+i}`,status:table==="tasks"?"doing":"open",assignee_id:member.user.id}))));
+   for(let start=0;start<1001;start+=400)checked(await service.from(table).insert(Array.from({length:Math.min(400,1001-start)},(_,i)=>({workspace_id:wid,project_id:active,title:`担当数検証のテスト用項目${start+i}`,status:table==="tasks"?"doing":"open",assignee_id:member.user.id}))));
    const included=table==="tasks"?["todo","review"]:["investigating"];
    const excluded=table==="tasks"?["done"]:["resolved","closed"];
    checked(await service.from(table).insert([
-    ...included.map(status=>({workspace_id:wid,project_id:planned,title:"計画中の架空担当",status,assignee_id:member.user.id})),
-    ...excluded.map(status=>({workspace_id:wid,project_id:active,title:"完了済みの架空担当",status,assignee_id:member.user.id})),
-    {workspace_id:wid,project_id:archived,title:"保管済みの架空担当",status:table==="tasks"?"todo":"open",assignee_id:member.user.id},
-    {workspace_id:otherWid,project_id:other,title:"別所属の架空担当",status:table==="tasks"?"todo":"open",assignee_id:member.user.id},
-    {workspace_id:wid,project_id:active,title:"未割当の架空項目",status:table==="tasks"?"todo":"open",assignee_id:null},
+    ...included.map(status=>({workspace_id:wid,project_id:planned,title:"計画中のテスト用担当",status,assignee_id:member.user.id})),
+    ...excluded.map(status=>({workspace_id:wid,project_id:active,title:"完了済みのテスト用担当",status,assignee_id:member.user.id})),
+    {workspace_id:wid,project_id:archived,title:"保管済みのテスト用担当",status:table==="tasks"?"todo":"open",assignee_id:member.user.id},
+    {workspace_id:otherWid,project_id:other,title:"別所属のテスト用担当",status:table==="tasks"?"todo":"open",assignee_id:member.user.id},
+    {workspace_id:wid,project_id:active,title:"未割当のテスト用項目",status:table==="tasks"?"todo":"open",assignee_id:null},
    ]));
   }
   for(const actor of [owner,member,viewer]){
