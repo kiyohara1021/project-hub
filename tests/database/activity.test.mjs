@@ -37,3 +37,29 @@ test("履歴のスナップショット・削除後の保持・所属分離・�
     checked(await service.from("workspaces").delete().eq("id",wid));
   }
 });
+
+
+test("タスク移動と位置の振り直しは移動したタスクの履歴だけを残す",async()=>{
+  const settings=localSettings(),service=adminClient(settings);
+  const owner=await login(settings,"admin");
+  const wid=checked(await owner.client.rpc("create_workspace",{p_name:"並び順履歴検証"}));
+  try{
+    const project=checked(await owner.client.rpc("create_project",{p_workspace_id:wid,p_name:"移動履歴"}));
+    const scope={p_workspace_id:wid,p_project_id:project.id};
+    const tasks=[];
+    for(const title of ["A","B","C"])tasks.push(checked(await owner.client.rpc("create_task_once",{...scope,p_title:title,p_description:"",p_priority:"medium",p_assignee_id:null,p_due_date:null,p_key:randomUUID()})));
+    for(const rebalance of [false,true]){
+      if(rebalance)localSql(`update public.tasks set position=case when id='${tasks[0].id}' then 1 else 2 end where id in ('${tasks[0].id}','${tasks[1].id}')`);
+      const before=checked(await owner.client.from("activity_logs").select("id").eq("project_id",project.id));
+      const moved=checked(await owner.client.rpc("move_task",{...scope,p_task_id:tasks[2].id,p_status:"todo",p_before_id:tasks[1].id,p_version:tasks[2].version}));
+      tasks[2]=moved;
+      const after=checked(await owner.client.from("activity_logs").select("id,entity_id,action").eq("project_id",project.id));
+      const added=after.filter(row=>!before.some(old=>old.id===row.id));
+      assert.equal(added.length,1);assert.equal(added[0].entity_id,moved.id);assert.equal(added[0].action,"UPDATE");
+    }
+  }finally{
+    localSql(`delete from private.task_requests where workspace_id='${wid}'`);
+    for(const table of ["tasks","projects","memberships","activity_logs"])checked(await service.from(table).delete().eq("workspace_id",wid));
+    checked(await service.from("workspaces").delete().eq("id",wid));
+  }
+});

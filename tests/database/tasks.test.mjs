@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { localSql } from "../../scripts/local-sql.mjs";
 import { randomUUID } from "node:crypto";
 import { localSettings, login, checked, adminClient, workspaceA } from "../../scripts/local-supabase.mjs";
 
@@ -19,9 +20,24 @@ test("タスクCRUD、同時再送、全列の順序、権限・アーカイブ�
   const b = checked(await member.client.rpc("create_task_once",{ ...input,p_title:"タスク検証B",p_key:randomUUID() }));
   const c = checked(await member.client.rpc("create_task_once",{ ...input,p_title:"タスク検証C",p_key:randomUUID() }));
   let moved = checked(await member.client.rpc("move_task",{ ...scope,p_task_id:c.id,p_status:"todo",p_before_id:a.id,p_version:1 }));
-  const ordered = checked(await owner.client.from("tasks").select("id,position,version").eq("project_id",project.id).order("position"));
+  const ordered = checked(await owner.client.from("tasks").select("id,position,version,updated_at").eq("project_id",project.id).order("position"));
   assert.deepEqual(ordered.map(t=>t.id),[c.id,a.id,b.id]);
-  assert.deepEqual(ordered.map(t=>t.position),[1024,2048,3072]);
+  assert.deepEqual(ordered.map(t=>t.position),[0,1024,2048]);
+  for (const original of [a,b]) {
+    const current=ordered.find(row=>row.id===original.id);
+    assert.equal(current.version,original.version);
+    assert.equal(current.updated_at,original.updated_at);
+  }
+  const editB={...scope,p_task_id:b.id,p_title:b.title,p_description:b.description,p_priority:b.priority,p_assignee_id:b.assignee_id,p_due_date:b.due_date,p_version:b.version};
+  checked(await member.client.rpc("edit_task",editB));
+  // Force a full destination column rebalance by removing its integer gap.
+  localSql(`update public.tasks set position=case when id='${c.id}' then 1 else 2 end where id in ('${c.id}','${a.id}')`);
+  const beforeRebalance=checked(await owner.client.from("tasks").select("id,version,updated_at").eq("project_id",project.id));
+  const bCurrent=beforeRebalance.find(row=>row.id===b.id);
+  checked(await member.client.rpc("move_task",{...scope,p_task_id:b.id,p_status:"todo",p_before_id:a.id,p_version:bCurrent.version}));
+  const afterRebalance=checked(await owner.client.from("tasks").select("id,version,updated_at").eq("project_id",project.id));
+  for(const id of [a.id,c.id]) assert.deepEqual(afterRebalance.find(row=>row.id===id),beforeRebalance.find(row=>row.id===id));
+  checked(await member.client.rpc("edit_task",{...editB,p_task_id:a.id,p_version:a.version}));
   assert.equal((await member.client.rpc("move_task",{ ...scope,p_task_id:c.id,p_status:"done",p_before_id:null,p_version:1 })).error?.code,"40001");
   moved = checked(await member.client.rpc("move_task",{ ...scope,p_task_id:c.id,p_status:"doing",p_before_id:null,p_version:moved.version }));
   assert.equal(moved.status,"doing");
