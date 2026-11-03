@@ -13,11 +13,11 @@
 | `pnpm test:e2e` | 成功（7件、1件skip） | 画面デモ。desktop・360px幅 |
 | `pnpm test:db` / `pnpm test:auth` | 未実施 | 確認環境にDockerがなく、ローカルSupabaseを起動できないため。CIの`database-auth`ジョブで確認する |
 
-仕様書（[基本仕様](specification.md)、[API・認可設計](architecture/api-rls.md)、[データモデル](architecture/data-model.md)）と実装を照合し、エンドポイント・入力検証・ページ送り・権限・再送制御の記載が実装と一致することを確認しました。マイグレーションのSECURITY DEFINER関数はすべて`search_path`を空に固定し、RPCの実行権限をauthenticatedに限定しています。
+仕様書（[基本仕様](specification.md)、[API・認可設計](architecture/api-rls.md)、[データモデル](architecture/data-model.md)）と実装を照合し、エンドポイント・入力検証・ページ送り・権限・再送制御の記載が実装と一致することを確認しました。通常ユーザーが利用する更新RPCは`search_path`を空に固定し、実行権限をauthenticatedに限定しています。内部トリガー関数などは、この利用者向けRPCとは区別します。
 
-## 確認時に対応したIssue
+## 確認時に起票したIssue
 
-確認時に見つけた不具合・改善はIssueに起票し、Issue単位のコミットで対応しました。
+確認時に見つけた不具合・改善はIssueに起票し、個別のPRで対応しています。マージ状況は各Issue・PRを参照してください。
 
 | Issue | 区分 | 内容 |
 |---|---|---|
@@ -41,8 +41,14 @@
 | 中 | [#56](https://github.com/kiyohara1021/project-hub/issues/56) | 入力検証関数の配置と命名の整理 | PR #42 のマージ後（コメントAPIも対象） |
 | 低 | [#61](https://github.com/kiyohara1021/project-hub/issues/61) | ログイン状況画面の取得件数の上限 | PR #42・#51・#52 のマージ後 |
 
-確認時点で既に起票されていたIssue（[#41](https://github.com/kiyohara1021/project-hub/issues/41) 課題コメント、[#43](https://github.com/kiyohara1021/project-hub/issues/43) タスク移動、[#44](https://github.com/kiyohara1021/project-hub/issues/44) 表示名、[#45](https://github.com/kiyohara1021/project-hub/issues/45) `shadcn`の依存区分、[#46](https://github.com/kiyohara1021/project-hub/issues/46) ライセンス）は、PR #42 で対応中のため本書では扱いません。
+確認時点で既に起票されていたIssue（[#41](https://github.com/kiyohara1021/project-hub/issues/41) 課題コメント、[#43](https://github.com/kiyohara1021/project-hub/issues/43) タスク移動、[#44](https://github.com/kiyohara1021/project-hub/issues/44) 表示名、[#45](https://github.com/kiyohara1021/project-hub/issues/45) `shadcn`の依存区分、[#46](https://github.com/kiyohara1021/project-hub/issues/46) ライセンス）は、PR #42 に含まれ、2026-11-04にマージ済みです。本書の2026-11-03時点の確認対象とは区別します。
 
 ## 検証の注意
 
 ローカルでPlaywrightのバージョンとインストール済みブラウザが一致しない場合、`pnpm test:e2e`はブラウザ起動前に失敗します。`pnpm exec playwright install chromium`でブラウザを入れ直してください。
+
+## 追加確認（2026-11-04）
+
+PR #42 の統合後は、DBテスト13件・認証E2E34件とCIが成功しています。上表の「Dockerなしで未実施」は、2026-11-03の確認環境についての記録です。本番DBはmigration011まで適用し、コメントのRLS・更新RPCの所有者、固定search_path、実行権限を読戻し確認しました。アプリの本番確認範囲は[運用手順](deployment.md)に記録します。
+
+Codex Security CLIはコミット`b56728d`の170ファイルをレビュー後、候補検証中に利用上限で停止しました。スキャンは未完了であり、脆弱性がないことを示す結果ではありません。#43〜#46の追加変更はこのスキャンの対象外です。
