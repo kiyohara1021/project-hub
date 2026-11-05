@@ -155,6 +155,9 @@ for (const width of [360, 1280]) {
       .getByRole("link", { name: "プロジェクト一覧", exact: true })
       .click();
     await page
+      .getByRole("searchbox", { name: "プロジェクト名で検索" })
+      .fill("サンプルプロジェクトA");
+    await page
       .getByRole("link", { name: "サンプルプロジェクトA", exact: true })
       .click();
     await expect(page).toHaveURL(new RegExp(`/projects/${project}/board`));
