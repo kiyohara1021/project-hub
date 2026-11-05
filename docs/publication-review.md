@@ -14,7 +14,6 @@ Vercel Hobbyの個人・非商用という利用条件は、リポジトリのPu
 
 参考: [GitHubの公開範囲変更](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility)、[Vercel Hobby](https://vercel.com/docs/plans/hobby)。
 
-
 ## 公開説明の見直し（2026-11-03 / Issue #39）
 
 GitHubのAbout欄、公開URL、READMEと関連ドキュメントを見直しました。

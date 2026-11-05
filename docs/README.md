@@ -4,19 +4,19 @@ ProjectHubの使い方、現行仕様、開発・運用手順をまとめてい�
 
 ## 目的から探す
 
-| 知りたいこと | 資料 |
-|---|---|
-| アプリの操作方法 | [利用ガイド](user-guide.md) |
-| 機能・権限・共通ルール | [基本仕様](specification.md) |
-| 各画面の動作と表示 | [画面仕様](design/screens.md) |
-| APIの入出力と認可 | [API・認可設計](architecture/api-rls.md) |
-| テーブル・制約・ER図 | [データモデル](architecture/data-model.md) |
-| 開発環境の準備・テスト | [ローカル開発手順](local-development.md) |
-| 本番設定・公開・切り戻し | [デプロイ・運用手順](deployment.md) |
-| 性能測定の条件と結果 | [性能測定記録](performance.md) |
-| 対応済みの範囲と未対応の範囲 | [対応状況と今後の範囲](roadmap.md) |
-| 実装の確認結果と改善候補 | [実装状況の確認と改善候補](implementation-review.md) |
-| 変更の進め方・データ方針 | [開発ルール](../CONTRIBUTING.md) |
+| 知りたいこと                 | 資料                                                 |
+| ---------------------------- | ---------------------------------------------------- |
+| アプリの操作方法             | [利用ガイド](user-guide.md)                          |
+| 機能・権限・共通ルール       | [基本仕様](specification.md)                         |
+| 各画面の動作と表示           | [画面仕様](design/screens.md)                        |
+| APIの入出力と認可            | [API・認可設計](architecture/api-rls.md)             |
+| テーブル・制約・ER図         | [データモデル](architecture/data-model.md)           |
+| 開発環境の準備・テスト       | [ローカル開発手順](local-development.md)             |
+| 本番設定・公開・切り戻し     | [デプロイ・運用手順](deployment.md)                  |
+| 性能測定の条件と結果         | [性能測定記録](performance.md)                       |
+| 対応済みの範囲と未対応の範囲 | [対応状況と今後の範囲](roadmap.md)                   |
+| 実装の確認結果と改善候補     | [実装状況の確認と改善候補](implementation-review.md) |
+| 変更の進め方・データ方針     | [開発ルール](../CONTRIBUTING.md)                     |
 
 ## 仕様と記録の読み方
 

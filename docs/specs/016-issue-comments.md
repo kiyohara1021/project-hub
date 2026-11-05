@@ -21,13 +21,13 @@
 
 接頭辞 `/api/v1/workspaces/:wid/projects/:pid/issues/:iid`。
 
-| メソッド・パス | 入力 | 応答 |
-|---|---|---|
-| GET /comments | limit/cursorのみ | 200 `{data:Comment[],nextCursor}` |
-| POST /comments | `{body}` とIdempotency-Key | 201 `{data:Comment}` |
-| GET /comments/:cid | なし | 200 `{data:Comment}`（競合復旧用） |
-| PATCH /comments/:cid | `{body,version}` | 200 `{data:Comment}` |
-| DELETE /comments/:cid | `{version}` | 204 |
+| メソッド・パス        | 入力                       | 応答                               |
+| --------------------- | -------------------------- | ---------------------------------- |
+| GET /comments         | limit/cursorのみ           | 200 `{data:Comment[],nextCursor}`  |
+| POST /comments        | `{body}` とIdempotency-Key | 201 `{data:Comment}`               |
+| GET /comments/:cid    | なし                       | 200 `{data:Comment}`（競合復旧用） |
+| PATCH /comments/:cid  | `{body,version}`           | 200 `{data:Comment}`               |
+| DELETE /comments/:cid | `{version}`                | 204                                |
 
 Commentはid/workspace_id/project_id/issue_id/author_id/author_display_name/body/version/created_at/updated_at。エラーは既存形式。未認証401、ロール不足403、無所属/親子不一致/不存在404、入力不正400、競合/アーカイブ409。Origin・JSON32KiB・未知/欠落キー・UUID・日付カーソルを検査。応答はprivate,no-store、通常JWTでRLSを適用。
 

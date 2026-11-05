@@ -6,16 +6,16 @@ ProjectHubをVercelとSupabaseで公開・運用するための手順です。�
 
 2026年11月3日確認。公開アプリは登録済みアカウントで利用できます。
 
-| 項目 | 設定・状態 |
-|---|---|
-| 公開URL | [project-hub-zeta-nine.vercel.app](https://project-hub-zeta-nine.vercel.app) |
-| アプリ | Vercel / project-hub / Productionブランチはmain |
-| 実行リージョン | Tokyo（hnd1） |
-| データベース | 専用Supabase / project-hub / Tokyo（ap-northeast-1） |
-| 本番モード | `APP_MODE=connected` |
-| Preview | `APP_MODE=preview`。DBに接続せず固定データを表示 |
-| マイグレーション | 001〜011を適用済み（2026-11-04） |
-| 利用範囲 | 個人の学習・デモ用途。実在の顧客情報や業務データは登録しない |
+| 項目             | 設定・状態                                                                   |
+| ---------------- | ---------------------------------------------------------------------------- |
+| 公開URL          | [project-hub-zeta-nine.vercel.app](https://project-hub-zeta-nine.vercel.app) |
+| アプリ           | Vercel / project-hub / Productionブランチはmain                              |
+| 実行リージョン   | Tokyo（hnd1）                                                                |
+| データベース     | 専用Supabase / project-hub / Tokyo（ap-northeast-1）                         |
+| 本番モード       | `APP_MODE=connected`                                                         |
+| Preview          | `APP_MODE=preview`。DBに接続せず固定データを表示                             |
+| マイグレーション | 001〜011を適用済み（2026-11-04）                                             |
+| 利用範囲         | 個人の学習・デモ用途。実在の顧客情報や業務データは登録しない                 |
 
 Vercel Hobbyの利用条件と上限は公開・変更時に再確認します。無料枠の容量やバックアップを保証として扱わず、上限に近づいた場合は停止・縮小も含めて構成を見直します。
 
@@ -23,22 +23,22 @@ Vercel Hobbyの利用条件と上限は公開・変更時に再確認します�
 
 開発と本番は別のDBを使用します。Previewには本番DBの接続情報を設定しません。
 
-| 変数 | Preview | Production |
-|---|---|---|
-| `APP_MODE` | `preview` | `connected` |
-| `APP_ORIGIN` | 不要 | 公開URLのHTTPSオリジン。末尾の`/`なし |
-| `SUPABASE_URL` | 未設定 | `https://<project-ref>.supabase.co` |
-| `SUPABASE_PUBLISHABLE_KEY` | 未設定 | 対象DBのpublishableキー、またはlegacy anonキー |
+| 変数                       | Preview   | Production                                     |
+| -------------------------- | --------- | ---------------------------------------------- |
+| `APP_MODE`                 | `preview` | `connected`                                    |
+| `APP_ORIGIN`               | 不要      | 公開URLのHTTPSオリジン。末尾の`/`なし          |
+| `SUPABASE_URL`             | 未設定    | `https://<project-ref>.supabase.co`            |
+| `SUPABASE_PUBLISHABLE_KEY` | 未設定    | 対象DBのpublishableキー、またはlegacy anonキー |
 
 管理鍵・DBパスワード・SupabaseアクセストークンはVercelアプリに登録しません。`SUPABASE_SERVICE_ROLE_KEY` / `SUPABASE_SECRET_KEY`とそれらの`NEXT_PUBLIC`版は設定検査で拒否します。アプリ用のSupabase変数に`NEXT_PUBLIC`接頭辞は不要です。
 
 `.env.local`やローカル検証用パスワードはアップロードせず、Previewへの環境変数の一括コピーも避けます。
 
-| コマンド | 用途 |
-|---|---|
-| `pnpm check:deploy` | 実行プロセスの環境変数を検査 |
+| コマンド            | 用途                             |
+| ------------------- | -------------------------------- |
+| `pnpm check:deploy` | 実行プロセスの環境変数を検査     |
 | `pnpm build:vercel` | 設定検査に成功した場合だけビルド |
-| `pnpm build` | 通常のローカル・CIビルド |
+| `pnpm build`        | 通常のローカル・CIビルド         |
 
 設定検査は`.env`を自動で読み込みません。また、値の形式検査であり、DBへの接続やアクセス権限の確認は別途必要です。
 
@@ -100,15 +100,15 @@ SQL Editorで適用する場合も、リポジトリの原文と順序を守り�
 
 ## 公開後の確認
 
-| 確認すること | 確認方法 |
-|---|---|
-| 未認証時の制御 | 6画面がログインへ誘導され、6種の読取APIが401 / no-storeとなる |
-| 権限・所属境界 | admin/member/viewerの許可・拒否、別ワークスペースの404、直接書き込み拒否を確認 |
-| 変更操作 | サンプルの作成・更新とダッシュボード・操作履歴への反映、最後の管理者保護を確認 |
-| Origin・Cookie | 正規URLから操作でき、異なるOriginは拒否される。HTTPSのSecure属性とログアウト後401を確認 |
-| 画面操作 | PCと360px幅、Tab/Shift+Tab/Escape、フォーカス復帰、横スクロールを確認 |
+| 確認すること   | 確認方法                                                                                               |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| 未認証時の制御 | 6画面がログインへ誘導され、6種の読取APIが401 / no-storeとなる                                          |
+| 権限・所属境界 | admin/member/viewerの許可・拒否、別ワークスペースの404、直接書き込み拒否を確認                         |
+| 変更操作       | サンプルの作成・更新とダッシュボード・操作履歴への反映、最後の管理者保護を確認                         |
+| Origin・Cookie | 正規URLから操作でき、異なるOriginは拒否される。HTTPSのSecure属性とログアウト後401を確認                |
+| 画面操作       | PCと360px幅、Tab/Shift+Tab/Escape、フォーカス復帰、横スクロールを確認                                  |
 | エラー・利用量 | Functions/DBログ（5xxはrequestId付きのJSONで出力）、Vercel/SupabaseのUsageを確認。資格情報を記録しない |
-| 性能 | 測定条件と対象データ量を記録。ローカル実測と本番実測を区別する |
+| 性能           | 測定条件と対象データ量を記録。ローカル実測と本番実測を区別する                                         |
 
 App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあるため、画面の未認証制御はステータスだけで判定しません。画面デモモードでは、DB APIは503となります。
 
@@ -128,14 +128,14 @@ App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあ�
 
 2026年11月3日、期間検索・メンバー担当件数・登録済みユーザーの所属追加を反映しました。詳細な作業ログと過去の公開履歴は[2026年11月の記録](history/deployment-2026-11.md)に保存しています。
 
-| 項目 | 確認結果 |
-|---|---|
-| 対応PR | #31 → #35 → #36 → #37の順にマージ |
-| アプリ基準SHA | `1d62e7100589dfdebe6fc9d88f437d127e439397` |
-| Vercel Deployment | `7w5B6Jx8HfUijpYzWyVDY5YgdCb8` |
-| 公開状態 | Ready / Production Current / 正規URL割当とSourceを照合 |
-| DB | 007→008を先行適用し、履歴8件・RPC所有者・実行権限・固定search_path・再送記録のRLSを照合 |
-| ローカル・CI | 各PRのverify/database-auth成功。統合時のDBテスト10件・認証E2E28件成功 |
+| 項目              | 確認結果                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| 対応PR            | #31 → #35 → #36 → #37の順にマージ                                                       |
+| アプリ基準SHA     | `1d62e7100589dfdebe6fc9d88f437d127e439397`                                              |
+| Vercel Deployment | `7w5B6Jx8HfUijpYzWyVDY5YgdCb8`                                                          |
+| 公開状態          | Ready / Production Current / 正規URL割当とSourceを照合                                  |
+| DB                | 007→008を先行適用し、履歴8件・RPC所有者・実行権限・固定search_path・再送記録のRLSを照合 |
+| ローカル・CI      | 各PRのverify/database-auth成功。統合時のDBテスト10件・認証E2E28件成功                   |
 
 今回の本番確認は、管理者の担当件数表示・メンバーAPI・所属追加の確認画面と重複拒否・Escape後のフォーカス復帰・期間検索とページ送りを対象としています。匿名の6種APIは401 / private,no-store、異なるOriginからの所属追加は403でした。
 
@@ -158,7 +158,6 @@ App Routerはログインへの誘導をHTTP 200のHTML内で返すことがあ�
 [課題コメント仕様](specs/016-issue-comments.md)の反映には`202611030009_issue_comments.sql`が必要です。適用済み008までの履歴を照合し、009をアプリより先に適用してください。追加RPCの所有者・固定search_path・EXECUTE、issue_commentsのRLS・SELECTだけの直接権限とprivate.comment_requestsへの直接アクセス拒否を確認します。課題削除時にコメントをCASCADE削除しますが、監査と再送記録は保持します。
 
 ローカルでは投稿/編集/確認削除・32KiB入力制限・再送・競合・所属/投稿者/アーカイブ境界をDB/認証E2Eで検証します。本番では適用とデプロイのSHA・確認した操作を別に記録してください。
-
 
 ### コメント・表示名・タスク移動の追加反映（2026-11-04）
 

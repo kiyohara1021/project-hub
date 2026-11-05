@@ -3,7 +3,20 @@ import { ProjectList } from "@/components/project-list";
 import { connectedMode } from "@/lib/supabase/config";
 import { ConnectedProjectList } from "@/components/connected-project-list";
 export const metadata = { title: "プロジェクト一覧" };
-export default async function Projects({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  if (connectedMode()) return <ConnectedProjectList search={await searchParams} />;
-  return <><PageHeading title="プロジェクト一覧" description="固定のサンプルデータを使った画面デモです。プロジェクトを選ぶとカンバンを確認できます。" /><ProjectList /></>;
+export default async function Projects({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  if (connectedMode())
+    return <ConnectedProjectList search={await searchParams} />;
+  return (
+    <>
+      <PageHeading
+        title="プロジェクト一覧"
+        description="固定のサンプルデータを使った画面デモです。プロジェクトを選ぶとカンバンを確認できます。"
+      />
+      <ProjectList />
+    </>
+  );
 }

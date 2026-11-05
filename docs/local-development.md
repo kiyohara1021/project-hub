@@ -23,13 +23,13 @@ pnpm dev
 
 [ログイン画面](http://127.0.0.1:3000/login)を開き、次のテストアカウントでログインしてください。
 
-| メールアドレス | 表示名 | 所属・ロール |
-|---|---|---|
-| admin@example.invalid | デモメンバー01 | デモスペースA・管理者 |
-| member@example.invalid | デモメンバー02 | デモスペースA・メンバー |
-| viewer@example.invalid | デモメンバー03 | デモスペースA・閲覧者 |
-| outside@example.invalid | デモメンバー04 | デモスペースB・管理者 |
-| unassigned@example.invalid | デモメンバー05 | 所属なし |
+| メールアドレス             | 表示名         | 所属・ロール            |
+| -------------------------- | -------------- | ----------------------- |
+| admin@example.invalid      | デモメンバー01 | デモスペースA・管理者   |
+| member@example.invalid     | デモメンバー02 | デモスペースA・メンバー |
+| viewer@example.invalid     | デモメンバー03 | デモスペースA・閲覧者   |
+| outside@example.invalid    | デモメンバー04 | デモスペースB・管理者   |
+| unassigned@example.invalid | デモメンバー05 | 所属なし                |
 
 共通パスワードは`Local-Demo-Only-2026!`です。ローカルのテスト専用で、本番では使用しません。
 
@@ -37,12 +37,12 @@ pnpm dev
 
 ### 環境変数
 
-| 変数 | ローカルDB接続時の設定 |
-|---|---|
-| APP_MODE | `connected` |
-| APP_ORIGIN | `http://127.0.0.1:3000` |
-| SUPABASE_URL | ローカルSupabaseのURL（通常は`http://127.0.0.1:54321`） |
-| SUPABASE_PUBLISHABLE_KEY | CLIから取得したローカル公開用接続鍵 |
+| 変数                     | ローカルDB接続時の設定                                  |
+| ------------------------ | ------------------------------------------------------- |
+| APP_MODE                 | `connected`                                             |
+| APP_ORIGIN               | `http://127.0.0.1:3000`                                 |
+| SUPABASE_URL             | ローカルSupabaseのURL（通常は`http://127.0.0.1:54321`） |
+| SUPABASE_PUBLISHABLE_KEY | CLIから取得したローカル公開用接続鍵                     |
 
 `APP_ORIGIN`はブラウザで開くURLのoriginと完全一致させます。ホストやポートを変更した場合は、この設定も変更してください。書込APIとログイン・ログアウトは指定したOriginだけを許可します。
 
@@ -73,15 +73,15 @@ pnpm test:e2e
 pnpm test:auth
 ```
 
-| コマンド | 確認内容 | 使用ポート |
-|---|---|---|
-| `pnpm lint` / `pnpm typecheck` | 静的解析・型の整合 | — |
-| `pnpm build` | 本番用ビルド | — |
-| `pnpm test:release` | 環境変数の検査・Cookie設定 | — |
-| `pnpm test:db` | RLS、更新RPC、競合、再送、集計、監査ログ | Supabase 54321 |
-| `pnpm test:e2e` | DB未接続の画面デモ | 3100 |
-| `pnpm test:auth` | DB接続・認証を含む画面/API操作 | 3101 |
-| `pnpm test:load` | 一覧APIのローカル性能 | 3104 |
+| コマンド                       | 確認内容                                 | 使用ポート     |
+| ------------------------------ | ---------------------------------------- | -------------- |
+| `pnpm lint` / `pnpm typecheck` | 静的解析・型の整合                       | —              |
+| `pnpm build`                   | 本番用ビルド                             | —              |
+| `pnpm test:release`            | 環境変数の検査・Cookie設定               | —              |
+| `pnpm test:db`                 | RLS、更新RPC、競合、再送、集計、監査ログ | Supabase 54321 |
+| `pnpm test:e2e`                | DB未接続の画面デモ                       | 3100           |
+| `pnpm test:auth`               | DB接続・認証を含む画面/API操作           | 3101           |
+| `pnpm test:load`               | 一覧APIのローカル性能                    | 3104           |
 
 Playwrightはビルド済みのアプリを起動します。各ポートの手動起動サーバーは先に停止してください。Windows/Linuxではブラウザの依存ライブラリが必要な場合があります。CIは`playwright install --with-deps chromium`を使用します。
 
