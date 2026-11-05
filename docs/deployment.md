@@ -165,7 +165,7 @@ pg_cronが利用できる場合は、毎時17分に期限切れ再送記録を�
 
 ## CSPの段階導入
 
-[仕様019](specs/019-content-security-policy.md)のReport-Onlyを本番で確認し、[仕様022](specs/022-enforced-content-security-policy.md)で強制モードへ切り替えます。2026-11-06時点では強制モードへの変更は実装中で、本番切り替えの完了は未確認です。nonceと許可範囲は維持し、応答ヘッダーを`Content-Security-Policy`へ変更します。
+[仕様019](specs/019-content-security-policy.md)のReport-Onlyを本番で確認し、[仕様022](specs/022-enforced-content-security-policy.md)で強制モードへ切り替えます。強制モードへの変更と公開結果は[PR #74](https://github.com/kiyohara1021/project-hub/pull/74)で追跡し、本番で確認したコミット・Deployment・画面操作の結果を同PRに記録します。nonceと許可範囲は維持し、応答ヘッダーを`Content-Security-Policy`へ変更します。
 
 切り替え後は正規URLと対象コミット・Deploymentを照合し、強制ヘッダーがあり、Report-Onlyヘッダーがないこと、HTMLのscriptとヘッダーのnonceが一致することを確認します。PC/360pxで各画面・メニュー・ダイアログを操作し、consoleと`securitypolicyviolation`イベントで違反がないことを確認して、その範囲を記録してください。違反通知先の`/api/csp-report`は受信内容を読み取らず204で破棄し、アプリで保存・本文のログ出力をしません。
 
@@ -241,4 +241,4 @@ migration012を履歴登録と同一トランザクションで適用し、履�
 - ローカルDBテスト14件・認証E2E38件・画面デモE2E11件（1件skip）・公開設定テスト6件が成功し、PRのCIもすべて成功しました。
 - 本番の管理者ログインを維持した状態で、PC（1280px）と360px幅のログイン状況・ダッシュボード・プロジェクト・カンバン・課題・メンバー・操作履歴の全7画面を確認し、モバイルでは7画面のメニューも開閉しました。consoleのCSP違反はありませんでした。
 - 両幅でプロジェクトの作成・編集、タスク追加、課題追加、コメント閲覧、メンバー追加のダイアログを開閉し、consoleのCSP違反がないことを確認しました。本番データの作成・更新は行っていません。
-- 別ロールでの再ログイン、本番でのデータ更新成功、すべてのブラウザ環境の検証は今回の確認範囲に含めません。強制モードへ切り替えた後の再確認結果は別に記録します。
+- 別ロールでの再ログイン、本番でのデータ更新成功、すべてのブラウザ環境の検証は今回の確認範囲に含めません。強制モードへ切り替えた後の再確認結果は[PR #74](https://github.com/kiyohara1021/project-hub/pull/74)に記録します。
