@@ -19,7 +19,7 @@ test("認証、所属データ、API境界、ログアウト", async ({ page, re
   await page.getByRole("button", { name: "ログイン", exact: true }).click();
   await expect(page).toHaveURL(/\/workspaces$/);
   await expect(page.getByRole("heading", { name: "デモスペースA", exact: true })).toBeVisible();
-  await expect(page.getByText("サンプルプロジェクトA", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "デモスペースA", exact: true })).toBeVisible();
   await expect(page.getByText("サンプルプロジェクトB", { exact: true })).not.toBeVisible();
   const api = await page.request.get(url);
   expect(api.status()).toBe(200);
@@ -51,10 +51,10 @@ for (const alias of ["viewer", "outside", "unassigned"]) {
     await page.getByRole("button", { name: "ログイン", exact: true }).click();
     await expect(page).toHaveURL(/\/workspaces$/);
     if (alias === "viewer") {
-      await expect(page.getByText("サンプルプロジェクトA", { exact: true })).toBeVisible();
+      await expect(page.getByRole("region", { name: "デモスペースA", exact: true })).toBeVisible();
       await expect(page.getByText("サンプルプロジェクトB", { exact: true })).not.toBeVisible();
     } else if (alias === "outside") {
-      await expect(page.getByText("サンプルプロジェクトB", { exact: true })).toBeVisible();
+      await expect(page.getByRole("region", { name: "デモスペースB", exact: true })).toBeVisible();
       await expect(page.getByText("サンプルプロジェクトA", { exact: true })).not.toBeVisible();
     } else {
       await expect(page.getByText("所属ワークスペースがありません", { exact: true })).toBeVisible();
