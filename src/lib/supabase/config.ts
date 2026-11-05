@@ -1,4 +1,6 @@
-export function connectedMode() { return process.env.APP_MODE === "connected"; }
+export function connectedMode() {
+  return process.env.APP_MODE === "connected";
+}
 
 export function supabaseConfig() {
   const url = process.env.SUPABASE_URL;
@@ -7,11 +9,21 @@ export function supabaseConfig() {
   if (!connectedMode() || !url || !key || !origin) return null;
   try {
     const parsed = new URL(origin);
-    if (!["http:", "https:"].includes(parsed.protocol) || parsed.origin !== origin) return null;
-  } catch { return null; }
+    if (
+      !["http:", "https:"].includes(parsed.protocol) ||
+      parsed.origin !== origin
+    )
+      return null;
+  } catch {
+    return null;
+  }
   return { url, key, origin };
 }
 
 export function authCookieOptions(origin: string) {
-  return { path: "/", sameSite: "lax" as const, secure: new URL(origin).protocol === "https:" };
+  return {
+    path: "/",
+    sameSite: "lax" as const,
+    secure: new URL(origin).protocol === "https:",
+  };
 }

@@ -12,7 +12,11 @@ export async function supabaseServer() {
       getAll: () => store.getAll(),
       setAll: (values) => {
         // Server ComponentではProxyが更新済み。Route Handlerでは書込を反映する。
-        try { values.forEach(({ name, value, options }) => store.set(name, value, options)); } catch {}
+        try {
+          values.forEach(({ name, value, options }) =>
+            store.set(name, value, options),
+          );
+        } catch {}
       },
     },
   });

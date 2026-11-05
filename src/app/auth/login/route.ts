@@ -13,8 +13,8 @@ export async function POST(request: Request) {
       ?.startsWith("application/x-www-form-urlencoded")
   )
     return new Response(null, { status: 415 });
-  const failed = () =>
-    NextResponse.redirect(new URL("/login?error=1", config.origin), {
+  const failed = (reason: "1" | "rate_limit" = "1") =>
+    NextResponse.redirect(new URL(`/login?error=${reason}`, config.origin), {
       status: 303,
       headers: { "Cache-Control": "no-store" },
     });
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return failed();
     const client = await supabaseServer();
     const { error } = await client.auth.signInWithPassword({ email, password });
-    if (error) return failed();
+    if (error) return failed(error.status === 429 ? "rate_limit" : "1");
     return NextResponse.redirect(new URL("/workspaces", config.origin), {
       status: 303,
       headers: { "Cache-Control": "no-store" },

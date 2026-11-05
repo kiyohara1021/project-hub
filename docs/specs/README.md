@@ -24,6 +24,9 @@
 | [016](016-issue-comments.md)           | 課題コメント                       | 006を拡張。投稿・時系列表示・編集・削除                                     |
 | [017](017-task-move-consistency.md)    | タスク移動時の並び順と編集競合     | 他タスクのversionと操作履歴を維持                                           |
 | [018](018-profile-display-name.md)     | 自分の表示名変更                   | 所属先の表示名へ反映、過去の履歴名は保持                                    |
+| [019](019-content-security-policy.md)  | CSPの段階導入                      | 要求ごとのnonce・Report-Only・画面操作の違反確認                            |
+| [020](020-idempotency-cleanup.md)      | 再送記録の定期削除                 | 期限切れだけを対象にした管理関数・pg_cron・実行記録の保持                   |
+| [021](021-auth-and-log-operations.md)  | 認証制限と操作履歴の運用           | Supabase Authの制限方針・操作履歴の無期限保持                               |
 
 ## 過去の仕様を読むとき
 
