@@ -1,6 +1,6 @@
 import {apiError,json,checkOrigin,readJson,projectAccess,ProjectError,uuid,idempotencyKey} from "@/lib/projects-server";
 import {readMembers,memberRpcError} from "@/lib/members-server";
-import {exactKeys} from "@/lib/tasks-server";
+import { exactKeys } from "@/lib/validation";
 import {memberRoles,type MemberRole} from "@/lib/member-types";
 
 type Context={params:Promise<{wid:string}>};

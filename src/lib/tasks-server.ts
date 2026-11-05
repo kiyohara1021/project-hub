@@ -1,3 +1,4 @@
+import { exactKeys, parseVersion } from "./validation";
 import { projectAccess, ProjectError, uuid, validateProject, rpcError } from "./projects-server";
 import { priorities, taskStatuses, type Task, type TaskPage, type TaskStatus, type Priority } from "./task-types";
 
@@ -16,19 +17,12 @@ export function taskRpcError(error: { code: string; message: string }) {
   if (error.code === "23503") return new ProjectError(400, "INVALID_ASSIGNEE", "担当者の所属を確認してください");
   return rpcError(error);
 }
-export function exactKeys(value: Record<string, unknown>, keys: string[]) {
-  if (Object.keys(value).some(k => !keys.includes(k)) || keys.some(k => !(k in value))) throw new ProjectError(400, "INVALID_INPUT", "入力項目を確認してください");
-}
-export function taskVersion(value: unknown) {
-  if (!Number.isSafeInteger(value) || Number(value) < 1 || Number(value) > 2147483647) throw new ProjectError(400, "INVALID_INPUT", "更新情報を確認してください");
-  return value as number;
-}
 export function validateTask(value: Record<string, unknown>, edit = false) {
   exactKeys(value, ["title", "description", "priority", "assignee_id", "due_date", ...(edit ? ["version"] : [])]);
   // 名前/本文/日付の上限はプロジェクトと共通。
   const common = validateProject({ name: value.title, description: value.description, due_date: value.due_date });
   if (typeof value.priority !== "string" || !priorities.includes(value.priority as Priority) || (value.assignee_id !== null && (typeof value.assignee_id !== "string" || !uuid.test(value.assignee_id)))) throw new ProjectError(400, "INVALID_INPUT", "優先度と担当者を確認してください");
-  return { title: common.name, description: common.description, due_date: common.due_date, priority: value.priority as Priority, assignee_id: value.assignee_id as string | null, ...(edit ? { version: taskVersion(value.version) } : {}) };
+  return { title: common.name, description: common.description, due_date: common.due_date, priority: value.priority as Priority, assignee_id: value.assignee_id as string | null, ...(edit ? { version: parseVersion(value.version) } : {}) };
 }
 export async function readTask(wid: string, pid: string, tid: string) {
   const { client } = await taskAccess(wid, pid);

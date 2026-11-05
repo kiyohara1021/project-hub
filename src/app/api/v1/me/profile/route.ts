@@ -1,6 +1,6 @@
 import {supabaseServer} from "@/lib/supabase/server";
 import {apiError,checkOrigin,json,readJson,ProjectError,rpcError} from "@/lib/projects-server";
-import {exactKeys} from "@/lib/tasks-server";
+import { exactKeys } from "@/lib/validation";
 
 export async function PATCH(request:Request) {
   try {

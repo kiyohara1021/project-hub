@@ -1,6 +1,6 @@
 import {ProjectError,uuid,rpcError} from "./projects-server";
 import {issueAccess} from "./issues-server";
-import {exactKeys,taskVersion} from "./tasks-server";
+import { exactKeys, parseVersion } from "./validation";
 import type {IssueComment,CommentPage} from "./comment-types";
 
 const fields="id,workspace_id,project_id,issue_id,author_id,author_display_name,body,version,created_at,updated_at";
@@ -15,7 +15,7 @@ export async function commentAccess(wid:string,pid:string,iid:string,write=false
 export function validateComment(input:Record<string,unknown>,edit=false){
   exactKeys(input,["body",...(edit?["version"]:[])]);
   if(typeof input.body!=="string"||input.body.includes("\u0000")||!input.body.trim()||Array.from(input.body.trim()).length>5000)throw new ProjectError(400,"INVALID_INPUT","コメントは1〜5,000文字で入力してください");
-  return {body:input.body.trim(),...(edit?{version:taskVersion(input.version)}:{})};
+  return {body:input.body.trim(),...(edit?{version:parseVersion(input.version)}:{})};
 }
 export function commentRpcError(error:{code:string;message:string}){
   if(error.code==="55000")return new ProjectError(409,"PROJECT_ARCHIVED","アーカイブ済みのプロジェクトは変更できません");
