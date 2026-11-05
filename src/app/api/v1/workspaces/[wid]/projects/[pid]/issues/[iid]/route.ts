@@ -1,6 +1,7 @@
 import {apiError,checkOrigin,json,readJson,ProjectError,uuid,noContent} from "@/lib/projects-server";
 import {issueAccess,readIssue,validateIssue} from "@/lib/issues-server";
-import {taskRpcError,exactKeys,taskVersion} from "@/lib/tasks-server";
+import { taskRpcError } from "@/lib/tasks-server";
+import { exactKeys, parseVersion } from "@/lib/validation";
 type Context={params:Promise<{wid:string;pid:string;iid:string}>};
 export async function GET(_request:Request,{params}:Context) {
   try{const {wid,pid,iid}=await params;return json({data:await readIssue(wid,pid,iid)});}catch(error){return apiError(error);}
@@ -19,7 +20,7 @@ export async function DELETE(request:Request,{params}:Context) {
     checkOrigin(request);const {wid,pid,iid}=await params;const {client}=await issueAccess(wid,pid,true);
     if(!uuid.test(iid)) throw new ProjectError(400,"INVALID_INPUT","IDを確認してください");
     const input=await readJson(request);exactKeys(input,["version"]);
-    const result=await client.rpc("delete_issue",{p_workspace_id:wid,p_project_id:pid,p_issue_id:iid,p_version:taskVersion(input.version)});
+    const result=await client.rpc("delete_issue",{p_workspace_id:wid,p_project_id:pid,p_issue_id:iid,p_version:parseVersion(input.version)});
     if(result.error) throw taskRpcError(result.error);return noContent();
   }catch(error){return apiError(error);}
 }

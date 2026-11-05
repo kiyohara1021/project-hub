@@ -1,5 +1,6 @@
 import { projectAccess, ProjectError, uuid, afterTimeCursor, encodeTimeCursor } from "./projects-server";
-import { taskAccess, exactKeys, validateTask } from "./tasks-server";
+import { taskAccess, validateTask } from "./tasks-server";
+import { exactKeys } from "./validation";
 import { priorities, type Priority } from "./task-types";
 import { issueStatuses, type IssueStatus, type Issue, type IssuePage } from "./issue-types";
 
