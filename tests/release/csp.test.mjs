@@ -21,6 +21,7 @@ test("CSPは要求ごとにnonceを生成し、応答にはReport-Onlyだけを�
   assert.ok(policy.includes(`style-src-elem 'self' 'nonce-${nonce}'`));
   assert.ok(policy.includes("style-src-attr 'unsafe-inline'"));
   assert.ok(policy.includes("connect-src 'self'"));
+  assert.ok(policy.includes("report-uri /api/csp-report"));
   assert.ok(policy.includes("object-src 'none'"));
   assert.ok(policy.includes("frame-ancestors 'none'"));
   assert.ok(!policy.includes("'unsafe-eval'"));

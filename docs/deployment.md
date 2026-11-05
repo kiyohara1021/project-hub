@@ -165,7 +165,7 @@ pg_cronが利用できる場合は、毎時17分に期限切れ再送記録を�
 
 ## CSPの段階導入
 
-[仕様019](specs/019-content-security-policy.md)では、Previewと接続モードへ要求ごとのnonceを含む`Content-Security-Policy-Report-Only`を追加します。強制モードへの移行は別変更です。本番への反映後は正規URLの応答ヘッダー、PC/360pxで確認した画面・メニュー・ダイアログとCSP違反の有無を記録してください。違反はブラウザのconsoleと`securitypolicyviolation`イベントで確認し、レポート収集先は設定しません。
+[仕様019](specs/019-content-security-policy.md)では、Previewと接続モードへ要求ごとのnonceを含む`Content-Security-Policy-Report-Only`を追加します。強制モードへの移行は別変更です。本番への反映後は正規URLの応答ヘッダー、PC/360pxで確認した画面・メニュー・ダイアログとCSP違反の有無を記録してください。違反はブラウザのconsoleと`securitypolicyviolation`イベントで確認し、違反通知先として`/api/csp-report`へ送信します。受信内容は読み取らず204で破棄し、保存・ログ出力はしません。
 
 ## 障害時の対応
 

@@ -15,6 +15,7 @@ Issue: [#58](https://github.com/kiyohara1021/project-hub/issues/58)
 - 通信・フォント・フォームは同一オリジンに限定する。オブジェクトとフレーム埋め込みは拒否する。画像は同一オリジン・data・blobに限定する。
 - スタイル要素は同一オリジン・nonce付きだけを許可する。進捗幅、表の列幅、Radixの位置・スクロール制御が使うstyle属性は`style-src-attr 'unsafe-inline'`で許可する。この例外はscriptの許可範囲を広げない。
 - Radixのダイアログ・Sheetが使う`react-style-singleton`へは、`get-nonce`の公開APIで現在のHTMLのnonceを渡す。クライアント側のlayout effectでDOM内のscriptの`nonce`プロパティを読み取り、style要素が挿入される前に設定する。RSC更新要求で発行される別nonceへは切り替えない。
+- 違反通知先として`report-uri /api/csp-report`を指定する。受信口はPOSTに204を返し、本文の読取・保存・ログ出力を行わない。収集・分析基盤は導入しない。
 - RootLayoutは既存の`force-dynamic`を維持する。nonce方式でHTMLをリクエストごとに生成するため、本変更を静的配信・ISR・PPR対応とは扱わない。
 
 ## 確認方法
@@ -30,4 +31,4 @@ Issue: [#58](https://github.com/kiyohara1021/project-hub/issues/58)
 - [Next.js公式CSPガイド](https://nextjs.org/docs/app/guides/content-security-policy)：Proxyのnonce生成、内部CSPからの自動付与、動的レンダリング、開発時だけのunsafe-eval。
 - 依存パッケージの実装：`react-style-singleton` 2.2.3のstyle作成時のgetNonce参照と、`get-nonce` 1.0.1のsetNonce公開APIを確認した。
 
-- [W3C CSP Level 3 §5.5](https://www.w3.org/TR/CSP3/#report-violation)：違反DOMイベントを発行した後、送信先指定がある場合にレポートを送信する。本変更では送信先を設定せず、ブラウザのイベントとconsoleで確認する。
+- [W3C CSP Level 3 §5.5](https://www.w3.org/TR/CSP3/#report-violation)：違反通知の仕様。違反通知は内容を破棄する同一オリジンの受信口へ送り、イベントとconsoleで確認する。

@@ -44,7 +44,13 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
     expect(headers["cache-control"]).toContain("no-store");
     expect(nonces.has(nonce)).toBe(false);
     nonces.add(nonce);
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    if (route === "/login")
+      await expect(page.getByRole("status")).toContainText(
+        "接続設定がありません",
+      );
+    else if (route === "/workspaces")
+      await expect(page.getByRole("status")).toContainText("DB接続は無効です");
+    else await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const scripts = await page
       .locator("script")
       .evaluateAll((elements) =>
@@ -80,7 +86,7 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
   // Client-side navigation keeps the initial document policy/nonce.
   await page.goto("/projects/demo-a/board");
   await page
-    .getByRole("link", { name: "このプロジェクトの課題", exact: true })
+    .getByRole("link", { name: "このプロジェクトの課題" })
     .click();
   await expect(page).toHaveURL("/projects/demo-a/issues");
   expect(violations).toEqual([]);
@@ -94,27 +100,48 @@ test("Report-Onlyはnonceなしscriptを検出し、まだ実行を遮断しな�
   expect(root.headers()["content-security-policy-report-only"]).toContain(
     "'strict-dynamic'",
   );
-  await page.goto("/dashboard");
-  const violation = await page.evaluate(
-    () =>
-      new Promise<{ directive: string; disposition: string }>((resolve) => {
-        document.addEventListener(
-          "securitypolicyviolation",
-          (event) =>
-            resolve({
-              directive: event.effectiveDirective,
-              disposition: event.disposition,
-            }),
-          { once: true },
-        );
-        const script = document.createElement("script");
-        script.textContent =
-          "document.documentElement.dataset.cspReportOnlyProbe = 'executed'";
-        document.body.appendChild(script);
-      }),
+  const violations: { directive: string; disposition: string }[] = [];
+  await page.exposeFunction(
+    "recordProbeViolation",
+    (value: { directive: string; disposition: string }) =>
+      violations.push(value),
   );
-  expect(violation.directive).toBe("script-src-elem");
-  expect(violation.disposition).toBe("report");
+  await page.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", (event) => {
+      (
+        window as unknown as {
+          recordProbeViolation: (value: {
+            directive: string;
+            disposition: string;
+          }) => void;
+        }
+      ).recordProbeViolation({
+        directive: event.effectiveDirective,
+        disposition: event.disposition,
+      });
+    });
+  });
+  await page.route("**/dashboard", async (route) => {
+    const response = await route.fetch();
+    const html = await response.text();
+    await route.fulfill({
+      response,
+      body: html.replace(
+        "</body>",
+        "<script>document.documentElement.dataset.cspReportOnlyProbe = 'executed'</script></body>",
+      ),
+    });
+  });
+  const report = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/csp-report") &&
+      response.request().method() === "POST",
+  );
+  await page.goto("/dashboard");
+  await expect
+    .poll(() => violations)
+    .toContainEqual({ directive: "script-src-elem", disposition: "report" });
+  expect((await report).status()).toBe(204);
   await expect(page.locator("html")).toHaveAttribute(
     "data-csp-report-only-probe",
     "executed",

@@ -22,6 +22,7 @@ export function contentSecurityPolicy(nonce: string, development = false) {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
+    "report-uri /api/csp-report",
   ].join("; ");
 }
 
