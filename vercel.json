@@ -3,7 +3,5 @@
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm build:vercel",
-  "regions": [
-    "hnd1"
-  ]
+  "regions": ["hnd1"]
 }

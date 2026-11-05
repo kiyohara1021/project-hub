@@ -86,11 +86,11 @@ DB接続モードの6画面と共通操作をまとめています。機能ご�
 
 以下は設計時の1440×960pxの静的モックアップです。表示値はサンプルで、ボタンは動作しません。現行実装とは、一覧のレイアウト、検索の適用方法、表示項目などが異なります。現行の振る舞いは上記の画面仕様を参照してください。
 
-| 画面 | デザイン案 |
-|---|---|
-| ダッシュボード | [SVGを開く](screens/01-dashboard.svg) |
-| プロジェクト一覧 | [SVGを開く](screens/02-projects.svg) |
-| カンバン | [SVGを開く](screens/03-kanban.svg) |
-| 課題一覧 | [SVGを開く](screens/04-issues.svg) |
-| メンバー | [SVGを開く](screens/05-members.svg) |
-| 操作履歴 | [SVGを開く](screens/06-activity.svg) |
+| 画面             | デザイン案                            |
+| ---------------- | ------------------------------------- |
+| ダッシュボード   | [SVGを開く](screens/01-dashboard.svg) |
+| プロジェクト一覧 | [SVGを開く](screens/02-projects.svg)  |
+| カンバン         | [SVGを開く](screens/03-kanban.svg)    |
+| 課題一覧         | [SVGを開く](screens/04-issues.svg)    |
+| メンバー         | [SVGを開く](screens/05-members.svg)   |
+| 操作履歴         | [SVGを開く](screens/06-activity.svg)  |

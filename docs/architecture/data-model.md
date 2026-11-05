@@ -25,28 +25,28 @@ erDiagram
 
 すべての業務テーブルにRLSを適用します。本文の長さ、状態、優先度、versionの正数制約はDBでも検査します。
 
-| テーブル | 主な列・制約 | 役割 |
-|---|---|---|
-| profiles | `id` PK・FK auth.users.id、`display_name` 1〜80文字 | Authユーザーに対応する表示名。Auth登録時に作成し、本人用RPCで変更 |
-| workspaces | `id` PK、`name` 1〜120文字、`created_at` | データと権限の分離単位 |
-| memberships | `workspace_id, user_id` 複合PK、各workspace / profile FK、`role, joined_at, version` | ユーザーの所属とadmin / member / viewerの権限 |
-| projects | `id` PK、`workspace_id` FK、`name, description, status, due_date, version, created_at, updated_at`、UNIQUE(workspace_id,id) | プロジェクト情報。削除の代わりにアーカイブを使用 |
-| tasks | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, position, version, created_at, updated_at` | カンバンのタスク。positionはbigint |
-| issues | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, version, created_at, updated_at` | 課題情報 |
-| issue_comments | `id` PK、`workspace_id, project_id, issue_id` 複合FK issues、`author_id` FK profiles、`author_display_name, body, version, created_at, updated_at` | 投稿時の表示名と本文。課題削除にCASCADE |
-| activity_logs | `id` PK、`workspace_id` FK、`project_id, actor_id` nullable、`actor_display_name, entity_type, entity_id, action, changes, created_at` | 読み取り専用の操作履歴。changesはjsonb |
+| テーブル       | 主な列・制約                                                                                                                                       | 役割                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| profiles       | `id` PK・FK auth.users.id、`display_name` 1〜80文字                                                                                                | Authユーザーに対応する表示名。Auth登録時に作成し、本人用RPCで変更 |
+| workspaces     | `id` PK、`name` 1〜120文字、`created_at`                                                                                                           | データと権限の分離単位                                            |
+| memberships    | `workspace_id, user_id` 複合PK、各workspace / profile FK、`role, joined_at, version`                                                               | ユーザーの所属とadmin / member / viewerの権限                     |
+| projects       | `id` PK、`workspace_id` FK、`name, description, status, due_date, version, created_at, updated_at`、UNIQUE(workspace_id,id)                        | プロジェクト情報。削除の代わりにアーカイブを使用                  |
+| tasks          | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, position, version, created_at, updated_at`        | カンバンのタスク。positionはbigint                                |
+| issues         | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, version, created_at, updated_at`                  | 課題情報                                                          |
+| issue_comments | `id` PK、`workspace_id, project_id, issue_id` 複合FK issues、`author_id` FK profiles、`author_display_name, body, version, created_at, updated_at` | 投稿時の表示名と本文。課題削除にCASCADE                           |
+| activity_logs  | `id` PK、`workspace_id` FK、`project_id, actor_id` nullable、`actor_display_name, entity_type, entity_id, action, changes, created_at`             | 読み取り専用の操作履歴。changesはjsonb                            |
 
-| 項目 | 許可値・ルール |
-|---|---|
-| projects.status | planned / active / archived |
-| tasks.status | todo / doing / review / done |
-| issues.status | open / investigating / resolved / closed |
-| tasks / issues.priority | low / medium / high |
-| assignee_id / due_date | 未割当・未設定はNULL |
-| name / title | 前後の空白を除いて1〜120文字 |
-| description | 0〜5,000文字 |
-| version | 初期1、1以上の整数。更新時に増加し、競合検出に使用 |
-| activity_logs.action | INSERT / UPDATE / DELETE |
+| 項目                    | 許可値・ルール                                     |
+| ----------------------- | -------------------------------------------------- |
+| projects.status         | planned / active / archived                        |
+| tasks.status            | todo / doing / review / done                       |
+| issues.status           | open / investigating / resolved / closed           |
+| tasks / issues.priority | low / medium / high                                |
+| assignee_id / due_date  | 未割当・未設定はNULL                               |
+| name / title            | 前後の空白を除いて1〜120文字                       |
+| description             | 0〜5,000文字                                       |
+| version                 | 初期1、1以上の整数。更新時に増加し、競合検出に使用 |
+| activity_logs.action    | INSERT / UPDATE / DELETE                           |
 
 ### ワークスペースの整合性
 
@@ -64,13 +64,13 @@ changesには変更前後のstatus・role・versionを保存し、本文や資�
 
 作成APIの再送でデータが重複しないように、入力と初回の成功応答を24時間保持します。これらのテーブルはAPI非公開で、RLS有効・通常ロールの直接権限なしです。
 
-| テーブル | 複合主キー | 保存内容・参照 |
-|---|---|---|
-| private.project_requests | `workspace_id, actor_id, request_key` | workspace / profile FK、`payload, result, expires_at` |
-| private.task_requests | `workspace_id, project_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at` |
-| private.issue_requests | `workspace_id, project_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at` |
+| テーブル                 | 複合主キー                                                  | 保存内容・参照                                                             |
+| ------------------------ | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| private.project_requests | `workspace_id, actor_id, request_key`                       | workspace / profile FK、`payload, result, expires_at`                      |
+| private.task_requests    | `workspace_id, project_id, actor_id, request_key`           | project複合FK / profile FK、`payload, result, expires_at`                  |
+| private.issue_requests   | `workspace_id, project_id, actor_id, request_key`           | project複合FK / profile FK、`payload, result, expires_at`                  |
 | private.comment_requests | `workspace_id, project_id, issue_id, actor_id, request_key` | project複合FK / profile FK、`payload, result, expires_at`。issueへのFKなし |
-| private.member_requests | `workspace_id, actor_id, request_key` | workspace / profile FK、`payload, response, expires_at` |
+| private.member_requests  | `workspace_id, actor_id, request_key`                       | workspace / profile FK、`payload, response, expires_at`                    |
 
 payloadとresult / responseはjsonbです。監査ログと異なり、再送に必要な作成入力と受付結果を保管します。所属追加の記録にはユーザーID・ロール・初回所属情報を保存します。パスワードやトークンは保存しません。
 
@@ -84,16 +84,16 @@ payloadとresult / responseはjsonbです。監査ログと異なり、再送に
 - メンバー担当数はplanned / active内の未完了タスク・未解決課題を全件集計します。メンバー一覧のページサイズとは独立しており、取得上限による件数の欠落を防ぎます。
 - previewモードは固定サンプル値を表示します。connectedモードの値はDBから取得・集計します。
 
-| 用途 | インデックスの主な列 |
-|---|---|
-| ユーザーの所属先 | memberships(user_id, workspace_id) |
-| プロジェクト一覧 | projects(workspace_id, created_at DESC, id DESC) |
-| カンバン | tasks(workspace_id, project_id, status, position, id) |
-| 課題の状態別取得 | issues(workspace_id, project_id, status, id) |
-| 課題のページ送り | issues(workspace_id, project_id, created_at DESC, id DESC) |
-| 担当別集計 | tasks / issues(workspace_id, assignee_id) |
-| 課題コメント | issue_comments(workspace_id, project_id, issue_id, created_at DESC, id DESC) |
-| 操作履歴 | activity_logs(workspace_id, created_at DESC, id DESC) |
+| 用途             | インデックスの主な列                                                         |
+| ---------------- | ---------------------------------------------------------------------------- |
+| ユーザーの所属先 | memberships(user_id, workspace_id)                                           |
+| プロジェクト一覧 | projects(workspace_id, created_at DESC, id DESC)                             |
+| カンバン         | tasks(workspace_id, project_id, status, position, id)                        |
+| 課題の状態別取得 | issues(workspace_id, project_id, status, id)                                 |
+| 課題のページ送り | issues(workspace_id, project_id, created_at DESC, id DESC)                   |
+| 担当別集計       | tasks / issues(workspace_id, assignee_id)                                    |
+| 課題コメント     | issue_comments(workspace_id, project_id, issue_id, created_at DESC, id DESC) |
+| 操作履歴         | activity_logs(workspace_id, created_at DESC, id DESC)                        |
 
 サンプルデータと検証用アカウントの扱いは[開発ルール](../../CONTRIBUTING.md)にまとめています。
 

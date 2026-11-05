@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.vercel/
+coverage/
+playwright-report/
+test-results/
+.env*
+*.tsbuildinfo
+next-env.d.ts
+pnpm-lock.yaml
+package-lock.json
+supabase/
+docs/design/screens/
+*.svg
+.git-blame-ignore-revs

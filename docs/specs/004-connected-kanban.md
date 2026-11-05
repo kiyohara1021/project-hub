@@ -18,14 +18,14 @@
 
 接頭辞 `/api/v1/workspaces/:wid/projects/:pid/tasks`。
 
-| メソッド | 用途・本文 |
-|---|---|
-| GET / | status（既定todo）/assignee/priority/limit/cursor。position ASC,id ASC |
-| POST / | title,description,priority,assignee_id,due_date。Idempotency-Key必須 |
-| GET /:tid | 単一タスク |
-| PATCH /:tid | 作成と同じ5項目 + version |
-| DELETE /:tid | version、成功204 |
-| POST /:tid/move | status,before_id（nullは末尾）,version。versionで重複移動を防止 |
+| メソッド        | 用途・本文                                                             |
+| --------------- | ---------------------------------------------------------------------- |
+| GET /           | status（既定todo）/assignee/priority/limit/cursor。position ASC,id ASC |
+| POST /          | title,description,priority,assignee_id,due_date。Idempotency-Key必須   |
+| GET /:tid       | 単一タスク                                                             |
+| PATCH /:tid     | 作成と同じ5項目 + version                                              |
+| DELETE /:tid    | version、成功204                                                       |
+| POST /:tid/move | status,before_id（nullは末尾）,version。versionで重複移動を防止        |
 
 JSON上限32KiB、全項目必須・不明キー拒否。Origin/JWT/所属/ロールを検査。401未認証、403権限、404無所属/不存在、400入力、409競合/アーカイブ。assigneeはuuidまたはunassigned、cursorはAPI発行の不透明値。作成の再送記録は同workspace/actorの次回作成時に期限切れを削除する。
 

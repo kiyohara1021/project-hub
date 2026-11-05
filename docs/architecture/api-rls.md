@@ -10,11 +10,11 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 - 変更要求は `APP_ORIGIN` と同じOriginからだけ受け付けます。JSONの上限は32KiBです。本文の全項目を必須とし、不明なキーを拒否します。未設定の担当・期限は `null` を送ります。
 - 業務APIのJSON応答には `Cache-Control: private, no-store` を付けます。認証済みデータを共有キャッシュしません。
 
-| ロール | 閲覧 | 変更できるもの |
-|---|---|---|
-| admin（管理者） | 所属先の全データ | プロジェクト、タスク、課題・コメント、メンバー所属 |
+| ロール             | 閲覧             | 変更できるもの                                       |
+| ------------------ | ---------------- | ---------------------------------------------------- |
+| admin（管理者）    | 所属先の全データ | プロジェクト、タスク、課題・コメント、メンバー所属   |
 | member（メンバー） | 所属先の全データ | タスク、課題・コメント（他者のコメントの変更は不可） |
-| viewer（閲覧者） | 所属先の全データ | 業務データの変更なし |
+| viewer（閲覧者）   | 所属先の全データ | 業務データの変更なし                                 |
 
 アーカイブ済みプロジェクトのタスク・課題・コメントは、全ロールで閲覧専用です。管理者はプロジェクト情報の編集とアーカイブからの復元ができます。
 
@@ -22,35 +22,35 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 以下はすべてベースパスからの相対パスです。`pid`、`tid`、`iid`、`cid`、`uid` はそれぞれプロジェクト、タスク、課題、コメント、ユーザーのUUIDです。
 
-| メソッド・パス | 用途・本文 | 権限・成功応答 |
-|---|---|---|
-| GET /dashboard | ワークスペースの集計。クエリー指定不可 | 所属者 / 200 |
-| GET /projects | プロジェクト一覧 | 所属者 / 200 |
-| POST /projects | `name, description, due_date` | admin / 201 |
-| GET /projects/:pid | プロジェクト取得 | 所属者 / 200 |
-| PATCH /projects/:pid | `name, description, due_date, status, version` | admin / 200 |
-| GET /projects/:pid/tasks | タスク一覧 | 所属者 / 200 |
-| POST /projects/:pid/tasks | `title, description, priority, assignee_id, due_date` | admin・member / 201 |
-| GET /projects/:pid/tasks/:tid | タスク取得 | 所属者 / 200 |
-| PATCH /projects/:pid/tasks/:tid | 作成と同じ5項目 + `version` | admin・member / 200 |
-| POST /projects/:pid/tasks/:tid/move | `status, before_id, version` | admin・member / 200 |
-| DELETE /projects/:pid/tasks/:tid | `version` | admin・member / 204 |
-| GET /projects/:pid/issues | 課題一覧 | 所属者 / 200 |
-| POST /projects/:pid/issues | `title, description, priority, assignee_id, due_date` | admin・member / 201 |
-| GET /projects/:pid/issues/:iid | 課題取得 | 所属者 / 200 |
-| PATCH /projects/:pid/issues/:iid | 作成と同じ5項目 + `status, version` | admin・member / 200 |
-| DELETE /projects/:pid/issues/:iid | `version` | admin・member / 204 |
-| GET /projects/:pid/issues/:iid/comments | コメント一覧（limit/cursor） | 所属者 / 200 |
-| POST /projects/:pid/issues/:iid/comments | `body`、Idempotency-Key必須 | admin・member / 201 |
-| GET /projects/:pid/issues/:iid/comments/:cid | コメント取得 | 所属者 / 200 |
-| PATCH /projects/:pid/issues/:iid/comments/:cid | `body, version` | admin・投稿者本人のmember / 200 |
-| DELETE /projects/:pid/issues/:iid/comments/:cid | `version` | admin・投稿者本人のmember / 204 |
-| GET /members | メンバー一覧・担当件数 | 所属者 / 200 |
-| POST /members | 登録済みユーザーの `user_id, role` | admin / 201 |
-| GET /members/:uid | 所属情報取得（担当件数は含まない） | 所属者 / 200 |
-| PATCH /members/:uid | `role, version` | admin / 204 |
-| DELETE /members/:uid | `version`。担当解除と所属解除 | admin / 204 |
-| GET /activity | 操作履歴。変更APIは提供しない | 所属者 / 200 |
+| メソッド・パス                                  | 用途・本文                                            | 権限・成功応答                  |
+| ----------------------------------------------- | ----------------------------------------------------- | ------------------------------- |
+| GET /dashboard                                  | ワークスペースの集計。クエリー指定不可                | 所属者 / 200                    |
+| GET /projects                                   | プロジェクト一覧                                      | 所属者 / 200                    |
+| POST /projects                                  | `name, description, due_date`                         | admin / 201                     |
+| GET /projects/:pid                              | プロジェクト取得                                      | 所属者 / 200                    |
+| PATCH /projects/:pid                            | `name, description, due_date, status, version`        | admin / 200                     |
+| GET /projects/:pid/tasks                        | タスク一覧                                            | 所属者 / 200                    |
+| POST /projects/:pid/tasks                       | `title, description, priority, assignee_id, due_date` | admin・member / 201             |
+| GET /projects/:pid/tasks/:tid                   | タスク取得                                            | 所属者 / 200                    |
+| PATCH /projects/:pid/tasks/:tid                 | 作成と同じ5項目 + `version`                           | admin・member / 200             |
+| POST /projects/:pid/tasks/:tid/move             | `status, before_id, version`                          | admin・member / 200             |
+| DELETE /projects/:pid/tasks/:tid                | `version`                                             | admin・member / 204             |
+| GET /projects/:pid/issues                       | 課題一覧                                              | 所属者 / 200                    |
+| POST /projects/:pid/issues                      | `title, description, priority, assignee_id, due_date` | admin・member / 201             |
+| GET /projects/:pid/issues/:iid                  | 課題取得                                              | 所属者 / 200                    |
+| PATCH /projects/:pid/issues/:iid                | 作成と同じ5項目 + `status, version`                   | admin・member / 200             |
+| DELETE /projects/:pid/issues/:iid               | `version`                                             | admin・member / 204             |
+| GET /projects/:pid/issues/:iid/comments         | コメント一覧（limit/cursor）                          | 所属者 / 200                    |
+| POST /projects/:pid/issues/:iid/comments        | `body`、Idempotency-Key必須                           | admin・member / 201             |
+| GET /projects/:pid/issues/:iid/comments/:cid    | コメント取得                                          | 所属者 / 200                    |
+| PATCH /projects/:pid/issues/:iid/comments/:cid  | `body, version`                                       | admin・投稿者本人のmember / 200 |
+| DELETE /projects/:pid/issues/:iid/comments/:cid | `version`                                             | admin・投稿者本人のmember / 204 |
+| GET /members                                    | メンバー一覧・担当件数                                | 所属者 / 200                    |
+| POST /members                                   | 登録済みユーザーの `user_id, role`                    | admin / 201                     |
+| GET /members/:uid                               | 所属情報取得（担当件数は含まない）                    | 所属者 / 200                    |
+| PATCH /members/:uid                             | `role, version`                                       | admin / 204                     |
+| DELETE /members/:uid                            | `version`。担当解除と所属解除                         | admin / 204                     |
+| GET /activity                                   | 操作履歴。変更APIは提供しない                         | 所属者 / 200                    |
 
 プロジェクトの削除APIはありません。アーカイブで代替します。タスク編集では状態・位置を変更せず、専用のmove APIを使います。`before_id` は移動先で直後に続くタスクID、`null` は列の末尾です。`position` 自体は入力に含めません。
 
@@ -66,14 +66,14 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 `limit` は既定25、1〜100です。`cursor` はAPIが返した値をそのまま渡します。未知・重複したクエリー、無効なenum・UUID・limit・cursorは400です。
 
-| 一覧 | 検索条件（limit・cursor以外） | 並び順・既定値 |
-|---|---|---|
-| projects | `q, status` | created_at DESC、id DESC。qは名前の部分一致 |
-| tasks | `status, priority, assignee` | position ASC、id ASC。statusは既定todo |
-| issues | `q, status, priority, assignee` | created_at DESC、id DESC。statusは既定unresolved（open・investigating）、allで全状態 |
-| comments | なし | created_at DESC、id DESC。親課題の範囲に限定 |
-| members | `role` | user_id ASC。cursorもユーザーUUID |
-| activity | `action, entity, project, actor, from, to` | created_at DESC、id DESC |
+| 一覧     | 検索条件（limit・cursor以外）              | 並び順・既定値                                                                       |
+| -------- | ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| projects | `q, status`                                | created_at DESC、id DESC。qは名前の部分一致                                          |
+| tasks    | `status, priority, assignee`               | position ASC、id ASC。statusは既定todo                                               |
+| issues   | `q, status, priority, assignee`            | created_at DESC、id DESC。statusは既定unresolved（open・investigating）、allで全状態 |
+| comments | なし                                       | created_at DESC、id DESC。親課題の範囲に限定                                         |
+| members  | `role`                                     | user_id ASC。cursorもユーザーUUID                                                    |
+| activity | `action, entity, project, actor, from, to` | created_at DESC、id DESC                                                             |
 
 タスク・課題の `assignee` はユーザーUUIDまたは `unassigned`（未割当）です。課題のqは件名の部分一致です。
 
@@ -83,15 +83,15 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 一覧は `{ "data": [], "nextCursor": null }`、単一取得・作成・更新は `{ "data": {...} }` です。ダッシュボードは集計結果をdataに返します。204は本文を返しません。日時はUTCのISO 8601、期限は `YYYY-MM-DD` です。
 
-| HTTP | 主な原因 |
-|---|---|
-| 400 | 入力・検索条件・送信キーが不正 |
-| 401 | 未認証 |
-| 403 | ロール不足、Origin不一致 |
-| 404 | 無所属、対象不存在、登録されていないユーザーID |
-| 409 | version競合、送信キーの本文違い、アーカイブ内変更、最後の管理者の変更・解除、既存所属への追加 |
-| 413 / 415 | 本文サイズ超過 / JSON以外の変更要求 |
-| 500 / 503 | 内部処理失敗 / 接続設定なし |
+| HTTP      | 主な原因                                                                                      |
+| --------- | --------------------------------------------------------------------------------------------- |
+| 400       | 入力・検索条件・送信キーが不正                                                                |
+| 401       | 未認証                                                                                        |
+| 403       | ロール不足、Origin不一致                                                                      |
+| 404       | 無所属、対象不存在、登録されていないユーザーID                                                |
+| 409       | version競合、送信キーの本文違い、アーカイブ内変更、最後の管理者の変更・解除、既存所属への追加 |
+| 413 / 415 | 本文サイズ超過 / JSON以外の変更要求                                                           |
+| 500 / 503 | 内部処理失敗 / 接続設定なし                                                                   |
 
 業務APIのエラー形式は次のとおりです。SQLや資格情報は応答へ含めません。5xxの場合は、同じ`requestId`・コード・原因をサーバーログへJSON形式で出力します。
 
@@ -131,15 +131,15 @@ DB接続モードで提供するAPIと認可の仕様です。画面からの操
 
 8つのpublic業務テーブルはすべてRLSを有効にしています。anonのアクセスとauthenticatedの直接書き込みを拒否し、変更は許可したRPCに限定します。UI上の非表示だけでは認可しません。
 
-| テーブル | authenticatedのSELECT | 変更経路 |
-|---|---|---|
-| profiles | 自分、または共通ワークスペースの所属者 | Auth登録時のトリガー・管理用の初期設定・本人限定のupdate_my_profile RPC |
-| workspaces | 所属先 | 初期作成RPC。通常画面に作成UIはなし |
-| memberships | 所属先のメンバー | 管理者向けRPC |
-| projects | 所属先 | 管理者向けRPC |
-| tasks / issues | 所属先 | 管理者・メンバー向けRPC |
-| issue_comments | 所属先の課題に属するコメント | 現在のadmin/memberの投稿、adminまたはmember本人の編集/削除RPC |
-| activity_logs | 所属先 | 変更時のDBトリガーのみ |
+| テーブル       | authenticatedのSELECT                  | 変更経路                                                                |
+| -------------- | -------------------------------------- | ----------------------------------------------------------------------- |
+| profiles       | 自分、または共通ワークスペースの所属者 | Auth登録時のトリガー・管理用の初期設定・本人限定のupdate_my_profile RPC |
+| workspaces     | 所属先                                 | 初期作成RPC。通常画面に作成UIはなし                                     |
+| memberships    | 所属先のメンバー                       | 管理者向けRPC                                                           |
+| projects       | 所属先                                 | 管理者向けRPC                                                           |
+| tasks / issues | 所属先                                 | 管理者・メンバー向けRPC                                                 |
+| issue_comments | 所属先の課題に属するコメント           | 現在のadmin/memberの投稿、adminまたはmember本人の編集/削除RPC           |
+| activity_logs  | 所属先                                 | 変更時のDBトリガーのみ                                                  |
 
 `private.is_member`・`is_admin`・`can_read_profile` は、所属表のRLS再帰を避けるためのSECURITY DEFINER関数です。変更RPCもSECURITY DEFINERですが、操作者は `auth.uid()` から確定し、所属・ロール・親子関係・versionをDB内で再検査します。所有者はログイン不可の専用ロール、search_pathは空、参照先は完全修飾です。再送記録のprivateテーブルもRLSを有効にし、通常ユーザーの直接アクセスを許可しません。
 

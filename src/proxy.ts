@@ -10,10 +10,12 @@ export async function proxy(request: NextRequest) {
     cookieOptions: authCookieOptions(config.origin),
     cookies: {
       getAll: () => request.cookies.getAll(),
-      setAll: values => {
+      setAll: (values) => {
         values.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        values.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        values.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        );
       },
     },
   });
@@ -22,4 +24,15 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/activity", "/members", "/dashboard", "/projects/:path*", "/workspaces/:path*", "/login", "/auth/:path*", "/api/v1/:path*"] };
+export const config = {
+  matcher: [
+    "/activity",
+    "/members",
+    "/dashboard",
+    "/projects/:path*",
+    "/workspaces/:path*",
+    "/login",
+    "/auth/:path*",
+    "/api/v1/:path*",
+  ],
+};
