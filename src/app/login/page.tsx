@@ -29,7 +29,9 @@ export default async function Login({
             <form action="/auth/login" method="post" className="space-y-5">
               {error && (
                 <p role="alert" className="text-sm text-red-700">
-                  ログインできませんでした。入力内容と接続状況をご確認ください。
+                  {error === "rate_limit"
+                    ? "ログインの試行が制限されています。しばらく待ってから、もう一度お試しください。"
+                    : "ログインできませんでした。入力内容と接続状況をご確認ください。"}
                 </p>
               )}
               <div>

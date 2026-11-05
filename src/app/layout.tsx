@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
+import { CspNonce } from "@/components/csp-nonce";
 import "./globals.css";
 import { connectedMode } from "@/lib/supabase/config";
 
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
+        <CspNonce />
         <AppShell connected={connectedMode()}>{children}</AppShell>
       </body>
     </html>
