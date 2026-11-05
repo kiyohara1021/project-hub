@@ -85,9 +85,7 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
   }
   // Client-side navigation keeps the initial document policy/nonce.
   await page.goto("/projects/demo-a/board");
-  await page
-    .getByRole("link", { name: "このプロジェクトの課題" })
-    .click();
+  await page.getByRole("link", { name: "このプロジェクトの課題" }).click();
   await expect(page).toHaveURL("/projects/demo-a/issues");
   expect(violations).toEqual([]);
 });
