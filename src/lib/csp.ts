@@ -1,4 +1,4 @@
-export const reportOnlyHeader = "Content-Security-Policy-Report-Only";
+export const cspHeader = "Content-Security-Policy";
 
 export function createNonce() {
   return Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString(
@@ -28,7 +28,7 @@ export function contentSecurityPolicy(nonce: string, development = false) {
 
 export function cspResponseHeaders(nonce: string, development = false) {
   return new Headers({
-    [reportOnlyHeader]: contentSecurityPolicy(nonce, development),
+    [cspHeader]: contentSecurityPolicy(nonce, development),
     "Cache-Control": "private, no-store",
   });
 }

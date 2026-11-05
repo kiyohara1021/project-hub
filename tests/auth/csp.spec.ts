@@ -50,10 +50,8 @@ for (const width of [360, 1280]) {
       const response = await page.goto(url);
       const headers = response!.headers();
       const nonce =
-        headers["content-security-policy-report-only"].match(
-          /'nonce-([^']+)'/,
-        )![1];
-      expect(headers["content-security-policy"]).toBeUndefined();
+        headers["content-security-policy"].match(/'nonce-([^']+)'/)![1];
+      expect(headers["content-security-policy-report-only"]).toBeUndefined();
       expect(headers["cache-control"]).toContain("no-store");
       expect(nonces.has(nonce)).toBe(false);
       nonces.add(nonce);

@@ -4,29 +4,30 @@
 
 ## 仕様一覧
 
-| 番号                                   | 内容                               | 後続の追加・関連資料                                                        |
-| -------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
-| [001](001-app-foundation.md)           | アプリケーション基盤・画面デモ     | DB接続と編集機能は002以降で追加                                             |
-| [002](002-auth-database.md)            | 認証・DB・ワークスペース分離       | [現行のデータモデル](../architecture/data-model.md)                         |
-| [003](003-connected-projects.md)       | プロジェクト管理                   | 004でカンバン、005で集計を追加                                              |
-| [004](004-connected-kanban.md)         | タスク管理・カンバン               | [現行の画面仕様](../design/screens.md)                                      |
-| [005](005-connected-dashboard.md)      | ダッシュボード集計                 | 006の課題管理の変更も集計に反映                                             |
-| [006](006-connected-issues.md)         | 課題管理                           | [現行のAPI仕様](../architecture/api-rls.md)                                 |
-| [007](007-connected-members.md)        | メンバー一覧・ロール変更・所属解除 | 013で担当件数、014で所属追加を実装                                          |
-| [008](008-connected-activity.md)       | 操作履歴                           | 012で期間検索を追加                                                         |
-| [009](009-release-readiness.md)        | 公開準備・設定検査                 | [運用手順](../deployment.md) / [公開履歴](../history/deployment-2026-11.md) |
-| [010](010-production-copy.md)          | 公開画面の説明整理                 | 操作説明と開発・運用情報を分離                                              |
-| [011](011-browser-performance.md)      | 本番ブラウザの性能測定             | [測定結果](../performance.md)                                               |
-| [012](012-activity-date-filter.md)     | 操作履歴の期間検索                 | 008を拡張                                                                   |
-| [013](013-member-assignment-counts.md) | メンバー担当件数                   | 007を拡張                                                                   |
-| [014](014-add-workspace-member.md)     | 登録済みユーザーの所属追加         | 007を拡張                                                                   |
-| [015](015-list-api-load-check.md)      | ローカル一覧APIの負荷検証          | 本番ブラウザ測定とは別の検証                                                |
-| [016](016-issue-comments.md)           | 課題コメント                       | 006を拡張。投稿・時系列表示・編集・削除                                     |
-| [017](017-task-move-consistency.md)    | タスク移動時の並び順と編集競合     | 他タスクのversionと操作履歴を維持                                           |
-| [018](018-profile-display-name.md)     | 自分の表示名変更                   | 所属先の表示名へ反映、過去の履歴名は保持                                    |
-| [019](019-content-security-policy.md)  | CSPの段階導入                      | 要求ごとのnonce・Report-Only・画面操作の違反確認                            |
-| [020](020-idempotency-cleanup.md)      | 再送記録の定期削除                 | 期限切れだけを対象にした管理関数・pg_cron・実行記録の保持                   |
-| [021](021-auth-and-log-operations.md)  | 認証制限と操作履歴の運用           | Supabase Authの制限方針・操作履歴の無期限保持                               |
+| 番号                                           | 内容                               | 後続の追加・関連資料                                                        |
+| ---------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------- |
+| [001](001-app-foundation.md)                   | アプリケーション基盤・画面デモ     | DB接続と編集機能は002以降で追加                                             |
+| [002](002-auth-database.md)                    | 認証・DB・ワークスペース分離       | [現行のデータモデル](../architecture/data-model.md)                         |
+| [003](003-connected-projects.md)               | プロジェクト管理                   | 004でカンバン、005で集計を追加                                              |
+| [004](004-connected-kanban.md)                 | タスク管理・カンバン               | [現行の画面仕様](../design/screens.md)                                      |
+| [005](005-connected-dashboard.md)              | ダッシュボード集計                 | 006の課題管理の変更も集計に反映                                             |
+| [006](006-connected-issues.md)                 | 課題管理                           | [現行のAPI仕様](../architecture/api-rls.md)                                 |
+| [007](007-connected-members.md)                | メンバー一覧・ロール変更・所属解除 | 013で担当件数、014で所属追加を実装                                          |
+| [008](008-connected-activity.md)               | 操作履歴                           | 012で期間検索を追加                                                         |
+| [009](009-release-readiness.md)                | 公開準備・設定検査                 | [運用手順](../deployment.md) / [公開履歴](../history/deployment-2026-11.md) |
+| [010](010-production-copy.md)                  | 公開画面の説明整理                 | 操作説明と開発・運用情報を分離                                              |
+| [011](011-browser-performance.md)              | 本番ブラウザの性能測定             | [測定結果](../performance.md)                                               |
+| [012](012-activity-date-filter.md)             | 操作履歴の期間検索                 | 008を拡張                                                                   |
+| [013](013-member-assignment-counts.md)         | メンバー担当件数                   | 007を拡張                                                                   |
+| [014](014-add-workspace-member.md)             | 登録済みユーザーの所属追加         | 007を拡張                                                                   |
+| [015](015-list-api-load-check.md)              | ローカル一覧APIの負荷検証          | 本番ブラウザ測定とは別の検証                                                |
+| [016](016-issue-comments.md)                   | 課題コメント                       | 006を拡張。投稿・時系列表示・編集・削除                                     |
+| [017](017-task-move-consistency.md)            | タスク移動時の並び順と編集競合     | 他タスクのversionと操作履歴を維持                                           |
+| [018](018-profile-display-name.md)             | 自分の表示名変更                   | 所属先の表示名へ反映、過去の履歴名は保持                                    |
+| [019](019-content-security-policy.md)          | CSPの段階導入                      | Report-Only導入時点の仕様。強制モードへの移行は022                          |
+| [020](020-idempotency-cleanup.md)              | 再送記録の定期削除                 | 期限切れだけを対象にした管理関数・pg_cron・実行記録の保持                   |
+| [021](021-auth-and-log-operations.md)          | 認証制限と操作履歴の運用           | Supabase Authの制限方針・操作履歴の無期限保持                               |
+| [022](022-enforced-content-security-policy.md) | CSPの強制モードへの移行            | 019の本番確認を受けた遮断の有効化・確認と切り戻し                           |
 
 ## 過去の仕様を読むとき
 

@@ -6,15 +6,15 @@ import {
   contentSecurityPolicy,
 } from "../../src/lib/csp.ts";
 
-test("CSPは要求ごとにnonceを生成し、応答にはReport-Onlyだけを設定する", () => {
+test("CSPは要求ごとにnonceを生成し、応答で強制しReport-Onlyを設定しない", () => {
   const nonce = createNonce();
   const nextNonce = createNonce();
   assert.notEqual(nonce, nextNonce);
   assert.equal(Buffer.from(nonce, "base64").length, 16);
   const headers = cspResponseHeaders(nonce);
-  assert.equal(headers.get("Content-Security-Policy"), null);
+  assert.equal(headers.get("Content-Security-Policy-Report-Only"), null);
   assert.equal(headers.get("Cache-Control"), "private, no-store");
-  const policy = headers.get("Content-Security-Policy-Report-Only");
+  const policy = headers.get("Content-Security-Policy");
   assert.ok(
     policy.includes(`script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`),
   );

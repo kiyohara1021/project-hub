@@ -2,6 +2,8 @@
 
 Issue: [#58](https://github.com/kiyohara1021/project-hub/issues/58)
 
+この文書はReport-Only導入時点の仕様です。強制モードへの移行は[仕様022](022-enforced-content-security-policy.md)、現在の反映状況は[対応状況](../roadmap.md)を参照してください。
+
 ## 目的・範囲
 
 画面のスクリプト・スタイル・通信先を明示し、CSPを段階的に導入する。最初は`Content-Security-Policy-Report-Only`で配信し、通常操作への影響を確認する。違反レポートの収集サービス、第三者のスクリプト許可、CSPの強制モードへの切り替えは本変更の対象外とする。

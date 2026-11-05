@@ -37,10 +37,8 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
     const response = await page.goto(route);
     const headers = response!.headers();
     const nonce =
-      headers["content-security-policy-report-only"].match(
-        /'nonce-([^']+)'/,
-      )![1];
-    expect(headers["content-security-policy"]).toBeUndefined();
+      headers["content-security-policy"].match(/'nonce-([^']+)'/)![1];
+    expect(headers["content-security-policy-report-only"]).toBeUndefined();
     expect(headers["cache-control"]).toContain("no-store");
     expect(nonces.has(nonce)).toBe(false);
     nonces.add(nonce);
@@ -90,12 +88,12 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
   expect(violations).toEqual([]);
 });
 
-test("Report-Onlyはnonceなしscriptを検出し、まだ実行を遮断しない", async ({
+test("CSPはnonceなしscriptの実行を遮断し、違反を通知する", async ({
   page,
   request,
 }) => {
   const root = await request.get("/", { maxRedirects: 0 });
-  expect(root.headers()["content-security-policy-report-only"]).toContain(
+  expect(root.headers()["content-security-policy"]).toContain(
     "'strict-dynamic'",
   );
   const violations: { directive: string; disposition: string }[] = [];
@@ -126,7 +124,7 @@ test("Report-Onlyはnonceなしscriptを検出し、まだ実行を遮断しな�
       response,
       body: html.replace(
         "</body>",
-        "<script>document.documentElement.dataset.cspReportOnlyProbe = 'executed'</script></body>",
+        "<script>document.documentElement.dataset.cspEnforcementProbe = 'executed'</script></body>",
       ),
     });
   });
@@ -138,10 +136,10 @@ test("Report-Onlyはnonceなしscriptを検出し、まだ実行を遮断しな�
   await page.goto("/dashboard");
   await expect
     .poll(() => violations)
-    .toContainEqual({ directive: "script-src-elem", disposition: "report" });
+    .toContainEqual({ directive: "script-src-elem", disposition: "enforce" });
   expect((await report).status()).toBe(204);
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-csp-report-only-probe",
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-csp-enforcement-probe",
     "executed",
   );
 });
