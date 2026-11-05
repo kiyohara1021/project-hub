@@ -165,7 +165,11 @@ pg_cronが利用できる場合は、毎時17分に期限切れ再送記録を�
 
 ## CSPの段階導入
 
-[仕様019](specs/019-content-security-policy.md)では、Previewと接続モードへ要求ごとのnonceを含む`Content-Security-Policy-Report-Only`を追加します。強制モードへの移行は別変更です。本番への反映後は正規URLの応答ヘッダー、PC/360pxで確認した画面・メニュー・ダイアログとCSP違反の有無を記録してください。違反はブラウザのconsoleと`securitypolicyviolation`イベントで確認し、違反通知先として`/api/csp-report`へ送信します。受信内容は読み取らず204で破棄し、保存・ログ出力はしません。
+[仕様019](specs/019-content-security-policy.md)のReport-Onlyを本番で確認し、[仕様022](specs/022-enforced-content-security-policy.md)で強制モードへ切り替えます。2026-11-06時点では強制モードへの変更は実装中で、本番切り替えの完了は未確認です。nonceと許可範囲は維持し、応答ヘッダーを`Content-Security-Policy`へ変更します。
+
+切り替え後は正規URLと対象コミット・Deploymentを照合し、強制ヘッダーがあり、Report-Onlyヘッダーがないこと、HTMLのscriptとヘッダーのnonceが一致することを確認します。PC/360pxで各画面・メニュー・ダイアログを操作し、consoleと`securitypolicyviolation`イベントで違反がないことを確認して、その範囲を記録してください。違反通知先の`/api/csp-report`は受信内容を読み取らず204で破棄し、アプリで保存・本文のログ出力をしません。
+
+通常操作がCSPに遮断された場合は、Report-Onlyの動作を確認したPR #73のDeployment `12ctAVqpT1jjLFEvGmEAzJ9nxkK7`（コミット`46f1bf3bbc07bcb543f5da8751c7dcdea378bd3d`）へVercelで切り戻します。切り戻し先の環境変数と正規URL割当を照合し、Report-Onlyのヘッダーと通常操作を再確認してください。DBは変更せず、定期削除と記録の保持方針も維持します。違反した操作・directive・対象コミットを記録し、許可範囲を安易に広げず原因を修正して再検証します。
 
 ## 障害時の対応
 
@@ -229,3 +233,12 @@ Codex Security CLIは`b56728d`の170ファイルをレビュー後、候補検�
 migration012を履歴登録と同一トランザクションで適用し、履歴12件・最新`202611060012`、索引10件、関数の所有者・固定search_pathを確認しました。anon/authenticated/service_roleの実行権限はありません。
 
 検証時だけ各ジョブを毎分実行に変更し、期限切れ削除は01:33 JST、実行履歴削除は01:34 JSTのスケジュール実行が`succeeded`になりました。検証後に前者を`17 * * * *`、後者を`47 2 * * *`へ戻し、postgres所有・activeを読戻し確認しました。実行時刻はcronのtimezoneに従います。操作履歴の削除は追加していません。
+
+### CSPのReport-Only導入と本番確認（2026-11-06）
+
+[PR #73](https://github.com/kiyohara1021/project-hub/pull/73)をmainへマージし、コミット`46f1bf3bbc07bcb543f5da8751c7dcdea378bd3d`のVercel Deployment `12ctAVqpT1jjLFEvGmEAzJ9nxkK7`がReadyになったことを確認しました。これはReport-Onlyの反映記録です。強制モードの本番反映完了を示すものではありません。
+
+- ローカルDBテスト14件・認証E2E38件・画面デモE2E11件（1件skip）・公開設定テスト6件が成功し、PRのCIもすべて成功しました。
+- 本番の管理者ログインを維持した状態で、PC（1280px）と360px幅のログイン状況・ダッシュボード・プロジェクト・カンバン・課題・メンバー・操作履歴の全7画面を確認し、モバイルでは7画面のメニューも開閉しました。consoleのCSP違反はありませんでした。
+- 両幅でプロジェクトの作成・編集、タスク追加、課題追加、コメント閲覧、メンバー追加のダイアログを開閉し、consoleのCSP違反がないことを確認しました。本番データの作成・更新は行っていません。
+- 別ロールでの再ログイン、本番でのデータ更新成功、すべてのブラウザ環境の検証は今回の確認範囲に含めません。強制モードへ切り替えた後の再確認結果は別に記録します。

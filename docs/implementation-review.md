@@ -34,10 +34,10 @@
 | 優先度 | Issue                                                        | 項目                             | 対応状況・決める必要があること                                                 |
 | ------ | ------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------ |
 | 高     | [#55](https://github.com/kiyohara1021/project-hub/issues/55) | コード整形の統一とCIでの検査     | 2026-11-05対応。Prettier・整形コマンド・CI検査を追加し、整形を別コミットに分離 |
-| 高     | [#57](https://github.com/kiyohara1021/project-hub/issues/57) | ログイン試行の制限方針           | 2026-11-06実装・検証中。Supabase Authの制限を利用し、429時の案内を追加         |
-| 中     | [#58](https://github.com/kiyohara1021/project-hub/issues/58) | Content-Security-Policyの追加    | 2026-11-06実装・検証中。Report-Onlyで導入し、強制モードへの移行は別変更        |
+| 高     | [#57](https://github.com/kiyohara1021/project-hub/issues/57) | ログイン試行の制限方針           | 2026-11-06 PR #73で対応済み。Supabase Authの制限方針と429時の案内              |
+| 中     | [#58](https://github.com/kiyohara1021/project-hub/issues/58) | Content-Security-Policyの追加    | 2026-11-06 Report-Onlyの本番確認済み。仕様022で強制切り替えを実装中            |
 | 中     | [#59](https://github.com/kiyohara1021/project-hub/issues/59) | 再送記録の期限切れ行の定期削除   | 2026-11-06にmigration012を本番適用。定期実行の成功を確認済み                   |
-| 中     | [#60](https://github.com/kiyohara1021/project-hub/issues/60) | 操作履歴の保持期間               | 2026-11-06方針を明文化。無期限保持・月次容量確認とし、既存動作を検証中         |
+| 中     | [#60](https://github.com/kiyohara1021/project-hub/issues/60) | 操作履歴の保持期間               | 2026-11-06 PR #73で対応済み。無期限保持・月次容量確認を明文化                  |
 | 中     | [#56](https://github.com/kiyohara1021/project-hub/issues/56) | 入力検証関数の配置と命名の整理   | 2026-11-05対応。validation.tsへ移し、コメント・表示名変更も含めて参照を更新    |
 | 低     | [#61](https://github.com/kiyohara1021/project-hub/issues/61) | ログイン状況画面の取得件数の上限 | 2026-11-05対応。所属先ごとに最新5件を取得し、一覧へ案内                        |
 
