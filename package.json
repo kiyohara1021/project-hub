@@ -23,7 +23,9 @@
     "build:vercel": "node scripts/check-deployment.mjs && next build",
     "check:deploy": "node scripts/check-deployment.mjs",
     "test:release": "node --test tests/release/*.test.mjs",
-    "test:load": "node scripts/check-list-performance.mjs"
+    "test:load": "node scripts/check-list-performance.mjs",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -44,6 +46,7 @@
     "@types/react-dom": "^19.0.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.4.3",
+    "prettier": "3.9.10",
     "shadcn": "^4.23.0",
     "supabase": "2.122.0",
     "tailwindcss": "4.3.3",

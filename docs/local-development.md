@@ -46,6 +46,15 @@ pnpm dev
 
 `APP_ORIGIN`はブラウザで開くURLのoriginと完全一致させます。ホストやポートを変更した場合は、この設定も変更してください。書込APIとログイン・ログアウトは指定したOriginだけを許可します。
 
+## コード整形
+
+```sh
+pnpm format
+pnpm format:check
+```
+
+`format`はコードと文書を整形し、`format:check`は書き換えずに検査します。ロックファイル・SupabaseのSQL・画面図・生成物は対象外です。CIで整形が失敗した場合は、ローカルで整形して差分を確認してください。[整形と履歴の扱い](../CONTRIBUTING.md#コード整形)も参照してください。
+
 ## テスト
 
 DB・認証テストの前にDockerとローカルSupabaseを起動し、seedと`.env.local`を準備します。

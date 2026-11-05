@@ -27,19 +27,19 @@
 | [#54](https://github.com/kiyohara1021/project-hub/issues/54) | 保守性 | `Idempotency-Key`検査、204応答、`created_at`/`id`カーソルの重複を共通関数へまとめる。挙動は変えない |
 | [#62](https://github.com/kiyohara1021/project-hub/issues/62) | 文書 | 本書の作成 |
 
-## 改善候補（未対応）
+## 改善候補の対応状況
 
 各候補はIssueに起票済みです。着手するときは[開発ルール](../CONTRIBUTING.md)に沿って、仕様と受け入れ条件をIssueまたは`docs/specs/`に書いてから実装してください。
 
-| 優先度 | Issue | 項目 | 着手条件・決める必要があること |
+| 優先度 | Issue | 項目 | 対応状況・決める必要があること |
 |---|---|---|---|
-| 高 | [#55](https://github.com/kiyohara1021/project-hub/issues/55) | コード整形の統一とCIでの検査 | PR #42 のマージ後。整形だけのコミットに分ける |
+| 高 | [#55](https://github.com/kiyohara1021/project-hub/issues/55) | コード整形の統一とCIでの検査 | 2026-11-05対応。Prettier・整形コマンド・CI検査を追加し、整形を別コミットに分離 |
 | 高 | [#57](https://github.com/kiyohara1021/project-hub/issues/57) | ログイン試行の制限方針 | Supabase Authの設定値と、アプリ側で制限するかを決める |
 | 中 | [#58](https://github.com/kiyohara1021/project-hub/issues/58) | Content-Security-Policyの追加 | 仕様を追加し、Report-Onlyで確認してから強制する |
 | 中 | [#59](https://github.com/kiyohara1021/project-hub/issues/59) | 再送記録の期限切れ行の定期削除 | 削除方式（pg_cronなど）を決める |
 | 中 | [#60](https://github.com/kiyohara1021/project-hub/issues/60) | 操作履歴の保持期間 | 保持期間と期限後の扱いを決める |
-| 中 | [#56](https://github.com/kiyohara1021/project-hub/issues/56) | 入力検証関数の配置と命名の整理 | PR #42 のマージ後（コメントAPIも対象） |
-| 低 | [#61](https://github.com/kiyohara1021/project-hub/issues/61) | ログイン状況画面の取得件数の上限 | PR #42・#51・#52 のマージ後 |
+| 中 | [#56](https://github.com/kiyohara1021/project-hub/issues/56) | 入力検証関数の配置と命名の整理 | 2026-11-05対応。validation.tsへ移し、コメント・表示名変更も含めて参照を更新 |
+| 低 | [#61](https://github.com/kiyohara1021/project-hub/issues/61) | ログイン状況画面の取得件数の上限 | 2026-11-05対応。所属先ごとに最新5件を取得し、一覧へ案内 |
 
 確認時点で既に起票されていたIssue（[#41](https://github.com/kiyohara1021/project-hub/issues/41) 課題コメント、[#43](https://github.com/kiyohara1021/project-hub/issues/43) タスク移動、[#44](https://github.com/kiyohara1021/project-hub/issues/44) 表示名、[#45](https://github.com/kiyohara1021/project-hub/issues/45) `shadcn`の依存区分、[#46](https://github.com/kiyohara1021/project-hub/issues/46) ライセンス）は、PR #42 に含まれ、2026-11-04にマージ済みです。本書の2026-11-03時点の確認対象とは区別します。
 
