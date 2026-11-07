@@ -30,6 +30,7 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
     "/members",
     "/activity",
     "/projects/demo-a/gantt",
+    "/notifications",
     "/signup",
     "/forgot-password",
     "/reset-password",
