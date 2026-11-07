@@ -1,3 +1,4 @@
+import { readProjectAssignees } from "@/lib/project-access-server";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseConfig } from "@/lib/supabase/config";
@@ -103,18 +104,7 @@ export async function ConnectedBoardPage({
     .select("user_id,role")
     .eq("workspace_id", wid);
   if (memberRows.error) throw new Error("Member read failed");
-  const profiles = await client
-    .from("profiles")
-    .select("id,display_name")
-    .in(
-      "id",
-      memberRows.data.map((m) => m.user_id),
-    );
-  if (profiles.error) throw new Error("Profile read failed");
-  const members = profiles.data.map((p) => ({
-    id: p.id,
-    name: p.display_name,
-  }));
+  const members = await readProjectAssignees(client, wid, id);
   const role = memberRows.data.find(
     (m) => m.user_id === user.data?.claims.sub,
   )?.role;

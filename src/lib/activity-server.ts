@@ -22,6 +22,11 @@ function safeState(value: unknown, entity: string): ActivityState {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const raw = value as Record<string, unknown>;
   const result: ActivityState = {};
+  if (
+    entity === "projects" &&
+    (raw.visibility === "workspace" || raw.visibility === "private")
+  )
+    result.visibility = raw.visibility;
   const statuses: readonly string[] =
     entity === "projects"
       ? projectStatuses

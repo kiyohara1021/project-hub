@@ -17,6 +17,8 @@ import {
   statusLabels,
   type Project,
   type ProjectStatus,
+  type ProjectVisibility,
+  visibilityLabels,
 } from "@/lib/project-types";
 
 export function ProjectEditor({
@@ -30,6 +32,7 @@ export function ProjectEditor({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(project?.name ?? "");
   const [description, setDescription] = useState(project?.description ?? "");
+  const [visibility, setVisibility] = useState<ProjectVisibility>("workspace");
   const [due, setDue] = useState(project?.due_date ?? "");
   const [status, setStatus] = useState<ProjectStatus>(
     project?.status ?? "planned",
@@ -54,7 +57,7 @@ export function ProjectEditor({
       name,
       description,
       due_date: due || null,
-      ...(project ? { status, version } : {}),
+      ...(project ? { status, version } : { visibility }),
     });
     if (!request.current || request.current.body !== body)
       request.current = { key: crypto.randomUUID(), body };
@@ -81,6 +84,7 @@ export function ProjectEditor({
         setName("");
         setDescription("");
         setDue("");
+        setVisibility("workspace");
       }
       router.refresh();
     } catch {
@@ -213,6 +217,34 @@ export function ProjectEditor({
               disabled={busy}
             />
           </div>
+          {!project && (
+            <div>
+              <label
+                htmlFor={`${fieldId}-visibility`}
+                className="mb-2 block text-sm font-medium"
+              >
+                公開範囲
+              </label>
+              <select
+                id={`${fieldId}-visibility`}
+                value={visibility}
+                onChange={(event) =>
+                  setVisibility(event.target.value as ProjectVisibility)
+                }
+                disabled={busy}
+                className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+              >
+                {(["workspace", "private"] as const).map((value) => (
+                  <option key={value} value={value}>
+                    {visibilityLabels[value]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-slate-500">
+                非公開の参加者は作成後に「公開範囲」から設定できます。管理者は常に閲覧できます。
+              </p>
+            </div>
+          )}
           {project && (
             <div>
               <label

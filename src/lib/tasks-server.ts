@@ -23,12 +23,12 @@ export async function taskAccess(
   write = false,
   resource: "task" | "issue" = "task",
 ) {
-  const client = await projectAccess(wid, write ? resource : false);
+  const client = await projectAccess(wid);
   if (!uuid.test(pid))
     throw new ProjectError(400, "INVALID_INPUT", "IDを確認してください");
   const project = await client
     .from("projects")
-    .select("id,name,status,workspace_id")
+    .select("id,name,status,workspace_id,visibility")
     .eq("workspace_id", wid)
     .eq("id", pid)
     .maybeSingle();
@@ -40,6 +40,7 @@ export async function taskAccess(
     );
   if (!project.data)
     throw new ProjectError(404, "NOT_FOUND", "見つかりませんでした");
+  if (write) await projectAccess(wid, resource);
   if (write && project.data.status === "archived")
     throw new ProjectError(
       409,

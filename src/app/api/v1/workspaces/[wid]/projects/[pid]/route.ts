@@ -24,6 +24,7 @@ export async function PATCH(request: Request, { params }: Context) {
   try {
     checkOrigin(request);
     const { wid, pid } = await params;
+    await readProject(wid, pid);
     const client = await projectAccess(wid, true);
     if (!uuid.test(pid))
       throw new ProjectError(400, "INVALID_INPUT", "IDを確認してください");

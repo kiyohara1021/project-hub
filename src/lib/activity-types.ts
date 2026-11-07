@@ -1,4 +1,8 @@
-import { statusLabels } from "./project-types";
+import {
+  statusLabels,
+  visibilityLabels,
+  type ProjectVisibility,
+} from "./project-types";
 import { taskLabels } from "./task-types";
 import { issueLabels } from "./issue-types";
 import { memberLabels } from "./member-types";
@@ -9,6 +13,7 @@ export const activityEntities = [
   "issues",
   "memberships",
   "issue_comments",
+  "project_members",
 ] as const;
 export const activityActions = ["INSERT", "UPDATE", "DELETE"] as const;
 export type ActivityEntity = (typeof activityEntities)[number];
@@ -19,6 +24,7 @@ export const entityLabels: Record<ActivityEntity, string> = {
   issues: "課題",
   memberships: "メンバー",
   issue_comments: "課題コメント",
+  project_members: "プロジェクト参加者",
 };
 export const actionLabels: Record<ActivityAction, string> = {
   INSERT: "追加",
@@ -27,6 +33,7 @@ export const actionLabels: Record<ActivityAction, string> = {
 };
 export type ActivityState = {
   status?: string;
+  visibility?: ProjectVisibility;
   role?: string;
   version?: number;
 };
@@ -52,11 +59,15 @@ export function changeSummary(event: Activity) {
         ? taskLabels
         : issueLabels;
   const state = (value: ActivityState) =>
-    value.role
-      ? `ロール: ${memberLabels[value.role as keyof typeof memberLabels] ?? "不明"}`
-      : value.status
-        ? `状態: ${labels[value.status] ?? "不明"}`
-        : "";
+    [
+      value.visibility ? `公開範囲: ${visibilityLabels[value.visibility]}` : "",
+      value.role
+        ? `ロール: ${memberLabels[value.role as keyof typeof memberLabels] ?? "不明"}`
+        : "",
+      value.status ? `状態: ${labels[value.status] ?? "不明"}` : "",
+    ]
+      .filter(Boolean)
+      .join(" / ");
   const before = state(event.changes.before),
     after = state(event.changes.after);
   if (event.action === "INSERT") return after || "新規登録";
