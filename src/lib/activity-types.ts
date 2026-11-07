@@ -14,6 +14,7 @@ export const activityEntities = [
   "memberships",
   "issue_comments",
   "project_members",
+  "attachments",
 ] as const;
 export const activityActions = ["INSERT", "UPDATE", "DELETE"] as const;
 export type ActivityEntity = (typeof activityEntities)[number];
@@ -25,6 +26,7 @@ export const entityLabels: Record<ActivityEntity, string> = {
   memberships: "メンバー",
   issue_comments: "課題コメント",
   project_members: "プロジェクト参加者",
+  attachments: "添付ファイル",
 };
 export const actionLabels: Record<ActivityAction, string> = {
   INSERT: "追加",

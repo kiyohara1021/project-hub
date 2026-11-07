@@ -10,6 +10,7 @@ import { PageHeading, EmptyState } from "@/components/page-parts";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { IssueEditor } from "./issue-editor";
+import { AttachmentsDialog } from "./attachments-dialog";
 import { IssueComments } from "./issue-comments";
 
 function Content({ issue }: { issue: Issue }) {
@@ -98,6 +99,10 @@ function IssueRows({
                       members={members}
                     />
                   )}
+                  <AttachmentsDialog
+                    base={`${base}/${issue.id}/attachments`}
+                    title={issue.title}
+                  />
                   <IssueComments
                     key={`${base}-${issue.id}`}
                     base={base}
@@ -149,6 +154,10 @@ function IssueRows({
                     members={members}
                   />
                 )}
+                <AttachmentsDialog
+                  base={`${base}/${issue.id}/attachments`}
+                  title={issue.title}
+                />
                 <IssueComments
                   key={`${base}-${issue.id}`}
                   base={base}
