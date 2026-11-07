@@ -67,7 +67,7 @@ select id,'AUTH_USER_UUID'::uuid,'admin' from space;
 commit;
 ```
 
-以後の所属追加はアプリの管理者画面で行えます。対象ユーザーのUUIDは、本人がログイン状況画面（`/workspaces`）で確認して管理者へ伝えます。ユーザー作成・候補検索・メール招待はアプリの対象外です。管理用SQLで設定した初期データの履歴は、ログインユーザーによる操作とは区別して表示されます。
+以後の所属追加はアプリの管理者画面で行えます。対象ユーザーのUUIDは、本人がログイン状況画面（`/workspaces`）で確認して管理者へ伝えます。既存運用のユーザー作成は管理側で行います。メール招待は追加実装・検証中で、本番では無効です。管理用SQLで設定した初期データの履歴は、ログインユーザーによる操作とは区別して表示されます。
 
 ### Vercel
 
@@ -242,3 +242,41 @@ migration012を履歴登録と同一トランザクションで適用し、履�
 - 本番の管理者ログインを維持した状態で、PC（1280px）と360px幅のログイン状況・ダッシュボード・プロジェクト・カンバン・課題・メンバー・操作履歴の全7画面を確認し、モバイルでは7画面のメニューも開閉しました。consoleのCSP違反はありませんでした。
 - 両幅でプロジェクトの作成・編集、タスク追加、課題追加、コメント閲覧、メンバー追加のダイアログを開閉し、consoleのCSP違反がないことを確認しました。本番データの作成・更新は行っていません。
 - 別ロールでの再ログイン、本番でのデータ更新成功、すべてのブラウザ環境の検証は今回の確認範囲に含めません。強制モードへ切り替えた後の再確認結果は[PR #74](https://github.com/kiyohara1021/project-hub/pull/74)に記録します。
+
+## 追加機能の本番導入と確認
+
+2026-11-08、適用済み001〜012とRealtimeの既存配信表が空であることを照合し、リポジトリ原文の013〜020と履歴登録を単一トランザクションで本番DBへ適用しました。読戻しで履歴20件・最新`202611060020`を確認しています。アプリの反映と画面確認の進行状況は[PR #83](https://github.com/kiyohara1021/project-hub/pull/83)〜[PR #89](https://github.com/kiyohara1021/project-hub/pull/89)で追跡します。DB適用を全機能の本番画面検証完了とは扱いません。
+
+- 非公開Storageバケットの3MiB上限、新規4表のRLS、本人メール照合用関数の引数なし・固定search_path・限定実行権限を確認しました。
+- Realtimeの公開表は`realtime_updates`だけで、INSERT配信のみです。通知・Realtime・招待の削除ジョブは登録・有効化を確認しました。新規ジョブの定期実行成功は、この時点では未確認です。
+- ローカルではDBテスト23件、認証画面テスト56件の各ケースを検証しました。全体実行の54件と、通知の追加によるセレクター修正・フォーカス再確認を含む関連5件の再実行が通過しています。各PRのCI結果も参照してください。
+- 送信元ドメインとFromが未決定のため、一般登録と招待メールの本番有効化、外部宛ての到着確認は未実施です。
+
+### ResendをSupabase AuthのSMTPに設定する
+
+送信元ドメインとFromは未決定です。本番の`SELF_SERVICE_AUTH_ENABLED=false`を維持し、Supabaseの一般signupも有効にしません。登録・招待・再設定の送信は、以下の準備と確認が完了してから有効化します。Previewには接続情報も送信機能も設定しません。
+
+[Resend公式のSupabase SMTP手順](https://resend.com/docs/send-with-supabase-smtp)に従い、Resendでドメインを検証し、送信用APIキーを用意します。SupabaseのAuthentication → NotificationsのEmail → SMTP SettingsでCustom SMTPを有効にし、確認したSender emailとSender nameを設定します。
+
+| SMTP項目 | 値                |
+| -------- | ----------------- |
+| Host     | `smtp.resend.com` |
+| Port     | `465`             |
+| Username | `resend`          |
+| Password | ResendのAPIキー   |
+
+このAPIキーはSupabaseのSMTP資格情報としてだけ保存し、Vercel・アプリ・リポジトリへ追加しません。招待もSupabase Auth経由で送り、アプリからResend APIを直接呼びません。
+
+1. 送信元ドメインの検証とFromを確定し、SupabaseのSite URL・許可リダイレクトを正規HTTPSオリジンへ限定します。
+2. 確認・再設定・招待メールのテンプレートを実装の`/confirm`・token_hash・許可するtype/nextと照合します。リンクGETは認証を消費せず、画面POSTで確認します。ローカルテンプレートの設定はHostedへ自動反映されません。
+3. Supabaseのsignup許可とメール確認必須（confirmations=true）、SMTP、送信制限を確認します。公開登録を許可する時点まではアプリのフラグをfalseに保ちます。
+4. 承認済みの検証宛先で確認メール・再設定・招待を検証し、確認前拒否、別ブラウザ、GET未消費、トークン再使用拒否、招待先の現在の確認済みメール照合、明示承諾まで所属しないことを確認します。ローカルのexample.invalid宛て試験は外部送信しません。
+5. 条件が整った後だけProductionの`SELF_SERVICE_AUTH_ENABLED=true`を設定して再デプロイし、日付・対象SHA・設定と確認範囲を記録します。送信受付を到着・開封の確認と混同しません。失敗時はフラグをfalseへ戻します。
+
+### Storage・通知・Realtime
+
+- 添付は非公開`project-attachments`とポリシー、3MiB/20件の制約、非公開プロジェクトの失効を確認します。物理削除は台帳とStorage APIを使い、月次と消去失敗時に管理用CLIで回収対象を確認します。アプリへ管理鍵を追加しません。
+- 回収はCLI認証と対象プロジェクトを照合し、`node scripts/cleanup-attachments.mjs --project-ref <対象project-ref>`で最大100件の対象を確認してから、同じ引数に`--execute`を付けます。未完了台帳が残れば確認・再実行します。storage.objectsをSQLで直接削除しません。
+- 通知は本人と現在の閲覧権限、90日保持、既読の本人境界を確認します。pg_cronの登録と実行成功を別途確認します。業務データ・操作履歴の保持は変えません。
+- Realtimeは既存publicationの用途を確認します。migration019は全表publicationや他の公開表がある場合にロールバックする契約です。専用プロジェクトでrealtime_updatesだけのINSERT配信、RLS、本人宛て分離、失効・再接続・入力保持を確認します。業務表を追加しません。
+- Realtimeの1日超イベント削除と通知の定期削除は、ジョブの登録・成功記録を確認してから導入済みとします。pg_cronのない環境では管理用の代替実行を決め、定期実行未導入と記録します。CSPのconnect-srcは対象SupabaseのHTTPS/WSSだけに限定します。

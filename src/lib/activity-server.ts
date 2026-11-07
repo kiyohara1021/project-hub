@@ -34,11 +34,13 @@ function safeState(value: unknown, entity: string): ActivityState {
         ? taskStatuses
         : entity === "issues"
           ? issueStatuses
-          : [];
+          : entity === "workspace_invitations"
+            ? ["pending", "accepted", "cancelled", "expired"]
+            : [];
   if (typeof raw.status === "string" && statuses.includes(raw.status))
     result.status = raw.status;
   if (
-    entity === "memberships" &&
+    ["memberships", "workspace_invitations"].includes(entity) &&
     typeof raw.role === "string" &&
     (memberRoles as readonly string[]).includes(raw.role)
   )

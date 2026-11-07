@@ -121,4 +121,23 @@ pnpm db:stop
 
 テストを強制終了し、ロールや権限が戻らなかった場合も再構築します。`db:reset`はローカルDBのデータを消すため、保持したい変更がある場合は先に退避してください。
 
-一般登録は無効で、外部へのメール・SMS送信は行いません。`supabase/config.toml`はローカル専用です。本番設定は[デプロイ・運用手順](deployment.md)に従い、ローカルseed・共通パスワード・管理鍵を転用しないでください。
+ローカルのSupabaseは登録・メール確認を有効にし、アプリ側は`SELF_SERVICE_AUTH_ENABLED`で公開登録・招待を制御します。メールはローカルSMTPで受信し、外部へのメール・SMS送信は行いません。`supabase/config.toml`はローカル専用です。本番設定は[デプロイ・運用手順](deployment.md)に従い、ローカルseed・共通パスワード・管理鍵を転用しないでください。
+
+## 追加機能のローカル検証
+
+仕様023〜030は統合検証中です。通常のDB・認証手順に加えて、次を確認します。本番への適用確認とは区別してください。
+
+- `.env.local`の`SELF_SERVICE_AUTH_ENABLED=true`で登録・再設定・招待を検証します。既定はfalseです。Previewでは有効にしません。`db:env`で生成された値を確認し、必要ならローカル設定を変更します。
+- `supabase/config.toml`でローカルSMTP（54324）、Storage、Realtimeを有効にしています。確認・再設定テンプレートは`supabase/templates/`にあります。ローカルSMTP受信箱（通常`http://127.0.0.1:54324`）で実際のリンクを取得し、example.invalidだけを使用します。テンプレート変更後はローカルサービスの設定を反映して確認します。招待メールは`auth.email.template.magic_link`にも確認用の`supabase/templates/confirmation.html`を指定し、仕様027のtoken_hash・type=email・招待先nextを引き継ぐことを確認します。
+- Authはローカルでsignupとemail confirmationsがtrueです。確認前の所属なし、GET未消費、明示POST、別ブラウザ確認、再設定後の認証を確認します。これらのローカル設定は本番へ自動反映されません。
+- Storageはmigration018の非公開`project-attachments`を使います。公開バケットへ変更せず、ユーザーJWTで投稿・ダウンロード・削除と閲覧権限の失効を確認します。
+- Realtimeは専用publicationのINSERT通知だけを使用します。業務表を公開しません。二つのブラウザで自動反映・入力保持・権限失効・再接続を確認し、PreviewがWebSocketへ接続しないことも確認します。
+
+添付の回収は管理用CLIで実行します。既定は最大100件の対象表示だけで、`--execute`で実際にStorage APIを呼びます。DB・認証E2Eと同時に実行しないでください。
+
+```sh
+node scripts/cleanup-attachments.mjs --local
+node scripts/cleanup-attachments.mjs --local --execute
+```
+
+親削除・期限切れ予約・消去失敗の台帳を確認し、回収失敗時は接続を確認して5分後以降に再実行します。アプリにservice_roleキーを追加しません。

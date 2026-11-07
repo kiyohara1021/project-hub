@@ -23,6 +23,7 @@ export async function proxy(request: NextRequest) {
     );
     if (
       request.nextUrl.pathname === "/confirm" ||
+      request.nextUrl.pathname.startsWith("/invitations/") ||
       request.nextUrl.pathname === "/auth/confirm"
     )
       result.headers.set("Referrer-Policy", "strict-origin");
@@ -66,6 +67,7 @@ export const config = {
     "/reset-password",
     "/confirm",
     "/notifications",
+    "/invitations/:path*",
     "/auth/:path*",
     "/api/v1/:path*",
   ],
