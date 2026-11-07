@@ -3,6 +3,7 @@
 import { useRef, useState, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { AttachmentsDialog } from "./attachments-dialog";
 import { TaskEditor } from "./task-editor";
 import {
   taskStatuses,
@@ -349,6 +350,12 @@ export function ConnectedKanban({
                         </div>
                       </div>
                     )}
+                    <div className="mt-3">
+                      <AttachmentsDialog
+                        base={`${base}/${task.id}/attachments`}
+                        title={task.title}
+                      />
+                    </div>
                   </article>
                 </li>
               ))}

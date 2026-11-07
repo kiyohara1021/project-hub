@@ -18,7 +18,7 @@ enabled = false
 enabled = true
 port = 54324
 [storage]
-enabled = false
+enabled = true
 [realtime]
 enabled = false
 [analytics]
