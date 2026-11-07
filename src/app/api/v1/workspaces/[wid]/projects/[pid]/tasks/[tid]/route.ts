@@ -40,6 +40,9 @@ export async function PATCH(request: Request, { params }: Context) {
       p_priority: input.priority,
       p_assignee_id: input.assignee_id,
       p_due_date: input.due_date,
+      ...(input.start_date !== undefined
+        ? { p_start_date: input.start_date, p_schedule_provided: true }
+        : {}),
       p_version: input.version,
     });
     if (result.error) throw taskRpcError(result.error);

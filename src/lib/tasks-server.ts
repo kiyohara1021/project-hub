@@ -16,7 +16,7 @@ import {
 } from "./task-types";
 
 const fields =
-  "id,workspace_id,project_id,title,description,status,priority,assignee_id,due_date,position,version";
+  "id,workspace_id,project_id,title,description,status,priority,assignee_id,due_date,start_date,position,version";
 export async function taskAccess(
   wid: string,
   pid: string,
@@ -71,6 +71,7 @@ export function validateTask(value: Record<string, unknown>, edit = false) {
     "assignee_id",
     "due_date",
     ...(edit ? ["version"] : []),
+    ...("start_date" in value ? ["start_date"] : []),
   ]);
   // 名前/本文/日付の上限はプロジェクトと共通。
   const common = validateProject({
@@ -89,7 +90,22 @@ export function validateTask(value: Record<string, unknown>, edit = false) {
       "INVALID_INPUT",
       "優先度と担当者を確認してください",
     );
+  const startDate =
+    "start_date" in value
+      ? validateProject({
+          name: value.title,
+          description: "",
+          due_date: value.start_date,
+        }).due_date
+      : undefined;
+  if (startDate && common.due_date && startDate > common.due_date)
+    throw new ProjectError(
+      400,
+      "INVALID_INPUT",
+      "開始日は期限以前にしてください",
+    );
   return {
+    ...(startDate !== undefined ? { start_date: startDate } : {}),
     title: common.name,
     description: common.description,
     due_date: common.due_date,

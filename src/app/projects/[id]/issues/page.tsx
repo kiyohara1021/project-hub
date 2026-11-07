@@ -29,6 +29,12 @@ export default async function Issues({
       >
         ← カンバンに戻る
       </Link>
+      <Link
+        href={`/projects/${id}/gantt`}
+        className="mb-6 ml-5 inline-block text-sm text-blue-700 hover:underline"
+      >
+        ガントチャートへ →
+      </Link>
       {id !== "demo-a" ? (
         <EmptyState
           title="課題はまだありません"

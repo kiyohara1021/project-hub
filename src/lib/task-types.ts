@@ -23,6 +23,7 @@ export type Task = {
   priority: Priority;
   assignee_id: string | null;
   due_date: string | null;
+  start_date?: string | null;
   position: number;
   version: number;
 };
