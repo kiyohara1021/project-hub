@@ -1,3 +1,4 @@
+import { ProjectAccessEditor } from "./project-access-editor";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -12,6 +13,7 @@ import {
   projectStatuses,
   statusLabels,
   type ProjectStatus,
+  visibilityLabels,
 } from "@/lib/project-types";
 
 export async function ConnectedProjectList({
@@ -203,6 +205,9 @@ export async function ConnectedProjectList({
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700">
                   {statusLabels[p.status as ProjectStatus]}
                 </span>
+                <p className="mt-3 text-xs text-slate-500">
+                  公開範囲: {visibilityLabels[p.visibility]}
+                </p>
                 <h2 className="mb-3 mt-4 break-words text-lg font-semibold">
                   <Link
                     href={`/projects/${p.id}/board?workspace=${workspaceId}`}
@@ -220,14 +225,21 @@ export async function ConnectedProjectList({
                 >
                   課題一覧へ →
                 </Link>
-                <div className="mt-5 flex items-center justify-between gap-3">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm">期限: {p.due_date ?? "未設定"}</p>
                   {canEdit && (
-                    <ProjectEditor
-                      key={`${p.id}-${p.version}`}
-                      workspaceId={workspaceId}
-                      project={p}
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      <ProjectEditor
+                        key={`${p.id}-${p.version}`}
+                        workspaceId={workspaceId}
+                        project={p}
+                      />
+                      <ProjectAccessEditor
+                        key={`access-${p.id}-${p.version}`}
+                        workspaceId={workspaceId}
+                        projectId={p.id}
+                      />
+                    </div>
                   )}
                 </div>
               </CardContent>

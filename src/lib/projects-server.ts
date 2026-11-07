@@ -11,7 +11,7 @@ import {
 export const uuid =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const fields =
-  "id,workspace_id,name,description,status,due_date,version,created_at";
+  "id,workspace_id,name,description,status,visibility,due_date,version,created_at";
 export class ProjectError extends Error {
   constructor(
     public status: number,
@@ -197,7 +197,11 @@ export async function readJson(
 export function validateProject(
   value: Record<string, unknown>,
   edit = false,
-): ProjectFields & { status?: Project["status"]; version?: number } {
+): ProjectFields & {
+  status?: Project["status"];
+  version?: number;
+  visibility?: Project["visibility"];
+} {
   const keys = edit
     ? ["name", "description", "due_date", "status", "version"]
     : ["name", "description", "due_date"];
@@ -208,7 +212,9 @@ export function validateProject(
       "名前・説明・期限・状態を確認してください",
     );
   if (
-    Object.keys(value).some((k) => !keys.includes(k)) ||
+    Object.keys(value).some(
+      (k) => !keys.includes(k) && !(!edit && k === "visibility"),
+    ) ||
     keys.some((k) => !(k in value))
   )
     throw invalid();
@@ -230,6 +236,13 @@ export function validateProject(
   )
     throw invalid();
   if (
+    !edit &&
+    "visibility" in value &&
+    (typeof value.visibility !== "string" ||
+      !["workspace", "private"].includes(value.visibility))
+  )
+    throw invalid();
+  if (
     edit &&
     (typeof value.status !== "string" ||
       !projectStatuses.includes(value.status as Project["status"]) ||
@@ -239,6 +252,12 @@ export function validateProject(
   )
     throw invalid();
   return {
+    ...(!edit
+      ? {
+          visibility: (value.visibility ??
+            "workspace") as Project["visibility"],
+        }
+      : {}),
     name: value.name.trim(),
     description: value.description,
     due_date: value.due_date as string | null,

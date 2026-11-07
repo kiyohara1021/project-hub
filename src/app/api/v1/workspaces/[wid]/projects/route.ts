@@ -41,6 +41,7 @@ export async function POST(
       p_description: input.description,
       p_due_date: input.due_date,
       p_key: key,
+      p_visibility: input.visibility ?? "workspace",
     });
     if (result.error) throw rpcError(result.error);
     return json({ data: result.data }, 201);
