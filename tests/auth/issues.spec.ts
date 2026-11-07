@@ -91,9 +91,9 @@ test("メンバーが360pxで作成・編集・解決/再開・削除し集計�
     .fill("テスト用の課題画面更新");
   await dialog.getByLabel("状態", { exact: true }).selectOption("resolved");
   await dialog.getByRole("button", { name: "保存する", exact: true }).click();
-  await expect(dialog.getByRole("status")).toContainText(
-    "未解決」から「解決済み",
-  );
+  await expect(
+    dialog.getByRole("status").filter({ hasText: "状態を「" }),
+  ).toContainText("未解決」から「解決済み");
   expect(await count()).toBe(before + 1);
   await dialog
     .getByRole("button", { name: "状態変更を確認して保存", exact: true })
@@ -116,9 +116,9 @@ test("メンバーが360pxで作成・編集・解決/再開・削除し集計�
   );
   await dialog.getByLabel("状態", { exact: true }).selectOption("open");
   await dialog.getByRole("button", { name: "保存する", exact: true }).click();
-  await expect(dialog.getByRole("status")).toContainText(
-    "解決済み」から「未解決",
-  );
+  await expect(
+    dialog.getByRole("status").filter({ hasText: "状態を「" }),
+  ).toContainText("解決済み」から「未解決");
   await dialog
     .getByRole("button", { name: "状態変更を確認して保存", exact: true })
     .click();

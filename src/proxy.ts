@@ -11,14 +11,14 @@ export async function proxy(request: NextRequest) {
   const config = supabaseConfig();
   const nonce = createNonce();
   const development = process.env.NODE_ENV === "development";
-  const policy = contentSecurityPolicy(nonce, development);
+  const policy = contentSecurityPolicy(nonce, development, config?.url);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", policy);
   requestHeaders.delete("Content-Security-Policy-Report-Only");
   const nextResponse = () => {
     const result = NextResponse.next({ request: { headers: requestHeaders } });
-    cspResponseHeaders(nonce, development).forEach((value, name) =>
+    cspResponseHeaders(nonce, development, config?.url).forEach((value, name) =>
       result.headers.set(name, value),
     );
     if (
