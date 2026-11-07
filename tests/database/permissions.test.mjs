@@ -29,14 +29,12 @@ test("実JWTでワークスペース分離、RPC、制約、履歴を確認", as
   const anon = createClient(settings.API_URL, settings.ANON_KEY, {
     auth: { persistSession: false },
   });
-  assert.ok(
-    (
-      await anon.auth.signUp({
-        email: "signup-disabled@example.invalid",
-        password: "Local-Demo-Only-2026!",
-      })
-    ).error,
-  );
+  const registration = await anon.auth.signUp({
+    email: `confirmation-required-${crypto.randomUUID()}@example.invalid`,
+    password: "Local-Demo-Only-2026!",
+  });
+  assert.equal(registration.error, null);
+  assert.equal(registration.data.session, null, "確認前にセッションを与えない");
   assert.equal(
     (await anon.rpc("create_workspace", { p_name: "匿名作成不可" })).error
       ?.code,

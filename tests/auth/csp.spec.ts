@@ -7,6 +7,7 @@ for (const width of [360, 1280]) {
   test(`${width}pxの接続画面・Sheet・編集ダイアログでCSP違反を起こさない`, async ({
     page,
   }) => {
+    test.setTimeout(60_000);
     const violations: string[] = [];
     await page.exposeFunction("recordCspViolation", (value: string) =>
       violations.push(value),
@@ -44,6 +45,10 @@ for (const width of [360, 1280]) {
       [`/projects/${project}/issues?workspace=${workspace}`, "課題追加"],
       [`/members?workspace=${workspace}`, "メンバーを追加"],
       [`/activity?workspace=${workspace}`, ""],
+      ["/signup", ""],
+      ["/forgot-password", ""],
+      ["/confirm", ""],
+      ["/reset-password", ""],
     ];
     const nonces = new Set<string>();
     for (const [url, trigger] of routes) {

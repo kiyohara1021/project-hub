@@ -29,6 +29,10 @@ test("画面デモの全画面とモバイルメニューがCSP違反を起こ�
     "/projects/demo-a/issues",
     "/members",
     "/activity",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/confirm",
     "/workspaces",
     "/login",
   ];

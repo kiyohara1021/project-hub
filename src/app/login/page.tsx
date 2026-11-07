@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { selfServiceAuthEnabled, safeAuthNext } from "@/lib/auth-forms";
 import { supabaseConfig } from "@/lib/supabase/config";
 import { PageHeading, EmptyState } from "@/components/page-parts";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,11 @@ export const metadata = { title: "ログイン" };
 export default async function Login({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next: rawNext } = await searchParams;
+  const next = safeAuthNext(rawNext ?? null);
+  const invitationNext = next.startsWith("/invitations/") ? next : "";
   return (
     <>
       <PageHeading
@@ -27,6 +30,9 @@ export default async function Login({
         <Card className="max-w-md">
           <CardContent className="pt-6">
             <form action="/auth/login" method="post" className="space-y-5">
+              {invitationNext && (
+                <input type="hidden" name="next" value={invitationNext} />
+              )}
               {error && (
                 <p role="alert" className="text-sm text-red-700">
                   {error === "rate_limit"
@@ -70,6 +76,20 @@ export default async function Login({
             </form>
           </CardContent>
         </Card>
+      )}
+      {selfServiceAuthEnabled() && (
+        <div className="mt-6 flex flex-wrap gap-4 text-sm text-blue-700 underline">
+          <Link
+            href={
+              invitationNext
+                ? `/signup?next=${encodeURIComponent(invitationNext)}`
+                : "/signup"
+            }
+          >
+            アカウント登録
+          </Link>
+          <Link href="/forgot-password">パスワードを忘れた方</Link>
+        </div>
       )}
       <Link
         href="/dashboard"

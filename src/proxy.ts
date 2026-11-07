@@ -8,6 +8,7 @@ import {
 } from "@/lib/csp";
 
 export async function proxy(request: NextRequest) {
+  const config = supabaseConfig();
   const nonce = createNonce();
   const development = process.env.NODE_ENV === "development";
   const policy = contentSecurityPolicy(nonce, development);
@@ -20,10 +21,14 @@ export async function proxy(request: NextRequest) {
     cspResponseHeaders(nonce, development).forEach((value, name) =>
       result.headers.set(name, value),
     );
+    if (
+      request.nextUrl.pathname === "/confirm" ||
+      request.nextUrl.pathname === "/auth/confirm"
+    )
+      result.headers.set("Referrer-Policy", "strict-origin");
     return result;
   };
   let response = nextResponse();
-  const config = supabaseConfig();
   if (!config) return response;
   const client = createServerClient(config.url, config.key, {
     cookieOptions: authCookieOptions(config.origin),
@@ -56,6 +61,10 @@ export const config = {
     "/projects/:path*",
     "/workspaces/:path*",
     "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/confirm",
     "/auth/:path*",
     "/api/v1/:path*",
   ],
