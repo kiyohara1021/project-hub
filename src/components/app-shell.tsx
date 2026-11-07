@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NotificationLink } from "@/components/notification-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard,
@@ -165,6 +166,7 @@ export function AppShell({
             <span className="text-sm text-slate-500">ProjectHub</span>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-4">
+            <NotificationLink connected={connected} />
             <Link
               href="/workspaces"
               className="text-sm font-medium text-blue-700 hover:underline"

@@ -46,6 +46,7 @@ for (const width of [360, 1280]) {
       [`/members?workspace=${workspace}`, "メンバーを追加"],
       [`/activity?workspace=${workspace}`, ""],
       [`/projects/${project}/gantt?workspace=${workspace}`, ""],
+      ["/notifications", ""],
       ["/signup", ""],
       ["/forgot-password", ""],
       ["/confirm", ""],

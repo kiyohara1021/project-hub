@@ -65,6 +65,7 @@ export const config = {
     "/forgot-password",
     "/reset-password",
     "/confirm",
+    "/notifications",
     "/auth/:path*",
     "/api/v1/:path*",
   ],
