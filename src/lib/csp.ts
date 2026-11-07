@@ -6,7 +6,30 @@ export function createNonce() {
   );
 }
 
-export function contentSecurityPolicy(nonce: string, development = false) {
+export function realtimeConnectSources(supabaseUrl?: string) {
+  if (!supabaseUrl) return [];
+  try {
+    const parsed = new URL(supabaseUrl);
+    const hosted =
+      parsed.protocol === "https:" &&
+      /^[a-z0-9]{20}\.supabase\.co$/.test(parsed.hostname) &&
+      !parsed.port;
+    const local =
+      parsed.protocol === "http:" &&
+      parsed.hostname === "127.0.0.1" &&
+      parsed.port === "54321";
+    if ((!hosted && !local) || parsed.origin !== supabaseUrl) throw new Error();
+    return [parsed.origin, `${hosted ? "wss" : "ws"}://${parsed.host}`];
+  } catch {
+    throw new Error("Invalid Supabase realtime URL");
+  }
+}
+
+export function contentSecurityPolicy(
+  nonce: string,
+  development = false,
+  supabaseUrl?: string,
+) {
   if (nonce.trim() !== nonce || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(nonce))
     throw new Error("Invalid CSP nonce");
   return [
@@ -15,7 +38,9 @@ export function contentSecurityPolicy(nonce: string, development = false) {
     `style-src 'self' 'nonce-${nonce}'`,
     `style-src-elem 'self' 'nonce-${nonce}'`,
     "style-src-attr 'unsafe-inline'",
-    "connect-src 'self'",
+    `connect-src 'self'${realtimeConnectSources(supabaseUrl)
+      .map((origin) => ` ${origin}`)
+      .join("")}`,
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "object-src 'none'",
@@ -26,9 +51,13 @@ export function contentSecurityPolicy(nonce: string, development = false) {
   ].join("; ");
 }
 
-export function cspResponseHeaders(nonce: string, development = false) {
+export function cspResponseHeaders(
+  nonce: string,
+  development = false,
+  supabaseUrl?: string,
+) {
   return new Headers({
-    [cspHeader]: contentSecurityPolicy(nonce, development),
+    [cspHeader]: contentSecurityPolicy(nonce, development, supabaseUrl),
     "Cache-Control": "private, no-store",
   });
 }

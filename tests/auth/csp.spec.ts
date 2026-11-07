@@ -63,11 +63,18 @@ for (const width of [360, 1280]) {
       expect(nonces.has(nonce)).toBe(false);
       nonces.add(nonce);
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-      const scriptNonces = await page
-        .locator("script")
-        .evaluateAll((elements) =>
-          elements.map((element) => (element as HTMLScriptElement).nonce),
-        );
+      // Automatic Realtime refreshes can insert trusted RSC scripts with later
+      // request nonces. Validate every script in this exact SSR response instead.
+      const scriptNonces = await page.evaluate(
+        (html) =>
+          Array.from(
+            new DOMParser()
+              .parseFromString(html, "text/html")
+              .querySelectorAll("script"),
+            (element) => element.getAttribute("nonce"),
+          ),
+        await response!.text(),
+      );
       expect(scriptNonces.length).toBeGreaterThan(0);
       expect(scriptNonces.every((value) => value === nonce)).toBe(true);
       const menu = page.getByRole("button", {

@@ -35,6 +35,11 @@ export function ConnectedKanban({
 }) {
   const router = useRouter();
   const [pages, setPages] = useState(initial);
+  const [previousInitial, setPreviousInitial] = useState(initial);
+  if (previousInitial !== initial) {
+    setPreviousInitial(initial);
+    setPages(initial);
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
