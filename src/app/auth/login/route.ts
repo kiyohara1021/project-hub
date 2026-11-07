@@ -1,3 +1,4 @@
+import { safeAuthNext } from "@/lib/auth-forms";
 import { NextResponse } from "next/server";
 import { supabaseConfig } from "@/lib/supabase/config";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -13,11 +14,18 @@ export async function POST(request: Request) {
       ?.startsWith("application/x-www-form-urlencoded")
   )
     return new Response(null, { status: 415 });
+  let next = "/workspaces";
   const failed = (reason: "1" | "rate_limit" = "1") =>
-    NextResponse.redirect(new URL(`/login?error=${reason}`, config.origin), {
-      status: 303,
-      headers: { "Cache-Control": "no-store" },
-    });
+    NextResponse.redirect(
+      new URL(
+        `/login?error=${reason}${next.startsWith("/invitations/") ? `&next=${encodeURIComponent(next)}` : ""}`,
+        config.origin,
+      ),
+      {
+        status: 303,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   try {
     const reader = request.body?.getReader();
     if (!reader) return failed();
@@ -40,6 +48,8 @@ export async function POST(request: Request) {
       offset += chunk.byteLength;
     }
     const data = new URLSearchParams(new TextDecoder().decode(bytes));
+    next = safeAuthNext(data.get("next"));
+    if (next === "/reset-password") next = "/workspaces";
     const email = data.get("email");
     const password = data.get("password");
     if (
@@ -54,7 +64,7 @@ export async function POST(request: Request) {
     const client = await supabaseServer();
     const { error } = await client.auth.signInWithPassword({ email, password });
     if (error) return failed(error.status === 429 ? "rate_limit" : "1");
-    return NextResponse.redirect(new URL("/workspaces", config.origin), {
+    return NextResponse.redirect(new URL(next, config.origin), {
       status: 303,
       headers: { "Cache-Control": "no-store" },
     });

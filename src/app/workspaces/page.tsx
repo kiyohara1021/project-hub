@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { statusLabels, type ProjectStatus } from "@/lib/project-types";
 
+import { WorkspaceCreate } from "@/components/workspace-create";
 import { ProfileEditor } from "@/components/profile-editor";
 
 export const metadata = { title: "ログイン状況" };
@@ -23,7 +24,7 @@ export default async function Workspaces() {
   if (error || !data?.claims.sub) redirect("/login");
   const profileResult = await client
     .from("profiles")
-    .select("display_name")
+    .select("display_name,job_title,bio")
     .eq("id", data.claims.sub)
     .single();
   const workspaceResult = await client
@@ -58,7 +59,11 @@ export default async function Workspaces() {
         ユーザーID: <span className="font-mono">{data.claims.sub}</span>
         （所属追加を依頼するときに管理者へ伝えてください）
       </p>
-      <ProfileEditor displayName={profileResult.data.display_name} />
+      <ProfileEditor
+        displayName={profileResult.data.display_name}
+        jobTitle={profileResult.data.job_title}
+        bio={profileResult.data.bio}
+      />
       <Link
         href="/projects"
         className="mb-5 inline-block text-sm text-blue-700 underline"
@@ -68,10 +73,11 @@ export default async function Workspaces() {
       <form action="/auth/logout" method="post" className="mb-6">
         <Button variant="outline">ログアウト</Button>
       </form>
+      <WorkspaceCreate />
       {!workspaceResult.data.length ? (
         <EmptyState
           title="所属ワークスペースがありません"
-          description="このユーザーには業務データの閲覧権限がありません。"
+          description="新しくワークスペースを作成するか、管理者からの招待をお待ちください。"
         />
       ) : (
         <div className="space-y-4">

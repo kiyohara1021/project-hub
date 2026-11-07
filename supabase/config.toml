@@ -15,7 +15,8 @@ sql_paths = ["./seed.sql"]
 [studio]
 enabled = false
 [local_smtp]
-enabled = false
+enabled = true
+port = 54324
 [storage]
 enabled = false
 [realtime]
@@ -27,12 +28,26 @@ enabled = false
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = []
-enable_signup = false
+additional_redirect_urls = ["http://127.0.0.1:3000/confirm**", "http://127.0.0.1:3101/confirm**"]
+enable_signup = true
 minimum_password_length = 12
 [auth.email]
 enable_signup = true
-enable_confirmations = false
+enable_confirmations = true
 [auth.rate_limit]
 # ローカルのDB/ブラウザテストを繰り返せる枠。本番の設定ではない。
-sign_in_sign_ups = 100
+sign_in_sign_ups = 1000
+email_sent = 1000
+token_refresh = 1000
+token_verifications = 1000
+
+[auth.email.template.confirmation]
+subject = "ProjectHubのメールアドレス確認"
+content_path = "./supabase/templates/confirmation.html"
+[auth.email.template.recovery]
+subject = "ProjectHubのパスワード再設定"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "ProjectHubのワークスペース招待"
+content_path = "./supabase/templates/confirmation.html"

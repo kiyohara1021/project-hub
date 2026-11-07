@@ -134,7 +134,7 @@ test("再送記録の清掃は期限切れ・上限を守り、管理者だけ�
     assert.equal(
       Number(
         localSql(
-          "select count(*) from pg_indexes where schemaname='private' and indexname like '%requests%cleanup%';",
+          "select count(*) from pg_indexes where schemaname='private' and tablename in ('project_requests','task_requests','issue_requests','member_requests','comment_requests') and indexname like '%requests%cleanup%';",
         ),
       ),
       10,

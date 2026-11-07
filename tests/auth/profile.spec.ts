@@ -130,18 +130,20 @@ test("360pxで表示名を変更し、メンバー一覧へ反映・通信失敗
       return route.continue();
     });
     await page
-      .getByRole("button", { name: "表示名を保存", exact: true })
+      .getByRole("button", { name: "プロフィールを保存", exact: true })
       .click();
     await expect(
-      page.getByRole("form", { name: "表示名の変更" }).getByRole("alert"),
+      page.getByRole("form", { name: "プロフィールの変更" }).getByRole("alert"),
     ).toContainText("再試行");
     await expect(input).toHaveValue("表示名を変更した閲覧者");
     await page
-      .getByRole("button", { name: "表示名を保存", exact: true })
+      .getByRole("button", { name: "プロフィールを保存", exact: true })
       .click();
     await expect(
-      page.getByRole("form", { name: "表示名の変更" }).getByRole("status"),
-    ).toContainText("表示名を保存しました");
+      page
+        .getByRole("form", { name: "プロフィールの変更" })
+        .getByRole("status"),
+    ).toContainText("プロフィールを保存しました");
     await expect(
       page.getByText("ログイン中: 表示名を変更した閲覧者", { exact: true }),
     ).toBeVisible();
