@@ -139,6 +139,12 @@ export async function ConnectedBoardPage({
         >
           課題一覧へ →
         </Link>
+        <Link
+          href={`/projects/${id}/gantt?workspace=${wid}`}
+          className="underline"
+        >
+          ガントチャートへ →
+        </Link>
       </div>
       {project.status === "archived" && (
         <p

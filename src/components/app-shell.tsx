@@ -10,6 +10,7 @@ import {
   Users,
   History,
   PanelsTopLeft,
+  CalendarRange,
 } from "lucide-react";
 import {
   Sheet,
@@ -26,6 +27,11 @@ const links = [
   { href: "/projects", label: "プロジェクト一覧", icon: FolderKanban },
   { href: "/projects/demo-a/board", label: "カンバン", icon: Columns3 },
   { href: "/projects/demo-a/issues", label: "課題一覧", icon: CircleAlert },
+  {
+    href: "/projects/demo-a/gantt",
+    label: "ガントチャート",
+    icon: CalendarRange,
+  },
   { href: "/members", label: "メンバー", icon: Users },
   { href: "/activity", label: "操作履歴", icon: History },
 ];
@@ -56,22 +62,29 @@ function Navigation({
           ].includes(label)
             ? `${href}${scoped}`
             : href;
-        if (connected && label === "カンバン")
-          target = path.endsWith("/board")
-            ? `${path}${query.toString() ? `?${query}` : ""}`
-            : /^\/projects\/[^/]+\/issues$/.test(path)
-              ? `${path.replace(/\/issues$/, "/board")}${scoped}`
-              : `/projects${scoped}`;
-        if (connected && label === "課題一覧")
-          target = /^\/projects\/[^/]+\/(board|issues)$/.test(path)
-            ? `${path.replace(/\/(board|issues)$/, "/issues")}${scoped}`
+        const projectRoute = path.match(
+          /^\/projects\/([^/]+)\/(board|issues|gantt)$/,
+        );
+        const suffix =
+          label === "カンバン"
+            ? "board"
+            : label === "課題一覧"
+              ? "issues"
+              : label === "ガントチャート"
+                ? "gantt"
+                : null;
+        if (connected && suffix)
+          target = projectRoute
+            ? `/projects/${projectRoute[1]}/${suffix}${scoped}`
             : `/projects${scoped}`;
         const active =
-          connected && label === "カンバン"
-            ? path.endsWith("/board")
-            : connected && label === "課題一覧"
-              ? path.endsWith("/issues")
-              : path === href;
+          connected && label === "ガントチャート"
+            ? path.endsWith("/gantt")
+            : connected && label === "カンバン"
+              ? path.endsWith("/board")
+              : connected && label === "課題一覧"
+                ? path.endsWith("/issues")
+                : path === href;
         const link = (
           <Link
             href={target}
@@ -151,12 +164,14 @@ export function AppShell({
             </Sheet>
             <span className="text-sm text-slate-500">ProjectHub</span>
           </div>
-          <Link
-            href="/workspaces"
-            className="text-sm font-medium text-blue-700 hover:underline"
-          >
-            アカウント
-          </Link>
+          <div className="flex flex-wrap items-center justify-end gap-4">
+            <Link
+              href="/workspaces"
+              className="text-sm font-medium text-blue-700 hover:underline"
+            >
+              アカウント
+            </Link>
+          </div>
         </header>
         {!connected && (
           <div className="border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs leading-5 text-blue-900 md:px-10">

@@ -24,12 +24,15 @@ export default async function Board({
         title="カンバン"
         description={`${project.name} · タスクのプレビューです。追加・移動・編集は未実装です。`}
       />
-      <div className="mb-6 flex gap-5 text-sm text-blue-700">
+      <div className="mb-6 flex flex-wrap gap-5 text-sm text-blue-700">
         <Link href="/projects" className="hover:underline">
           ← 一覧に戻る
         </Link>
         <Link href={`/projects/${id}/issues`} className="hover:underline">
           このプロジェクトの課題 →
+        </Link>
+        <Link href={`/projects/${id}/gantt`} className="hover:underline">
+          ガントチャートへ →
         </Link>
       </div>
       <Kanban populated={id === "demo-a"} />

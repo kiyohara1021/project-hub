@@ -270,6 +270,12 @@ export async function ConnectedIssues({
         >
           カンバンへ →
         </Link>
+        <Link
+          href={`/projects/${id}/gantt?workspace=${wid}`}
+          className="underline"
+        >
+          ガントチャートへ →
+        </Link>
       </div>
       {project.status === "archived" && (
         <p

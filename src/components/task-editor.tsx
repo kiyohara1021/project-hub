@@ -41,6 +41,7 @@ export function TaskEditor({
     task?.priority ?? "medium",
   );
   const [assignee, setAssignee] = useState(task?.assignee_id ?? "");
+  const [start, setStart] = useState(task?.start_date ?? "");
   const [due, setDue] = useState(task?.due_date ?? "");
   const [version, setVersion] = useState(task?.version ?? 1);
   const [busy, setBusy] = useState(false);
@@ -65,6 +66,7 @@ export function TaskEditor({
       priority,
       assignee_id: assignee || null,
       due_date: due || null,
+      start_date: start || null,
       ...(task ? { version } : {}),
     });
     if (!request.current || request.current.body !== body)
@@ -110,6 +112,7 @@ export function TaskEditor({
         setPriority("medium");
         setAssignee("");
         setDue("");
+        setStart("");
       }
       await onSaved();
     } catch {
@@ -136,6 +139,7 @@ export function TaskEditor({
       setPriority(latest.priority);
       setAssignee(latest.assignee_id ?? "");
       setDue(latest.due_date ?? "");
+      setStart(latest.start_date ?? "");
       setVersion(latest.version);
       setConflict(false);
       setError("");
@@ -162,7 +166,7 @@ export function TaskEditor({
         <DialogHeader>
           <DialogTitle>{task ? "タスク編集" : "タスク追加"}</DialogTitle>
           <DialogDescription>
-            タスク名・担当者・期限を設定します。状態変更はカードの状態メニューから行えます。
+            タスク名・担当者・開始日・期限を設定します。状態変更はカードの状態メニューから行えます。
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
@@ -265,6 +269,23 @@ export function TaskEditor({
           </div>
           <div>
             <label
+              htmlFor={`${fieldId}-start`}
+              className="mb-2 block text-sm font-medium"
+            >
+              開始日（任意）
+            </label>
+            <Input
+              id={`${fieldId}-start`}
+              type="date"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              max={due || "9999-12-31"}
+              min="0001-01-01"
+              disabled={busy}
+            />
+          </div>
+          <div>
+            <label
               htmlFor={`${fieldId}-due`}
               className="mb-2 block text-sm font-medium"
             >
@@ -274,6 +295,8 @@ export function TaskEditor({
               id={`${fieldId}-due`}
               type="date"
               value={due}
+              min={start || "0001-01-01"}
+              max="9999-12-31"
               onChange={(e) => setDue(e.target.value)}
               disabled={busy}
             />
