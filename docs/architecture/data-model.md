@@ -1,5 +1,7 @@
 # データモデル
 
+仕様023〜030は実装・統合検証中です。本書の追加機能の説明は実装契約であり、本番での利用開始を示しません。本番の適用・確認記録は[公開・運用手順](../deployment.md)を参照してください。
+
 PostgreSQLのテーブル・制約・集計の関係をまとめています。IDはUUID、日時は `timestamptz`、期限は `date` です。変更履歴は[マイグレーション](../../supabase/migrations/)、アクセス制御は[APIとアクセス制御](api-rls.md)を参照してください。
 
 ## 業務データの関係
@@ -25,16 +27,16 @@ erDiagram
 
 すべての業務テーブルにRLSを適用します。本文の長さ、状態、優先度、versionの正数制約はDBでも検査します。
 
-| テーブル       | 主な列・制約                                                                                                                                       | 役割                                                              |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| profiles       | `id` PK・FK auth.users.id、`display_name` 1〜80文字                                                                                                | Authユーザーに対応する表示名。Auth登録時に作成し、本人用RPCで変更 |
-| workspaces     | `id` PK、`name` 1〜120文字、`created_at`                                                                                                           | データと権限の分離単位                                            |
-| memberships    | `workspace_id, user_id` 複合PK、各workspace / profile FK、`role, joined_at, version`                                                               | ユーザーの所属とadmin / member / viewerの権限                     |
-| projects       | `id` PK、`workspace_id` FK、`name, description, status, due_date, version, created_at, updated_at`、UNIQUE(workspace_id,id)                        | プロジェクト情報。削除の代わりにアーカイブを使用                  |
-| tasks          | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, position, version, created_at, updated_at`        | カンバンのタスク。positionはbigint                                |
-| issues         | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, version, created_at, updated_at`                  | 課題情報                                                          |
-| issue_comments | `id` PK、`workspace_id, project_id, issue_id` 複合FK issues、`author_id` FK profiles、`author_display_name, body, version, created_at, updated_at` | 投稿時の表示名と本文。課題削除にCASCADE                           |
-| activity_logs  | `id` PK、`workspace_id` FK、`project_id, actor_id` nullable、`actor_display_name, entity_type, entity_id, action, changes, created_at`             | 読み取り専用の操作履歴。changesはjsonb                            |
+| テーブル       | 主な列・制約                                                                                                                                            | 役割                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| profiles       | `id` PK・FK auth.users.id、`display_name` 1〜80文字、`job_title` 0〜80文字、`bio` 0〜500文字                                                            | Authユーザーに対応する表示名。Auth登録時に作成し、本人用RPCで変更 |
+| workspaces     | `id` PK、`name` 1〜120文字、`created_at`                                                                                                                | データと権限の分離単位                                            |
+| memberships    | `workspace_id, user_id` 複合PK、各workspace / profile FK、`role, joined_at, version`                                                                    | ユーザーの所属とadmin / member / viewerの権限                     |
+| projects       | `id` PK、`workspace_id` FK、`name, description, status, visibility, due_date, version, created_at, updated_at`、UNIQUE(workspace_id,id)                 | プロジェクト情報。削除の代わりにアーカイブを使用                  |
+| tasks          | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, start_date, due_date, position, version, created_at, updated_at` | カンバンのタスク。positionはbigint                                |
+| issues         | `id` PK、`workspace_id, project_id, title, description, status, priority, assignee_id, due_date, version, created_at, updated_at`                       | 課題情報                                                          |
+| issue_comments | `id` PK、`workspace_id, project_id, issue_id` 複合FK issues、`author_id` FK profiles、`author_display_name, body, version, created_at, updated_at`      | 投稿時の表示名と本文。課題削除にCASCADE                           |
+| activity_logs  | `id` PK、`workspace_id` FK、`project_id, actor_id` nullable、`actor_display_name, entity_type, entity_id, action, changes, created_at`                  | 読み取り専用の操作履歴。changesはjsonb                            |
 
 | 項目                    | 許可値・ルール                                     |
 | ----------------------- | -------------------------------------------------- |
@@ -104,3 +106,21 @@ issuesにUNIQUE(workspace_id,project_id,id)を追加し、issue_commentsの親�
 ## 表示名の更新
 
 `update_my_profile(text)` はauth.uid()に対応するprofilesだけを更新します。前後の空白除去と1〜80コードポイントの検証をDBでも行い、対象IDの指定や直接UPDATEは許可しません。既存のactor_display_nameとauthor_display_nameは更新せず、以後の操作・投稿から新しい名前を保存します。[仕様018](../specs/018-profile-display-name.md)を参照してください。
+
+## 追加モデル（migration013以降、実装・検証中）
+
+本番で適用確認済みなのは運用記録にある001〜012です。以下の追加モデルを適用済みとは扱いません。
+
+| 対象                                                        | 保存・制約・保持                                                                                                                                           |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| profiles                                                    | job_title/bioは空文字が既定。本人用update_my_profile_detailsで更新、省略項目は保持。旧RPCも維持                                                            |
+| tasks.start_date                                            | 任意のdate。開始日・期限は0001-01-01〜9999-12-31、両方設定時は開始日≦期限                                                                                  |
+| projects.visibility / public.project_members                | workspace/private、既存はworkspace。参加しても所属ロールを変えず、所属解除で参加も解除                                                                     |
+| private.deleted_project_visibility                          | 管理操作でプロジェクト削除後も履歴の閲覧範囲を保持。通常ユーザーは直接参照不可                                                                             |
+| private.workspace_requests                                  | ワークスペース作成の24時間の再送制御。既存の期限切れ削除運用に含める                                                                                       |
+| public.user_notifications                                   | 本人宛ての種別・対象ID・発生元version・既読日時。本文/タイトル/操作者名は保存せず90日保持。受信者等の一意制約で重複を防ぐ                                  |
+| public.attachments / private.attachment_objects             | 閲覧用メタデータと物理削除台帳を分離。親削除でメタデータを削除し台帳を残す。予約1時間、回収完了まで20件の枠に含める                                        |
+| public.realtime_updates                                     | ランダムid、user_id、kind、created_atだけ。1日超を毎時最大10,000件ずつ削除。業務データは保存しない                                                         |
+| private.workspace_invitations / private.invitation_requests | 招待は7日有効、生トークンは保存せずSHA-256 digest。再送記録24時間、招待レコードは期限終了後30日まで。migration020で追加し、仕様027に沿って実装・統合検証中 |
+
+通知とRealtimeの定期削除はpg_cronがある場合に登録します。登録・実行成功は各環境で別途確認し、拡張なしでは定期実行済みと扱いません。添付の物理回収はStorage APIを使用する管理用CLIで行い、storage.objectsをSQLで直接消しません。いずれも業務データ・操作履歴の無期限保持とは区別します。

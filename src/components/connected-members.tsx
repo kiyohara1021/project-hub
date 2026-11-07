@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { listInvitations } from "@/lib/invitations-server";
+import { selfServiceAuthEnabled } from "@/lib/auth-forms";
+import { WorkspaceInvitations } from "./workspace-invitations";
 import { redirect, notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { supabaseConfig } from "@/lib/supabase/config";
@@ -139,6 +142,14 @@ export async function ConnectedMembers({
         <div className="mb-5">
           <MemberAdd key={wid} wid={wid} />
         </div>
+      )}
+      {me.data.role === "admin" && (
+        <WorkspaceInvitations
+          key={`invitations-${wid}`}
+          wid={wid}
+          initial={await listInvitations(wid, new URLSearchParams())}
+          enabled={selfServiceAuthEnabled()}
+        />
       )}
       <p className="mb-5 text-xs leading-6 text-slate-500">
         担当件数は計画中・進行中のプロジェクトにある未完了タスクと未解決課題です。完了・解決済みとアーカイブ内は含みません。

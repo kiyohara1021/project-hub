@@ -15,6 +15,7 @@ export const activityEntities = [
   "issue_comments",
   "project_members",
   "attachments",
+  "workspace_invitations",
 ] as const;
 export const activityActions = ["INSERT", "UPDATE", "DELETE"] as const;
 export type ActivityEntity = (typeof activityEntities)[number];
@@ -27,6 +28,7 @@ export const entityLabels: Record<ActivityEntity, string> = {
   issue_comments: "課題コメント",
   project_members: "プロジェクト参加者",
   attachments: "添付ファイル",
+  workspace_invitations: "ワークスペース招待",
 };
 export const actionLabels: Record<ActivityAction, string> = {
   INSERT: "追加",
@@ -55,11 +57,18 @@ export type ActivityPage = { data: Activity[]; nextCursor: string | null };
 
 export function changeSummary(event: Activity) {
   const labels: Record<string, string> =
-    event.entity_type === "projects"
-      ? statusLabels
-      : event.entity_type === "tasks"
-        ? taskLabels
-        : issueLabels;
+    event.entity_type === "workspace_invitations"
+      ? {
+          pending: "招待中",
+          accepted: "承諾済み",
+          cancelled: "取消済み",
+          expired: "期限切れ",
+        }
+      : event.entity_type === "projects"
+        ? statusLabels
+        : event.entity_type === "tasks"
+          ? taskLabels
+          : issueLabels;
   const state = (value: ActivityState) =>
     [
       value.visibility ? `公開範囲: ${visibilityLabels[value.visibility]}` : "",
