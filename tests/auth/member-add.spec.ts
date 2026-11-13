@@ -170,7 +170,9 @@ test("360pxの追加確認・入力保持・通信再試行・成功とフォー
     await dialog
       .getByRole("button", { name: "追加内容を確認", exact: true })
       .click();
-    await expect(dialog.getByRole("status")).toContainText("全プロジェクト");
+    await expect(
+      dialog.getByRole("status").filter({ hasText: "全プロジェクト" }),
+    ).toBeVisible();
     await dialog
       .getByRole("button", { name: "確認して追加", exact: true })
       .click();
