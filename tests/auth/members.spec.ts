@@ -30,7 +30,9 @@ test("管理者が360pxでロール変更・競合復旧・最後の管理者保
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("ロール", { exact: true }).selectOption("viewer");
   await dialog.getByRole("button", { name: "ロール変更…" }).click();
-  await expect(dialog.getByRole("status")).toContainText("閲覧者");
+  await expect(
+    dialog.getByRole("status").filter({ hasText: "閲覧者" }),
+  ).toBeVisible();
   await dialog.getByRole("button", { name: "確認して実行" }).click();
   await expect(dialog).not.toBeVisible();
   await expect(member).toContainText("閲覧者");
@@ -68,7 +70,9 @@ test("管理者が360pxでロール変更・競合復旧・最後の管理者保
     .getByRole("button", { name: "権限を管理" })
     .click();
   await dialog.getByRole("button", { name: "所属を解除…" }).click();
-  await expect(dialog.getByRole("status")).toContainText("未割当");
+  await expect(
+    dialog.getByRole("status").filter({ hasText: "未割当" }),
+  ).toBeVisible();
   await dialog.getByRole("button", { name: "確認して実行" }).click();
   await expect(dialog.getByRole("alert")).toContainText("最後の管理者");
   expect(
