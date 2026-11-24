@@ -8,6 +8,13 @@ updates:
       time: "09:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
+    ignore:
+      # .node-version と engines（Node 24）に型定義を合わせる
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # CLI 3 は --linked を廃止した。scripts/cleanup-attachments.mjs と docs/deployment.md を移行するまで見送る
+      - dependency-name: "supabase"
+        update-types: ["version-update:semver-major"]
     groups:
       minor-and-patch:
         update-types:
